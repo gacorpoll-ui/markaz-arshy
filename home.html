@@ -1,0 +1,171 @@
+{% extends 'layout.html' %}
+
+{% block title %}Selamat Datang di Markaz Arshy EA{% endblock %}
+
+{% block content %}
+<div class="min-h-screen flex flex-col bg-gradient-to-tr from-blue-100 via-white to-blue-50">
+
+  <!-- Navbar -->
+  <nav class="flex items-center justify-between px-6 py-4 bg-white/80 backdrop-blur border-b border-blue-100 shadow-md">
+    <div class="flex items-center space-x-2">
+      <img src="{{ url_for('static', filename='logo.png') }}" alt="Logo" class="w-9 h-9 rounded-xl shadow-lg" />
+      <span class="font-bold text-xl text-blue-700 tracking-tight">Markaz Arshy EA</span>
+    </div>
+    <div class="flex items-center space-x-4">
+      <a href="{{ url_for('login_page') }}" class="px-4 py-2 rounded-xl font-semibold text-blue-600 hover:bg-blue-50 transition">Login</a>
+      <a href="{{ url_for('register_page') }}" class="px-4 py-2 bg-blue-600 text-white rounded-xl font-semibold shadow-md hover:bg-blue-700 transition">Daftar</a>
+    </div>
+  </nav>
+
+  <!-- Hero Section -->
+  <section class="flex flex-col md:flex-row items-center justify-center px-4 py-16 max-w-7xl mx-auto gap-8">
+    <div class="flex-1 text-center md:text-left space-y-6">
+      <h1 class="text-4xl sm:text-5xl font-extrabold text-blue-800 leading-tight">
+        Otomatiskan Strategi Trading Forex Anda
+      </h1>
+      <p class="text-lg sm:text-xl text-gray-600">
+        Markaz Arshy EA menghadirkan sistem <span class="font-semibold text-blue-700">AI-Powered Expert Advisor</span> untuk membantu Anda menjalankan strategi trading dengan konsisten dan efisien. Fokus pada target jangka panjang, biarkan AI kami mengelola entry & exit.
+      </p>
+      <div class="flex flex-col sm:flex-row gap-4 justify-center md:justify-start">
+        <a href="{{ url_for('register_page') }}" class="px-7 py-3 bg-blue-700 text-white rounded-2xl font-semibold shadow-lg hover:bg-blue-800 transition text-lg">Mulai Free Trial</a>
+        <span class="text-gray-500 self-center mt-2 sm:mt-0">Tidak IB & Free 100%</span>
+      </div>
+    </div>
+    <div class="flex-1 flex items-center justify-center">
+      <img src="{{ url_for('static', filename='hero_illustration.svg') }}" alt="Ilustrasi EA Trading" class="w-full max-w-md rounded-3xl shadow-2xl" loading="lazy"/>
+    </div>
+  </section>
+
+  <!-- Why Us Section -->
+  <section class="bg-white/90 rounded-3xl shadow-xl px-6 py-12 max-w-6xl mx-auto mb-12">
+    <h2 class="text-3xl font-bold text-center text-blue-800 mb-8">Apa yang Membuat Kami Unik?</h2>
+    <div class="grid md:grid-cols-3 gap-8 text-center">
+      <div class="p-4">
+        <div class="mx-auto w-16 h-16 flex items-center justify-center bg-blue-100 text-blue-700 rounded-3xl mb-4 text-3xl shadow-inner">
+          <i class="fa-solid fa-chart-line"></i>
+        </div>
+        <h3 class="font-semibold text-blue-700 mb-1">Analisa Teknikal</h3>
+        <p class="text-gray-600 text-sm">Algoritma kami menganalisis tren & pola pasar, menghasilkan sinyal entry dan exit yang lebih presisi.</p>
+      </div>
+      <div class="p-4">
+        <div class="mx-auto w-16 h-16 flex items-center justify-center bg-blue-100 text-blue-700 rounded-3xl mb-4 text-3xl shadow-inner">
+          <i class="fa-solid fa-newspaper"></i>
+        </div>
+        <h3 class="font-semibold text-blue-700 mb-1">Analisa Fundamental</h3>
+        <p class="text-gray-600 text-sm">Sistem memantau indikator ekonomi & berita global secara realtime dan menyesuaikan strategi sesuai kondisi pasar.</p>
+      </div>
+      <div class="p-4">
+        <div class="mx-auto w-16 h-16 flex items-center justify-center bg-blue-100 text-blue-700 rounded-3xl mb-4 text-3xl shadow-inner">
+          <i class="fa-solid fa-wallet"></i>
+        </div>
+        <h3 class="font-semibold text-blue-700 mb-1">Manajemen Risiko</h3>
+        <p class="text-gray-600 text-sm">Kelola posisi dengan take profit, trailing stop, alarm harga, dan fitur pengaturan lot otomatis.</p>
+      </div>
+    </div>
+    <div class="grid md:grid-cols-2 gap-8 mt-8 text-center">
+      <div class="p-4">
+        <div class="mx-auto w-16 h-16 flex items-center justify-center bg-blue-100 text-blue-700 rounded-3xl mb-4 text-3xl shadow-inner">
+          <i class="fa-brands fa-telegram"></i>
+        </div>
+        <h3 class="font-semibold text-blue-700 mb-1">Ai Analisis</h3>
+        <p class="text-gray-600 text-sm">Anda Tinggal Pasang EA Markaz Arshy di MT5 anda semua otomatis dengan akurasi realtime.</p>
+      </div>
+      <div class="p-4">
+        <div class="mx-auto w-16 h-16 flex items-center justify-center bg-blue-100 text-blue-700 rounded-3xl mb-4 text-3xl shadow-inner">
+          <i class="fa-solid fa-robot"></i>
+        </div>
+        <h3 class="font-semibold text-blue-700 mb-1">Automasi Penuh</h3>
+        <p class="text-gray-600 text-sm">AI melakukan analisa setiap trade untuk memilih peluang terbaik sesuai kondisi pasar.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Getting Started Steps -->
+  <section class="bg-blue-50/80 rounded-3xl shadow-lg px-6 py-12 max-w-5xl mx-auto mb-12">
+    <h2 class="text-3xl font-bold text-center text-blue-800 mb-8">Mulai Dalam 3 Langkah Mudah</h2>
+    <div class="grid md:grid-cols-3 gap-8 text-center">
+      <div>
+        <div class="mx-auto w-14 h-14 flex items-center justify-center bg-blue-200 text-blue-700 rounded-full mb-4 text-2xl">1</div>
+        <h3 class="font-semibold text-blue-700 mb-1">Pilih Paket</h3>
+        <p class="text-gray-600 text-sm">Tentukan paket yang sesuai dengan kebutuhan trading Anda, dari pemula hingga pro.</p>
+      </div>
+      <div>
+        <div class="mx-auto w-14 h-14 flex items-center justify-center bg-blue-200 text-blue-700 rounded-full mb-4 text-2xl">2</div>
+        <h3 class="font-semibold text-blue-700 mb-1">Hubungkan Akun</h3>
+        <p class="text-gray-600 text-sm">Ikuti panduan instalasi untuk menghubungkan EA dengan platform trading (MT5) Anda.</p>
+      </div>
+      <div>
+        <div class="mx-auto w-14 h-14 flex items-center justify-center bg-blue-200 text-blue-700 rounded-full mb-4 text-2xl">3</div>
+        <h3 class="font-semibold text-blue-700 mb-1">Mulai Trading</h3>
+        <p class="text-gray-600 text-sm">Biarkan AI bekerja, pantau analisa & hasil melalui dashboard dan dukungan realtime.</p>
+      </div>
+    </div>
+    <div class="flex justify-center mt-8">
+      <a href="{{ url_for('register_page') }}" class="px-8 py-3 bg-blue-700 text-white rounded-2xl font-semibold shadow-lg hover:bg-blue-800 transition text-lg">Gabung Sekarang</a>
+    </div>
+    <p class="text-center text-gray-500 mt-2">Butuh bantuan? <a href="{{ url_for('panduan_page') }}" class="text-blue-700 hover:underline">Pusat Bantuan</a></p>
+  </section>
+
+  <!-- Testimonials Section -->
+  <section class="max-w-6xl mx-auto px-6 py-12 mb-12">
+    <h2 class="text-3xl font-bold text-center text-blue-800 mb-8">Dipercaya oleh Ribuan Trader</h2>
+    <div class="grid sm:grid-cols-2 md:grid-cols-3 gap-6">
+      <div class="bg-white rounded-2xl p-6 shadow-md">
+        <div class="flex items-center mb-3">
+          <div class="w-10 h-10 bg-blue-200 text-blue-700 rounded-full flex items-center justify-center font-bold">A</div>
+          <div class="ml-3">
+            <p class="font-semibold text-blue-700">Andi</p>
+            <div class="flex text-yellow-400 text-sm">
+              <!-- contoh rating 5 bintang -->
+              <i class="fa-solid fa-star"></i>
+              <i class="fa-solid fa-star"></i>
+              <i class="fa-solid fa-star"></i>
+              <i class="fa-solid fa-star"></i>
+              <i class="fa-solid fa-star"></i>
+            </div>
+          </div>
+        </div>
+        <p class="text-gray-600 text-sm italic">“Saya sudah mencoba banyak EA, tapi Markaz Arshy EA memberikan hasil yang konsisten dengan risiko terukur. Dukungan tim juga sangat responsif.”</p>
+      </div>
+      <!-- Tambah testimoni lainnya di sini -->
+      <div class="bg-white rounded-2xl p-6 shadow-md">
+        <div class="flex items-center mb-3">
+          <div class="w-10 h-10 bg-blue-200 text-blue-700 rounded-full flex items-center justify-center font-bold">B</div>
+          <div class="ml-3">
+            <p class="font-semibold text-blue-700">Budi</p>
+            <div class="flex text-yellow-400 text-sm">
+              <i class="fa-solid fa-star"></i>
+              <i class="fa-solid fa-star"></i>
+              <i class="fa-solid fa-star"></i>
+              <i class="fa-solid fa-star"></i>
+              <i class="fa-solid fa-star-half-stroke"></i>
+            </div>
+          </div>
+        </div>
+        <p class="text-gray-600 text-sm italic">“AI-nya cerdas dan sangat konservatif. Saya merasa nyaman membiarkannya bekerja tanpa harus memantau terus-menerus.”</p>
+      </div>
+      <div class="bg-white rounded-2xl p-6 shadow-md">
+        <div class="flex items-center mb-3">
+          <div class="w-10 h-10 bg-blue-200 text-blue-700 rounded-full flex items-center justify-center font-bold">C</div>
+          <div class="ml-3">
+            <p class="font-semibold text-blue-700">Citra</p>
+            <div class="flex text-yellow-400 text-sm">
+              <i class="fa-solid fa-star"></i>
+              <i class="fa-solid fa-star"></i>
+              <i class="fa-solid fa-star"></i>
+              <i class="fa-solid fa-star"></i>
+              <i class="fa-solid fa-star"></i>
+            </div>
+          </div>
+        </div>
+        <p class="text-gray-600 text-sm italic">“Fitur Markaz Arshy sangat membantu. Semua sinyal dari AI trading langsung masuk ke akun saya.”</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="text-gray-400 text-center py-6 mt-auto">
+    &copy; {{ current_year }} Markaz Arshy EA. All rights reserved.
+  </footer>
+</div>
+{% endblock %}
