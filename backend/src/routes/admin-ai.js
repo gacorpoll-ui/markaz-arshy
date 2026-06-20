@@ -153,22 +153,36 @@ router.put('/ai-models/:id', requireAuth, requireAdmin, async (req, res) => {
       isActive,
     } = req.body;
 
+    // Check if modelId is actually being changed
+    const existing = await prisma.aIModel.findUnique({ where: { id: parseInt(id) } });
+    if (!existing) {
+      return res.status(404).json({ error: 'Model tidak ditemukan.' });
+    }
+
+    // Only validate unique if modelId is actually changing
+    if (modelId && modelId.trim() !== existing.modelId) {
+      const duplicate = await prisma.aIModel.findUnique({ where: { modelId: modelId.trim() } });
+      if (duplicate) {
+        return res.status(400).json({ error: `Model ID "${modelId.trim()}" sudah digunakan oleh model lain.` });
+      }
+    }
+
     const model = await prisma.aIModel.update({
       where: { id: parseInt(id) },
       data: {
-        ...(name && { name }),
-        ...(modelId && { modelId }),
-        ...(inputPricePerToken && { inputPricePerToken: parseFloat(inputPricePerToken) }),
-        ...(outputPricePerToken && { outputPricePerToken: parseFloat(outputPricePerToken) }),
-        ...(contextWindow && { contextWindow: parseInt(contextWindow) }),
-        ...(isActive !== undefined && { isActive }),
+        ...(name !== undefined && { name: name.trim() }),
+        ...(modelId !== undefined && { modelId: modelId.trim() }),
+        ...(inputPricePerToken !== undefined && { inputPricePerToken: parseFloat(inputPricePerToken) }),
+        ...(outputPricePerToken !== undefined && { outputPricePerToken: parseFloat(outputPricePerToken) }),
+        ...(contextWindow !== undefined && { contextWindow: parseInt(contextWindow) }),
+        ...(typeof isActive === 'boolean' && { isActive }),
       },
     });
 
     res.json(model);
   } catch (error) {
     console.error('Error updating AI model:', error);
-    res.status(500).json({ error: 'Failed to update AI model' });
+    res.status(500).json({ error: 'Gagal mengupdate model: ' + error.message });
   }
 });
 
