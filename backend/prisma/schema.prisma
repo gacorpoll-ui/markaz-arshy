@@ -246,6 +246,7 @@ model AIApiKey {
   model           AIModel?        @relation(fields: [modelId], references: [id])
   keyName         String          // User-defined name "My Dev Key"
   apiKey          String          @unique // Generated key "sk-mrkarsh-xxx"
+  nineRouterKey   String?         // Internal 9router key mapped by Markaz Arshy
   tier            String          // "BASIC" | "PRO" | "ENTERPRISE"
   rateLimit       Int             // Requests per minute
   monthlyQuota    Int?            // Max tokens per month (null = unlimited)
