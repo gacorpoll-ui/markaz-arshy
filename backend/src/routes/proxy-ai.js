@@ -10,6 +10,31 @@ const NINE_ROUTER_URL = process.env.AI_ROUTER_URL || 'http://localhost:20128';
 const NINE_ROUTER_EMAIL = 'admin';
 const NINE_ROUTER_PASSWORD = 'Riri@150187';
 
+// 9router Session Management
+let _sessionCookie = null;
+let _sessionExpiresAt = 0;
+
+async function login9Router() {
+  if (_sessionCookie && Date.now() < _sessionExpiresAt) return _sessionCookie;
+  try {
+    const res = await fetch(`${NINE_ROUTER_URL}/api/auth/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: NINE_ROUTER_EMAIL, password: NINE_ROUTER_PASSWORD }),
+    });
+    if (!res.ok) throw new Error(`Login failed: ${res.status}`);
+    const setCookie = res.headers.get('set-cookie');
+    if (!setCookie) throw new Error('No session cookie');
+    _sessionCookie = setCookie.split(';')[0];
+    _sessionExpiresAt = Date.now() + 23 * 60 * 60 * 1000;
+    console.log('[9ROUTER] Session established');
+    return _sessionCookie;
+  } catch (err) {
+    console.error('[9ROUTER] Login failed:', err.message);
+    throw err;
+  }
+}
+
 // ═══════════════════════════════════════
 // 9router Session Management
 // ═══════════════════════════════════════
@@ -120,9 +145,24 @@ router.post('/chat/completions', async (req, res) => {
         return res.status(401).json({ error: { message: 'Invalid or inactive API key', type: 'authentication_error' } });
       }
       if (!keyData.nineRouterKey) {
-        return res.status(400).json({ error: { message: 'No 9router key found. Please recreate your API key.', type: 'setup_error' } });
+        // Auto-create 9router key for legacy ma-* keys
+        try {
+          const cookie = await login9Router();
+          const keyRes = await fetch(`${NINE_ROUTER_URL}/api/keys`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Cookie': cookie },
+            body: JSON.stringify({ name: `ma-${keyData.keyName || keyData.id}` }),
+          });
+          if (keyRes.ok) {
+            const r9 = await keyRes.json();
+            await prisma.aIApiKey.update({ where: { apiKey }, data: { nineRouterKey: r9.key } });
+            routerKey = r9.key;
+            console.log(`[PROXY] Auto-created 9router key for ${apiKey.slice(0, 15)}...`);
+          }
+        } catch (e) { console.error('[PROXY] Auto-create key failed:', e.message); }
+      } else {
+        routerKey = keyData.nineRouterKey;
       }
-      routerKey = keyData.nineRouterKey;
     }
 
     // Forward to 9router with sk-* key
@@ -208,9 +248,24 @@ router.post('/messages', async (req, res) => {
         return res.status(401).json({ type: 'error', error: { type: 'authentication_error', message: 'Invalid or inactive API key' } });
       }
       if (!keyData.nineRouterKey) {
-        return res.status(400).json({ type: 'error', error: { type: 'setup_error', message: 'No 9router key found. Please recreate your API key.' } });
+        // Auto-create 9router key for legacy ma-* keys
+        try {
+          const cookie = await login9Router();
+          const keyRes = await fetch(`${NINE_ROUTER_URL}/api/keys`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Cookie': cookie },
+            body: JSON.stringify({ name: `ma-${keyData.keyName || keyData.id}` }),
+          });
+          if (keyRes.ok) {
+            const r9 = await keyRes.json();
+            await prisma.aIApiKey.update({ where: { apiKey }, data: { nineRouterKey: r9.key } });
+            routerKey = r9.key;
+            console.log(`[PROXY] Auto-created 9router key for ${apiKey.slice(0, 15)}...`);
+          }
+        } catch (e) { console.error('[PROXY] Auto-create key failed:', e.message); }
+      } else {
+        routerKey = keyData.nineRouterKey;
       }
-      routerKey = keyData.nineRouterKey;
     }
 
     const { model, messages, max_tokens, system, stream, temperature } = req.body;
