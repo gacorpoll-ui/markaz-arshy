@@ -1,13 +1,119 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { Cpu, Key, ArrowRight, HelpCircle, Code, Settings, Copy, Info, Terminal } from 'lucide-react';
+import { Cpu, Key, ArrowRight, HelpCircle, Code, Settings, Copy, Info, Terminal, ChevronDown, ChevronRight, Zap, Shield, CreditCard, BookOpen, ExternalLink, Check, Sparkles } from 'lucide-react';
 import CLIToolCards from '../components/CLIToolCards';
 
+/* ═══════════════════════════════════════
+   FAQ Accordion Item
+   ═══════════════════════════════════════ */
+function FAQItem({ question, answer, isOpen, onToggle }) {
+  return (
+    <div style={{
+      border: '1px solid var(--border-color)',
+      borderRadius: 'var(--radius-sm)',
+      overflow: 'hidden',
+      transition: 'all 0.2s ease',
+      background: isOpen ? 'rgba(79,172,254,0.03)' : 'transparent',
+    }}>
+      <button
+        onClick={onToggle}
+        style={{
+          width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+          padding: '16px 20px', background: 'none', border: 'none', cursor: 'pointer',
+          color: 'var(--text-primary)', fontSize: '14px', fontWeight: '600', textAlign: 'left',
+          transition: 'color 0.2s ease',
+        }}
+        onMouseEnter={(e) => e.currentTarget.style.color = 'var(--color-primary)'}
+        onMouseLeave={(e) => e.currentTarget.style.color = 'var(--text-primary)'}
+      >
+        <span style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <HelpCircle size={16} style={{ color: isOpen ? 'var(--color-primary)' : 'var(--text-muted)', flexShrink: 0 }} />
+          {question}
+        </span>
+        <ChevronDown size={16} style={{
+          color: 'var(--text-muted)', transition: 'transform 0.2s ease',
+          transform: isOpen ? 'rotate(180deg)' : 'rotate(0)',
+          flexShrink: 0,
+        }} />
+      </button>
+      {isOpen && (
+        <div style={{ padding: '0 20px 16px 46px', fontSize: '13px', color: 'var(--text-secondary)', lineHeight: '1.7' }}>
+          {answer}
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ═══════════════════════════════════════
+   Code Block Component
+   ═══════════════════════════════════════ */
+function CodeBlock({ code, language }) {
+  const [copied, setCopied] = useState(false);
+
+  const handleCopy = useCallback(() => {
+    navigator.clipboard.writeText(code);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  }, [code]);
+
+  return (
+    <div style={{ position: 'relative' }}>
+      <div style={{
+        position: 'absolute', top: '10px', right: '10px', zIndex: 1,
+        display: 'flex', alignItems: 'center', gap: '6px',
+      }}>
+        {language && (
+          <span style={{
+            fontSize: '10px', color: 'var(--text-muted)', textTransform: 'uppercase',
+            fontWeight: '600', letterSpacing: '0.5px',
+          }}>
+            {language}
+          </span>
+        )}
+        <button
+          onClick={handleCopy}
+          style={{
+            background: copied ? 'rgba(34,197,94,0.15)' : 'rgba(255,255,255,0.06)',
+            border: '1px solid ' + (copied ? 'rgba(34,197,94,0.3)' : 'var(--border-color)'),
+            borderRadius: '6px', padding: '4px 10px', cursor: 'pointer',
+            fontSize: '11px', color: copied ? '#22c55e' : 'var(--text-muted)',
+            display: 'flex', alignItems: 'center', gap: '4px',
+            transition: 'all 0.2s ease',
+          }}
+        >
+          {copied ? <><Check size={12} /> Copied!</> : <><Copy size={12} /> Copy</>}
+        </button>
+      </div>
+      <pre style={{
+        background: 'rgba(0, 0, 0, 0.4)',
+        border: '1px solid var(--border-color)',
+        borderRadius: 'var(--radius-sm)',
+        padding: '20px',
+        paddingTop: '16px',
+        fontSize: '13px',
+        fontFamily: "'JetBrains Mono', 'Fira Code', monospace",
+        color: '#d4d4d4',
+        overflowX: 'auto',
+        lineHeight: '1.6',
+        margin: 0,
+      }}>
+        <code>{code}</code>
+      </pre>
+    </div>
+  );
+}
+
+/* ═══════════════════════════════════════
+   Main Component
+   ═══════════════════════════════════════ */
 export default function AIDocs() {
   const aiRouterUrl = import.meta.env.VITE_AI_ROUTER_PUBLIC_URL || 'https://ai.markaz-arshy.com/v1';
   const [activeTab, setActiveTab] = useState('cli-tools');
   const [providers, setProviders] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [openFaq, setOpenFaq] = useState(null);
+  const [copied, setCopied] = useState('');
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -26,458 +132,409 @@ export default function AIDocs() {
     }
   };
 
-  const copyToClipboard = (text, message) => {
+  const copyToClipboard = useCallback((text, key) => {
     navigator.clipboard.writeText(text);
-    alert(message || 'Copied to clipboard!');
-  };
+    setCopied(key);
+    setTimeout(() => setCopied(''), 2000);
+  }, []);
+
+  const allModels = providers.flatMap(p => p.models.map(m => ({ ...m, providerName: p.name })));
+
+  const faqData = [
+    {
+      q: 'Bagaimana cara kerja pemotongan saldo?',
+      a: 'Setiap request AI akan menghitung jumlah token input (prompt) dan output (respon). Biaya dihitung: (tokens ÷ 1000) × harga per 1K tokens. Saldo kredit API key akan otomatis terpotong secara real-time setelah request selesai.'
+    },
+    {
+      q: 'Apa yang terjadi jika saldo habis?',
+      a: 'Jika saldo kredit API key mencapai Rp 0, request selanjutnya akan ditolak dengan error 402 (Insufficient Credits). Anda dapat top up kredit kapan saja dari saldo utama akun Markaz-Arshy.'
+    },
+    {
+      q: 'Bagaimana cara melihat penggunaan token saya?',
+      a: 'Buka Dashboard → AI Keys → Usage. Anda bisa melihat detail penggunaan per request, termasuk jumlah token, biaya, model yang digunakan, dan grafik penggunaan harian. Data diperbarui secara real-time.'
+    },
+    {
+      q: 'Model apa saja yang tersedia?',
+      a: 'Markaz-Arshy mendukung model dari OpenAI (GPT-4o, GPT-4o-mini), Anthropic (Claude 3.5 Sonnet, Claude 3 Opus), Google (Gemini 1.5 Pro, Gemini 1.5 Flash), dan model lainnya. Lihat katalog lengkap di bawah.'
+    },
+    {
+      q: 'Apakah ada rate limit?',
+      a: 'Setiap API key memiliki rate limit default 300 requests per minute. Jika melebihi batas, request akan ditolak dengan error 429 (Too Many Requests). Hubungi admin untuk menambah limit.'
+    },
+    {
+      q: 'Bagaimana cara top up saldo AI?',
+      a: 'Buka Dashboard → AI Keys → pilih API key → Top Up Credits. Masukkan nominal yang diinginkan dan saldo akan dipotong dari balance utama akun Anda. Pastikan saldo utama mencukupi.'
+    },
+  ];
 
   return (
-    <div className="container animate-fade-in" style={{ paddingTop: '50px', paddingBottom: '80px', color: 'var(--text-primary)' }}>
-      {/* Header */}
-      <div style={{ textAlign: 'center', marginBottom: '50px' }}>
-        <div style={{
-          display: 'inline-flex',
-          padding: '10px 20px',
-          borderRadius: '9999px',
-          background: 'rgba(79, 172, 254, 0.1)',
-          border: '1px solid rgba(79, 172, 254, 0.2)',
-          marginBottom: '16px',
-        }}>
-          <Cpu size={18} style={{ color: 'var(--color-primary)', marginRight: '8px', marginTop: '2px' }} />
-          <span style={{ fontSize: '13px', fontWeight: '600', color: 'var(--color-primary)' }}>
-            Pusat Dokumentasi & Panduan AI
-          </span>
+    <div style={{ paddingTop: '0', paddingBottom: '80px', color: 'var(--text-primary)' }}>
+
+      {/* ═══ Hero Section ═══ */}
+      <div style={{
+        background: 'linear-gradient(135deg, rgba(79,172,254,0.08) 0%, rgba(127,0,255,0.08) 100%)',
+        borderBottom: '1px solid var(--border-color)',
+        padding: '60px 20px 50px',
+        marginBottom: '40px',
+      }}>
+        <div style={{ maxWidth: '800px', margin: '0 auto', textAlign: 'center' }}>
+          <div style={{
+            display: 'inline-flex', alignItems: 'center', gap: '8px',
+            padding: '8px 16px', borderRadius: '999px',
+            background: 'rgba(79,172,254,0.1)', border: '1px solid rgba(79,172,254,0.2)',
+            marginBottom: '20px', fontSize: '12px', fontWeight: '600', color: 'var(--color-primary)',
+          }}>
+            <Sparkles size={14} />
+            AI Router Documentation
+          </div>
+          <h1 style={{
+            fontFamily: 'var(--font-title)', fontSize: 'clamp(28px, 5vw, 42px)',
+            fontWeight: '800', marginBottom: '16px', lineHeight: 1.2,
+            background: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 50%, #a855f7 100%)',
+            WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
+          }}>
+            Panduan Integrasi AI Router
+          </h1>
+          <p style={{ fontSize: '15px', color: 'var(--text-secondary)', maxWidth: '560px', margin: '0 auto', lineHeight: '1.7' }}>
+            Akses GPT-4o, Claude 3.5 Sonnet, Gemini Pro, dan model AI lainnya dengan satu API key. Kompatibel dengan Cursor, Claude Code, Cline, dan ribuan aplikasi lainnya.
+          </p>
         </div>
-        <h1 style={{
-          fontFamily: 'var(--font-title)',
-          fontSize: '40px',
-          fontWeight: '800',
-          marginBottom: '16px',
-          background: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
-          WebkitBackgroundClip: 'text',
-          WebkitTextFillColor: 'transparent',
-        }}>
-          Panduan Integrasi AI Router Markaz-Arshy
-        </h1>
-        <p style={{ fontSize: '16px', color: 'var(--text-secondary)', maxWidth: '600px', margin: '0 auto' }}>
-          Mulai integrasikan model AI tercanggih (GPT-4o, Claude 3.5 Sonnet, Gemini Pro) ke dalam alur koding Anda dengan satu API Key terpusat.
-        </p>
       </div>
 
-      {/* Grid: Steps & Config */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '30px', marginBottom: '50px' }}>
-        
-        {/* Step-by-Step Guide */}
-        <div className="glass-card" style={{ padding: '30px' }}>
-          <h2 style={{ fontSize: '20px', fontWeight: '700', marginBottom: '24px', display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <span style={{ padding: '6px', background: 'rgba(79, 172, 254, 0.1)', borderRadius: '6px', display: 'inline-flex' }}>
-              <Settings size={18} style={{ color: 'var(--color-primary)' }} />
-            </span>
-            Langkah Memulai (Quickstart)
+      <div style={{ maxWidth: '960px', margin: '0 auto', padding: '0 20px' }}>
+
+        {/* ═══ Quick Start Cards ═══ */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '16px', marginBottom: '40px' }}>
+          {[
+            { icon: CreditCard, title: '1. Top Up Saldo', desc: 'Deposit saldo utama melalui menu Deposit', link: '/deposit', color: 'var(--color-primary)' },
+            { icon: Key, title: '2. Buat API Key', desc: 'Buat key baru di Dashboard AI Keys', link: '/dashboard/ai-keys', color: '#a855f7' },
+            { icon: Terminal, title: '3. Mulai Coding', desc: 'Copy key & URL ke Cursor, Cline, dll', link: null, color: 'var(--color-success)' },
+          ].map((step, i) => (
+            <div
+              key={i}
+              className="glass-card"
+              style={{ padding: '24px', cursor: step.link ? 'pointer' : 'default', transition: 'all 0.2s ease' }}
+              onClick={() => step.link && navigate(step.link)}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
+                <div style={{
+                  width: '36px', height: '36px', borderRadius: '10px',
+                  background: `${step.color}15`, display: 'flex',
+                  alignItems: 'center', justifyContent: 'center',
+                }}>
+                  <step.icon size={18} style={{ color: step.color }} />
+                </div>
+                <h3 style={{ fontSize: '15px', fontWeight: '700' }}>{step.title}</h3>
+              </div>
+              <p style={{ fontSize: '13px', color: 'var(--text-secondary)', lineHeight: '1.5' }}>{step.desc}</p>
+              {step.link && (
+                <div style={{ marginTop: '12px', fontSize: '12px', color: step.color, display: 'flex', alignItems: 'center', gap: '4px', fontWeight: '600' }}>
+                  Buka <ArrowRight size={12} />
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+
+        {/* ═══ Gateway Credentials ═══ */}
+        <div className="glass-card" style={{ padding: '28px', marginBottom: '40px' }}>
+          <h2 style={{ fontSize: '18px', fontWeight: '700', marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <Zap size={20} style={{ color: 'var(--color-primary)' }} />
+            Koneksi Gateway
           </h2>
-          
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-            <div style={{ display: 'flex', gap: '16px' }}>
-              <div style={{ width: '28px', height: '28px', borderRadius: '50%', background: 'var(--color-primary)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '700', fontSize: '14px', flexShrink: 0 }}>1</div>
-              <div>
-                <h4 style={{ fontSize: '15px', fontWeight: '600', marginBottom: '4px' }}>Buat Akun & Top Up Saldo</h4>
-                <p style={{ fontSize: '13px', color: 'var(--text-secondary)', lineHeight: '1.5' }}>
-                  Daftarkan diri Anda di Markaz-Arshy lalu lakukan top up saldo utama Anda melalui sistem pembayaran otomatis kami di menu <Link to="/deposit" style={{ color: 'var(--color-primary)' }}>Deposit</Link>.
-                </p>
+
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '16px' }}>
+            <div>
+              <label style={{ fontSize: '11px', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: '600', letterSpacing: '0.5px', display: 'block', marginBottom: '8px' }}>
+                API Base URL (OpenAI Compatible)
+              </label>
+              <div style={{ display: 'flex', gap: '6px' }}>
+                <input
+                  type="text" readOnly value={aiRouterUrl}
+                  style={{
+                    flex: 1, padding: '10px 14px', background: 'rgba(0,0,0,0.3)',
+                    border: '1px solid var(--border-color)', borderRadius: 'var(--radius-sm)',
+                    color: 'var(--color-primary)', fontFamily: 'monospace', fontSize: '13px',
+                    outline: 'none',
+                  }}
+                />
+                <button
+                  onClick={() => copyToClipboard(aiRouterUrl, 'url')}
+                  style={{
+                    padding: '10px 14px', borderRadius: 'var(--radius-sm)',
+                    background: copied === 'url' ? 'rgba(34,197,94,0.15)' : 'rgba(255,255,255,0.06)',
+                    border: '1px solid ' + (copied === 'url' ? 'rgba(34,197,94,0.3)' : 'var(--border-color)'),
+                    color: copied === 'url' ? '#22c55e' : 'var(--text-secondary)',
+                    cursor: 'pointer', fontSize: '12px', fontWeight: '600',
+                    display: 'flex', alignItems: 'center', gap: '4px',
+                    transition: 'all 0.2s ease',
+                  }}
+                >
+                  {copied === 'url' ? <><Check size={14} /> OK</> : <><Copy size={14} /> Copy</>}
+                </button>
               </div>
             </div>
-
-            <div style={{ display: 'flex', gap: '16px' }}>
-              <div style={{ width: '28px', height: '28px', borderRadius: '50%', background: 'var(--color-primary)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '700', fontSize: '14px', flexShrink: 0 }}>2</div>
-              <div>
-                <h4 style={{ fontSize: '15px', fontWeight: '600', marginBottom: '4px' }}>Buat API Key Baru</h4>
-                <p style={{ fontSize: '13px', color: 'var(--text-secondary)', lineHeight: '1.5' }}>
-                  Masuk ke menu <Link to="/dashboard/ai-keys" style={{ color: 'var(--color-primary)' }}>My API Keys</Link>, klik tombol **Create New Key**, beri nama kunci API Anda, dan alokasikan kredit awal dari saldo utama Anda.
-                </p>
-              </div>
-            </div>
-
-            <div style={{ display: 'flex', gap: '16px' }}>
-              <div style={{ width: '28px', height: '28px', borderRadius: '50%', background: 'var(--color-primary)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '700', fontSize: '14px', flexShrink: 0 }}>3</div>
-              <div>
-                <h4 style={{ fontSize: '15px', fontWeight: '600', marginBottom: '4px' }}>Hubungkan Kunci API ke Tool Anda</h4>
-                <p style={{ fontSize: '13px', color: 'var(--text-secondary)', lineHeight: '1.5' }}>
-                  Salin API Key Anda (`ma-...`) beserta **API Base URL** yang tertera dan masukkan ke dalam aplikasi koding Anda seperti Cursor IDE atau Cline.
-                </p>
+            <div>
+              <label style={{ fontSize: '11px', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: '600', letterSpacing: '0.5px', display: 'block', marginBottom: '8px' }}>
+                Model ID (contoh)
+              </label>
+              <div style={{ display: 'flex', gap: '6px' }}>
+                <input
+                  type="text" readOnly value="mimo"
+                  style={{
+                    flex: 1, padding: '10px 14px', background: 'rgba(0,0,0,0.3)',
+                    border: '1px solid var(--border-color)', borderRadius: 'var(--radius-sm)',
+                    color: 'var(--text-primary)', fontFamily: 'monospace', fontSize: '13px',
+                    outline: 'none',
+                  }}
+                />
+                <button
+                  onClick={() => copyToClipboard('mimo', 'model')}
+                  style={{
+                    padding: '10px 14px', borderRadius: 'var(--radius-sm)',
+                    background: copied === 'model' ? 'rgba(34,197,94,0.15)' : 'rgba(255,255,255,0.06)',
+                    border: '1px solid ' + (copied === 'model' ? 'rgba(34,197,94,0.3)' : 'var(--border-color)'),
+                    color: copied === 'model' ? '#22c55e' : 'var(--text-secondary)',
+                    cursor: 'pointer', fontSize: '12px', fontWeight: '600',
+                    display: 'flex', alignItems: 'center', gap: '4px',
+                    transition: 'all 0.2s ease',
+                  }}
+                >
+                  {copied === 'model' ? <><Check size={14} /> OK</> : <><Copy size={14} /> Copy</>}
+                </button>
               </div>
             </div>
           </div>
+
+          <div style={{
+            background: 'rgba(79,172,254,0.04)', border: '1px solid rgba(79,172,254,0.12)',
+            borderRadius: 'var(--radius-sm)', padding: '14px 16px',
+            fontSize: '12px', color: 'var(--text-secondary)', lineHeight: '1.6',
+          }}>
+            <strong style={{ color: 'var(--text-primary)' }}>💡 Format Biaya:</strong>{' '}
+            <code style={{ background: 'rgba(0,0,0,0.3)', padding: '2px 6px', borderRadius: '3px', fontSize: '11px' }}>
+              (tokens ÷ 1000) × harga per 1K tokens
+            </code>
+            {' '}— Harga ditampilkan langsung dalam Rupiah per 1K tokens. Saldo terpotong otomatis setelah request selesai.
+          </div>
         </div>
 
-        {/* Global Connection Info */}
-        <div className="glass-card" style={{ padding: '30px' }}>
-          <h2 style={{ fontSize: '20px', fontWeight: '700', marginBottom: '24px', display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <span style={{ padding: '6px', background: 'rgba(168, 85, 247, 0.1)', borderRadius: '6px', display: 'inline-flex' }}>
-              <Info size={18} style={{ color: 'var(--color-secondary)' }} />
-            </span>
-            Kredensial Gateway
+        {/* ═══ Integration Guide ═══ */}
+        <div className="glass-card" style={{ padding: '28px', marginBottom: '40px' }}>
+          <h2 style={{ fontSize: '18px', fontWeight: '700', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <Code size={20} style={{ color: 'var(--color-success)' }} />
+            Panduan Integrasi
           </h2>
+          <p style={{ fontSize: '13px', color: 'var(--text-secondary)', marginBottom: '20px' }}>
+            Pilih editor atau platform Anda untuk melihat langkah setup.
+          </p>
 
-          <div style={{ marginBottom: '20px' }}>
-            <label style={{ fontSize: '12px', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: '600', display: 'block', marginBottom: '6px' }}>
-              API Base URL (OpenAI Compatible)
-            </label>
-            <div style={{ display: 'flex', gap: '8px' }}>
-              <input 
-                type="text" 
-                readOnly 
-                value={aiRouterUrl} 
-                className="form-input" 
-                style={{ fontFamily: 'monospace', fontSize: '13px', padding: '10px 14px', background: 'rgba(0,0,0,0.2)', flex: 1 }} 
-              />
-              <button 
-                onClick={() => copyToClipboard(aiRouterUrl, 'Copied Base URL!')}
-                className="btn btn-secondary" 
-                style={{ padding: '0 16px', height: '42px', fontSize: '13px' }}
+          {/* Tabs */}
+          <div style={{ display: 'flex', gap: '4px', marginBottom: '24px', flexWrap: 'wrap', background: 'rgba(255,255,255,0.02)', padding: '4px', borderRadius: 'var(--radius-sm)' }}>
+            {[
+              { id: 'cli-tools', label: 'CLI Tools', icon: Terminal },
+              { id: 'cursor', label: 'Cursor IDE' },
+              { id: 'cline', label: 'Cline (VS Code)' },
+              { id: 'others', label: 'Tool Lainnya' },
+              { id: 'nodejs', label: 'Node.js' },
+              { id: 'python', label: 'Python' },
+            ].map(tab => (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                style={{
+                  padding: '8px 16px', borderRadius: '6px', border: 'none',
+                  background: activeTab === tab.id ? 'var(--grad-primary)' : 'transparent',
+                  color: activeTab === tab.id ? '#fff' : 'var(--text-muted)',
+                  fontSize: '12px', fontWeight: '600', cursor: 'pointer',
+                  display: 'flex', alignItems: 'center', gap: '6px',
+                  transition: 'all 0.2s ease', whiteSpace: 'nowrap',
+                }}
               >
-                Copy
+                {tab.icon && <tab.icon size={13} />}
+                {tab.label}
               </button>
+            ))}
+          </div>
+
+          {/* Tab: CLI Tools */}
+          {activeTab === 'cli-tools' && (
+            <div>
+              <CLIToolCards apiKey={null} />
             </div>
-          </div>
+          )}
 
-          <div style={{ background: 'rgba(79, 172, 254, 0.03)', border: '1px solid rgba(79, 172, 254, 0.1)', borderRadius: 'var(--radius-sm)', padding: '16px', fontSize: '13px', color: 'var(--text-secondary)', lineHeight: '1.6' }}>
-            <strong style={{ color: 'var(--text-primary)', display: 'block', marginBottom: '4px' }}>💡 Penjelasan API Key:</strong>
-            API Key Anda (contoh `ma-xxxx...`) digunakan untuk mengautentikasi setiap request ke gateway. Saldo kredit AI Anda akan otomatis terpotong per request secara real-time berdasarkan pemakaian token.
-          </div>
-        </div>
+          {/* Tab: Cursor */}
+          {activeTab === 'cursor' && (
+            <div>
+              <h3 style={{ fontSize: '16px', fontWeight: '700', marginBottom: '16px' }}>Konfigurasi Cursor IDE</h3>
+              <ol style={{ fontSize: '13px', color: 'var(--text-secondary)', paddingLeft: '20px', lineHeight: '2.2' }}>
+                <li>Buka Cursor → <strong>Settings</strong> (ikon ⚙️ pojok kanan atas)</li>
+                <li>Pilih tab <strong>Models</strong> di sidebar kiri</li>
+                <li>Di bagian <strong>OpenAI API Key</strong>, masukkan API Key Markaz-Arshy (<code style={{ background: 'rgba(0,0,0,0.3)', padding: '2px 6px', borderRadius: '3px', fontSize: '12px' }}>sk-xxx...</code>)</li>
+                <li>Klik <strong>Override OpenAI Base URL</strong> → masukkan: <code style={{ background: 'rgba(0,0,0,0.3)', padding: '2px 6px', borderRadius: '3px', fontSize: '12px', color: 'var(--color-primary)' }}>{aiRouterUrl}</code></li>
+                <li>Tambahkan model ID (misal: <code style={{ background: 'rgba(0,0,0,0.3)', padding: '2px 6px', borderRadius: '3px', fontSize: '12px' }}>mimo</code>) di list model</li>
+                <li>Aktifkan model → selesai! 🎉</li>
+              </ol>
+            </div>
+          )}
 
-      </div>
+          {/* Tab: Cline */}
+          {activeTab === 'cline' && (
+            <div>
+              <h3 style={{ fontSize: '16px', fontWeight: '700', marginBottom: '16px' }}>Konfigurasi Cline (VS Code)</h3>
+              <ol style={{ fontSize: '13px', color: 'var(--text-secondary)', paddingLeft: '20px', lineHeight: '2.2' }}>
+                <li>Buka panel <strong>Cline</strong> di VS Code → klik ikon ⚙️ (Settings)</li>
+                <li>Di bagian <strong>API Provider</strong>, pilih <strong>OpenAI Compatible</strong></li>
+                <li>Masukkan <strong>Base URL</strong>: <code style={{ background: 'rgba(0,0,0,0.3)', padding: '2px 6px', borderRadius: '3px', fontSize: '12px', color: 'var(--color-primary)' }}>{aiRouterUrl}</code></li>
+                <li>Masukkan <strong>API Key</strong> Markaz-Arshy Anda</li>
+                <li>Masukkan <strong>Model ID</strong> (misal: <code style={{ background: 'rgba(0,0,0,0.3)', padding: '2px 6px', borderRadius: '3px', fontSize: '12px' }}>mimo</code>)</li>
+                <li>Simpan → Cline siap digunakan! 🎉</li>
+              </ol>
+            </div>
+          )}
 
-      {/* Integration Guide Tabs Section */}
-      <div className="glass-card" style={{ padding: '40px 30px', marginBottom: '50px' }}>
-        <h2 style={{ fontSize: '24px', fontWeight: '700', marginBottom: '10px', display: 'flex', alignItems: 'center', gap: '10px' }}>
-          <span style={{ padding: '6px', background: 'rgba(16, 185, 129, 0.1)', borderRadius: '6px', display: 'inline-flex' }}>
-            <Code size={18} style={{ color: 'var(--color-success)' }} />
-          </span>
-          Panduan Integrasi Editor & SDK
-        </h2>
-        <p style={{ fontSize: '14px', color: 'var(--text-secondary)', marginBottom: '30px' }}>
-          Pilih editor koding atau platform di bawah untuk melihat langkah-langkah settingnya.
-        </p>
-
-        {/* Tabs Headers */}
-        <div style={{ display: 'flex', borderBottom: '1px solid var(--border-color)', marginBottom: '30px', gap: '10px', overflowX: 'auto' }}>
-          <button 
-            className={`tab-btn ${activeTab === 'cli-tools' ? 'active' : ''}`}
-            onClick={() => setActiveTab('cli-tools')}
-            style={{ padding: '12px 24px', background: 'transparent', border: 'none', color: activeTab === 'cli-tools' ? 'var(--color-primary)' : 'var(--text-muted)', borderBottom: activeTab === 'cli-tools' ? '2px solid var(--color-primary)' : 'none', fontWeight: '600', cursor: 'pointer', whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', gap: '6px' }}
-          >
-            <Terminal size={14} />
-            CLI Tools
-          </button>
-          <button 
-            className={`tab-btn ${activeTab === 'cursor' ? 'active' : ''}`}
-            onClick={() => setActiveTab('cursor')}
-            style={{ padding: '12px 24px', background: 'transparent', border: 'none', color: activeTab === 'cursor' ? 'var(--color-primary)' : 'var(--text-muted)', borderBottom: activeTab === 'cursor' ? '2px solid var(--color-primary)' : 'none', fontWeight: '600', cursor: 'pointer', whiteSpace: 'nowrap' }}
-          >
-            Cursor IDE
-          </button>
-          <button 
-            className={`tab-btn ${activeTab === 'cline' ? 'active' : ''}`}
-            onClick={() => setActiveTab('cline')}
-            style={{ padding: '12px 24px', background: 'transparent', border: 'none', color: activeTab === 'cline' ? 'var(--color-primary)' : 'var(--text-muted)', borderBottom: activeTab === 'cline' ? '2px solid var(--color-primary)' : 'none', fontWeight: '600', cursor: 'pointer', whiteSpace: 'nowrap' }}
-          >
-            Cline (VS Code Extension)
-          </button>
-          <button 
-            className={`tab-btn ${activeTab === 'others' ? 'active' : ''}`}
-            onClick={() => setActiveTab('others')}
-            style={{ padding: '12px 24px', background: 'transparent', border: 'none', color: activeTab === 'others' ? 'var(--color-primary)' : 'var(--text-muted)', borderBottom: activeTab === 'others' ? '2px solid var(--color-primary)' : 'none', fontWeight: '600', cursor: 'pointer', whiteSpace: 'nowrap' }}
-          >
-            Hermes / OpenClaw / Codex
-          </button>
-          <button 
-            className={`tab-btn ${activeTab === 'nodejs' ? 'active' : ''}`}
-            onClick={() => setActiveTab('nodejs')}
-            style={{ padding: '12px 24px', background: 'transparent', border: 'none', color: activeTab === 'nodejs' ? 'var(--color-primary)' : 'var(--text-muted)', borderBottom: activeTab === 'nodejs' ? '2px solid var(--color-primary)' : 'none', fontWeight: '600', cursor: 'pointer', whiteSpace: 'nowrap' }}
-          >
-            Node.js SDK
-          </button>
-          <button 
-            className={`tab-btn ${activeTab === 'python' ? 'active' : ''}`}
-            onClick={() => setActiveTab('python')}
-            style={{ padding: '12px 24px', background: 'transparent', border: 'none', color: activeTab === 'python' ? 'var(--color-primary)' : 'var(--text-muted)', borderBottom: activeTab === 'python' ? '2px solid var(--color-primary)' : 'none', fontWeight: '600', cursor: 'pointer', whiteSpace: 'nowrap' }}
-          >
-            Python SDK
-          </button>
-        </div>
-
-        {/* Tab Content: CLI Tools */}
-        {activeTab === 'cli-tools' && (
-          <div className="animate-fade-in">
-            <div style={{ marginBottom: '20px' }}>
-              <h3 style={{ fontSize: '18px', fontWeight: '700', marginBottom: '8px' }}>🚀 CLI Tools — One-Click Setup</h3>
-              <p style={{ fontSize: '14px', color: 'var(--text-secondary)', lineHeight: '1.6' }}>
-                Pilih tool AI coding favorit Anda, lalu copy konfigurasi yang sudah di-generate. Tinggal paste ke terminal/IDE Anda — selesai!
+          {/* Tab: Others */}
+          {activeTab === 'others' && (
+            <div>
+              <h3 style={{ fontSize: '16px', fontWeight: '700', marginBottom: '16px' }}>Integrasi Universal (Hermes, Codex, dll)</h3>
+              <p style={{ fontSize: '13px', color: 'var(--text-secondary)', marginBottom: '16px', lineHeight: '1.6' }}>
+                Semua aplikasi yang mendukung <strong>OpenAI Compatible API</strong> dapat dihubungkan dengan langkah universal:
               </p>
-            </div>
-            <CLIToolCards apiKey={null} />
-          </div>
-        )}
-
-        {/* Tab Content: Cursor */}
-        {activeTab === 'cursor' && (
-          <div className="animate-fade-in" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '40px', flexWrap: 'wrap' }}>
-            <div>
-              <h3 style={{ fontSize: '18px', fontWeight: '700', marginBottom: '16px' }}>Cara Konfigurasi di Cursor IDE</h3>
-              <ol style={{ fontSize: '14px', color: 'var(--text-secondary)', paddingLeft: '20px', lineHeight: '2' }}>
-                <li>Buka Cursor IDE dan masuk ke **Cursor Settings** (ikon roda gigi di pojok kanan atas).</li>
-                <li>Pilih tab **Models** di bilah sisi kiri.</li>
-                <li>Cari seksi **OpenAI API Key** lalu klik tombol expand/setting.</li>
-                <li>Klik tombol **Override OpenAI Base URL** dan masukkan Base URL:<br />
-                  <code style={{ background: 'rgba(0,0,0,0.3)', padding: '4px 8px', borderRadius: '4px', color: 'var(--color-primary)', fontFamily: 'monospace' }}>{aiRouterUrl}</code>
-                </li>
-                <li>Masukkan API Key Markaz-Arshy Anda (`ma-...`) ke kolom API Key.</li>
-                <li>Tambahkan nama model yang ingin Anda gunakan secara manual di list model (misal: `gpt-4o-mini`, `claude-3-5-sonnet`, `gemini-1.5-flash`).</li>
-                <li>Aktifkan model tersebut dan Anda siap melakukan coding dengan AI!</li>
+              <ol style={{ fontSize: '13px', color: 'var(--text-secondary)', paddingLeft: '20px', lineHeight: '2.2' }}>
+                <li>Buka menu <strong>Settings</strong> → <strong>API / Model Provider</strong></li>
+                <li>Pilih provider: <strong>OpenAI Compatible</strong> atau <strong>Custom</strong></li>
+                <li>Masukkan <strong>Base URL</strong>: <code style={{ background: 'rgba(0,0,0,0.3)', padding: '2px 6px', borderRadius: '3px', fontSize: '12px', color: 'var(--color-primary)' }}>{aiRouterUrl}</code></li>
+                <li>Masukkan <strong>API Key</strong>: <code style={{ background: 'rgba(0,0,0,0.3)', padding: '2px 6px', borderRadius: '3px', fontSize: '12px' }}>sk-xxx...</code></li>
+                <li>Masukkan <strong>Model ID</strong> (misal: <code style={{ background: 'rgba(0,0,0,0.3)', padding: '2px 6px', borderRadius: '3px', fontSize: '12px' }}>mimo</code>)</li>
+                <li>Simpan & test → selesai! 🎉</li>
               </ol>
             </div>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(0,0,0,0.2)', border: '1px dashed var(--border-color)', borderRadius: 'var(--radius-sm)', padding: '40px', textAlign: 'center' }}>
-              <div>
-                <Cpu size={48} style={{ color: 'var(--color-primary)', marginBottom: '16px', opacity: 0.5 }} />
-                <h4 style={{ fontWeight: '600', marginBottom: '8px' }}>Cursor Model Override</h4>
-                <p style={{ fontSize: '13px', color: 'var(--text-muted)', maxWidth: '280px', margin: '0 auto' }}>Mengatur Base URL dan model manual adalah kunci untuk terhubung ke gateway router.</p>
-              </div>
-            </div>
-          </div>
-        )}
+          )}
 
-        {/* Tab Content: Cline */}
-        {activeTab === 'cline' && (
-          <div className="animate-fade-in" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '40px', flexWrap: 'wrap' }}>
+          {/* Tab: Node.js */}
+          {activeTab === 'nodejs' && (
             <div>
-              <h3 style={{ fontSize: '18px', fontWeight: '700', marginBottom: '16px' }}>Cara Konfigurasi di Cline (VS Code)</h3>
-              <ol style={{ fontSize: '14px', color: 'var(--text-secondary)', paddingLeft: '20px', lineHeight: '2' }}>
-                <li>Buka panel Cline di VS Code, lalu klik ikon **Settings** (roda gigi).</li>
-                <li>Pada bagian **API Provider**, pilih **OpenAI Compatible**.</li>
-                <li>Pada kolom **Base URL**, masukkan:<br />
-                  <code style={{ background: 'rgba(0,0,0,0.3)', padding: '4px 8px', borderRadius: '4px', color: 'var(--color-primary)', fontFamily: 'monospace' }}>{aiRouterUrl}</code>
-                </li>
-                <li>Pada kolom **API Key**, masukkan API Key Markaz-Arshy Anda.</li>
-                <li>Pada kolom **Model ID**, ketik model yang Anda inginkan (misal: `gpt-4o-mini` atau `claude-3-5-sonnet-20241022`).</li>
-                <li>Cline siap membantu Anda menganalisis dan menulis kode program!</li>
-              </ol>
-            </div>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(0,0,0,0.2)', border: '1px dashed var(--border-color)', borderRadius: 'var(--radius-sm)', padding: '40px', textAlign: 'center' }}>
-              <div>
-                <Code size={48} style={{ color: 'var(--color-secondary)', marginBottom: '16px', opacity: 0.5 }} />
-                <h4 style={{ fontWeight: '600', marginBottom: '8px' }}>Penyedia Kompatibel OpenAI</h4>
-                <p style={{ fontSize: '13px', color: 'var(--text-muted)', maxWidth: '280px', margin: '0 auto' }}>Gunakan OpenAI-compatible provider di Cline agar API key kita bisa terverifikasi.</p>
-              </div>
-            </div>
-          </div>
-        )}
+              <h3 style={{ fontSize: '16px', fontWeight: '700', marginBottom: '8px' }}>Node.js SDK</h3>
+              <p style={{ fontSize: '13px', color: 'var(--text-secondary)', marginBottom: '16px' }}>
+                Instal: <code style={{ background: 'rgba(0,0,0,0.3)', padding: '2px 6px', borderRadius: '3px', fontSize: '12px' }}>npm install openai</code>
+              </p>
+              <CodeBlock language="javascript" code={`import OpenAI from 'openai';
 
-        {/* Tab Content: Node.js SDK */}
-        {activeTab === 'nodejs' && (
-          <div className="animate-fade-in">
-            <h3 style={{ fontSize: '18px', fontWeight: '700', marginBottom: '12px' }}>Integrasi dengan Node.js SDK (library `openai`)</h3>
-            <p style={{ fontSize: '14px', color: 'var(--text-secondary)', marginBottom: '20px' }}>
-              Instal SDK OpenAI secara resmi menggunakan npm: `npm install openai`, lalu inisialisasi client dengan setelan URL khusus gateway.
-            </p>
-            <pre style={{ 
-              background: 'rgba(0, 0, 0, 0.4)', 
-              border: '1px solid var(--border-color)', 
-              borderRadius: 'var(--radius-sm)', 
-              padding: '20px', 
-              fontSize: '13px', 
-              fontFamily: 'monospace', 
-              color: '#d4d4d4', 
-              overflowX: 'auto',
-              lineHeight: '1.6'
-            }}>
-{`import OpenAI from 'openai';
-
-// Inisialisasi client menunjuk ke gateway AI Router Markaz-Arshy
 const openai = new OpenAI({
   baseURL: '${aiRouterUrl}',
-  apiKey: 'ma-xxxxxxxxxxxxxxxxx' // Masukkan API Key Anda di sini
+  apiKey: 'sk-xxxxxxxxxxxx' // API Key Markaz-Arshy
 });
 
-async function main() {
-  try {
-    const chatCompletion = await openai.chat.completions.create({
-      model: 'gpt-4o-mini', // Ketik model ID yang Anda inginkan
-      messages: [
-        { role: 'system', content: 'Kamu adalah asisten pemrograman yang andal.' },
-        { role: 'user', content: 'Jelaskan cara kerja event loop di Javascript secara singkat.' }
-      ],
-    });
+const completion = await openai.chat.completions.create({
+  model: 'mimo',
+  messages: [
+    { role: 'user', content: 'Halo, apa kabar?' }
+  ],
+});
 
-    console.log('Respon AI:', chatCompletion.choices[0].message.content);
-  } catch (error) {
-    console.error('Terjadi error:', error.message);
-  }
-}
+console.log(completion.choices[0].message.content);`} />
+            </div>
+          )}
 
-main();`}
-            </pre>
-          </div>
-        )}
+          {/* Tab: Python */}
+          {activeTab === 'python' && (
+            <div>
+              <h3 style={{ fontSize: '16px', fontWeight: '700', marginBottom: '8px' }}>Python SDK</h3>
+              <p style={{ fontSize: '13px', color: 'var(--text-secondary)', marginBottom: '16px' }}>
+                Instal: <code style={{ background: 'rgba(0,0,0,0.3)', padding: '2px 6px', borderRadius: '3px', fontSize: '12px' }}>pip install openai</code>
+              </p>
+              <CodeBlock language="python" code={`from openai import OpenAI
 
-        {/* Tab Content: Python SDK */}
-        {activeTab === 'python' && (
-          <div className="animate-fade-in">
-            <h3 style={{ fontSize: '18px', fontWeight: '700', marginBottom: '12px' }}>Integrasi dengan Python SDK (library `openai`)</h3>
-            <p style={{ fontSize: '14px', color: 'var(--text-secondary)', marginBottom: '20px' }}>
-              Instal SDK menggunakan pip: `pip install openai`, lalu inisialisasi client Anda dengan detail di bawah ini.
-            </p>
-            <pre style={{ 
-              background: 'rgba(0, 0, 0, 0.4)', 
-              border: '1px solid var(--border-color)', 
-              borderRadius: 'var(--radius-sm)', 
-              padding: '20px', 
-              fontSize: '13px', 
-              fontFamily: 'monospace', 
-              color: '#d4d4d4', 
-              overflowX: 'auto',
-              lineHeight: '1.6'
-            }}>
-{`from openai import OpenAI
-
-# Inisialisasi client dengan menunjuk ke Base URL AI Router Markaz-Arshy
 client = OpenAI(
     base_url="${aiRouterUrl}",
-    api_key="ma-xxxxxxxxxxxxxxxxx" # Masukkan API Key Anda di sini
+    api_key="sk-xxxxxxxxxxxx"  # API Key Markaz-Arshy
 )
 
-try:
-    completion = client.chat.completions.create(
-        model="gpt-4o-mini", # Pilih model ID yang tersedia
-        messages=[
-            {"role": "system", "content": "Kamu adalah asisten pemrograman yang ramah."},
-            {"role": "user", "content": "Tuliskan kode python untuk membalikkan string."}
-        ]
-    )
+completion = client.chat.completions.create(
+    model="mimo",
+    messages=[
+        {"role": "user", "content": "Halo, apa kabar?"}
+    ]
+)
 
-    print("Respon AI:", completion.choices[0].message.content)
-except Exception as e:
-    print("Error:", str(e))`}
-            </pre>
-          </div>
-        )}
-
-        {/* Tab Content: Others (Hermes, OpenClaw, Codex) */}
-        {activeTab === 'others' && (
-          <div className="animate-fade-in" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '40px', flexWrap: 'wrap' }}>
-            <div>
-              <h3 style={{ fontSize: '18px', fontWeight: '700', marginBottom: '16px' }}>Cara Integrasi di Hermes, OpenClaw, Codex, dll.</h3>
-              <p style={{ fontSize: '14px', color: 'var(--text-secondary)', marginBottom: '16px', lineHeight: '1.6' }}>
-                Hampir semua aplikasi pihak ketiga yang mendukung integrasi API kustom (OpenAI-compatible) dapat dihubungkan dengan AI Markaz-Arshy menggunakan langkah universal berikut:
-              </p>
-              <ol style={{ fontSize: '14px', color: 'var(--text-secondary)', paddingLeft: '20px', lineHeight: '2' }}>
-                <li>Buka menu pengaturan API atau integrasi model pada aplikasi Anda.</li>
-                <li>Pilih jenis provider: **OpenAI Compatible**, **Custom Provider**, atau **Local/Third-Party**.</li>
-                <li>Pada kolom **API Base URL** atau **API Endpoint**, masukkan:<br />
-                  <code style={{ background: 'rgba(0,0,0,0.3)', padding: '4px 8px', borderRadius: '4px', color: 'var(--color-primary)', fontFamily: 'monospace' }}>{aiRouterUrl}</code>
-                </li>
-                <li>Pada kolom **API Key** atau **Bearer Token**, masukkan API Key Anda (`ma-...`).</li>
-                <li>Pada kolom **Model Name** / **Model ID**, ketik secara manual nama model yang aktif (misal: `gpt-4o-mini`, `claude-3-5-sonnet`, `gemini-1.5-flash`).</li>
-                <li>Simpan konfigurasi dan uji coba chat/completion.</li>
-              </ol>
+print(completion.choices[0].message.content)`} />
             </div>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(0,0,0,0.2)', border: '1px dashed var(--border-color)', borderRadius: 'var(--radius-sm)', padding: '40px', textAlign: 'center' }}>
-              <div>
-                <Settings size={48} style={{ color: 'var(--color-primary)', marginBottom: '16px', opacity: 0.5 }} />
-                <h4 style={{ fontWeight: '600', marginBottom: '8px' }}>Integrasi Kompatibilitas Penuh</h4>
-                <p style={{ fontSize: '13px', color: 'var(--text-muted)', maxWidth: '280px', margin: '0 auto' }}>Seluruh model di Markaz-Arshy mengikuti format API OpenAI resmi sehingga kompatibel dengan ribuan aplikasi AI modern di internet.</p>
-              </div>
-            </div>
-          </div>
-        )}
+          )}
+        </div>
 
-      </div>
+        {/* ═══ Model Catalog ═══ */}
+        <div className="glass-card" style={{ padding: '28px', marginBottom: '40px' }}>
+          <h2 style={{ fontSize: '18px', fontWeight: '700', marginBottom: '6px', display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <Cpu size={20} style={{ color: 'var(--color-primary)' }} />
+            Katalog Model & Harga
+          </h2>
+          <p style={{ fontSize: '13px', color: 'var(--text-secondary)', marginBottom: '20px' }}>
+            Harga dalam Rupiah per 1K tokens. Biaya = (tokens ÷ 1000) × harga.
+          </p>
 
-      {/* Model Catalog & Pricing List */}
-      <div className="glass-card" style={{ padding: '30px', marginBottom: '50px' }}>
-        <h2 style={{ fontSize: '24px', fontWeight: '700', marginBottom: '10px', display: 'flex', alignItems: 'center', gap: '10px' }}>
-          <span style={{ padding: '6px', background: 'rgba(79, 172, 254, 0.1)', borderRadius: '6px', display: 'inline-flex' }}>
-            <Cpu size={18} style={{ color: 'var(--color-primary)' }} />
-          </span>
-          Katalog Model & Estimasi Biaya
-        </h2>
-        <p style={{ fontSize: '14px', color: 'var(--text-secondary)', marginBottom: '24px' }}>
-          Berikut adalah daftar model yang saat ini diaktifkan oleh admin beserta rincian biaya tokennya.
-        </p>
-
-        {loading ? (
-          <div style={{ color: 'var(--text-muted)', padding: '20px', textAlign: 'center' }}>Memuat daftar model...</div>
-        ) : providers.length === 0 ? (
-          <div style={{ color: 'var(--text-muted)', padding: '20px', textAlign: 'center' }}>Tidak ada model yang aktif saat ini.</div>
-        ) : (
-          <div style={{ overflowX: 'auto' }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '14px' }}>
-              <thead>
-                <tr style={{ borderBottom: '1px solid var(--border-color)' }}>
-                  <th style={{ padding: '12px', textAlign: 'left', color: 'var(--text-muted)' }}>Provider</th>
-                  <th style={{ padding: '12px', textAlign: 'left', color: 'var(--text-muted)' }}>Nama Model</th>
-                  <th style={{ padding: '12px', textAlign: 'left', color: 'var(--text-muted)' }}>Model ID</th>
-                  <th style={{ padding: '12px', textAlign: 'right', color: 'var(--text-muted)' }}>Harga Input / 1M Token</th>
-                  <th style={{ padding: '12px', textAlign: 'right', color: 'var(--text-muted)' }}>Harga Output / 1M Token</th>
-                  <th style={{ padding: '12px', textAlign: 'right', color: 'var(--text-muted)' }}>Context</th>
-                </tr>
-              </thead>
-              <tbody>
-                {providers.flatMap(p => p.models.map(m => (
-                  <tr key={m.id} style={{ borderBottom: '1px solid var(--border-color)' }}>
-                    <td style={{ padding: '12px', color: 'var(--text-primary)', fontWeight: '600' }}>{p.name}</td>
-                    <td style={{ padding: '12px', color: 'var(--text-primary)' }}>{m.name}</td>
-                    <td style={{ padding: '12px', color: 'var(--text-secondary)', fontFamily: 'monospace', fontSize: '12px' }}>{m.modelId}</td>
-                    <td style={{ padding: '12px', textAlign: 'right', color: 'var(--text-primary)' }}>
-                      Rp {Math.ceil(m.inputPricePer1K).toLocaleString('id-ID')}
-                    </td>
-                    <td style={{ padding: '12px', textAlign: 'right', color: 'var(--text-primary)' }}>
-                      Rp {Math.ceil(m.outputPricePer1K).toLocaleString('id-ID')}
-                    </td>
-                    <td style={{ padding: '12px', textAlign: 'right', color: 'var(--text-primary)' }}>
-                      {(m.contextWindow / 1000).toFixed(0)}K
-                    </td>
+          {loading ? (
+            <div style={{ textAlign: 'center', padding: '40px', color: 'var(--text-muted)', fontSize: '13px' }}>Memuat daftar model...</div>
+          ) : allModels.length === 0 ? (
+            <div style={{ textAlign: 'center', padding: '40px', color: 'var(--text-muted)', fontSize: '13px' }}>Tidak ada model aktif.</div>
+          ) : (
+            <div style={{ overflowX: 'auto' }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
+                <thead>
+                  <tr style={{ borderBottom: '1px solid var(--border-color)' }}>
+                    {['Provider', 'Model', 'Model ID', 'Input/1K', 'Output/1K', 'Context'].map(h => (
+                      <th key={h} style={{
+                        padding: '10px 14px', textAlign: h.includes('Input') || h.includes('Output') || h === 'Context' ? 'right' : 'left',
+                        color: 'var(--text-muted)', fontSize: '10px', textTransform: 'uppercase', fontWeight: '600', letterSpacing: '0.5px',
+                      }}>
+                        {h}
+                      </th>
+                    ))}
                   </tr>
-                )))}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </div>
+                </thead>
+                <tbody>
+                  {allModels.map(m => (
+                    <tr key={m.id} style={{ borderBottom: '1px solid var(--border-color)' }}>
+                      <td style={{ padding: '10px 14px', fontWeight: '600', color: 'var(--text-primary)' }}>{m.providerName}</td>
+                      <td style={{ padding: '10px 14px', color: 'var(--text-primary)' }}>{m.name}</td>
+                      <td style={{ padding: '10px 14px', fontFamily: 'monospace', fontSize: '11px', color: 'var(--text-secondary)' }}>{m.modelId}</td>
+                      <td style={{ padding: '10px 14px', textAlign: 'right', fontFamily: 'monospace', fontSize: '12px' }}>
+                        Rp {Math.ceil(m.inputPricePer1K).toLocaleString('id-ID')}
+                      </td>
+                      <td style={{ padding: '10px 14px', textAlign: 'right', fontFamily: 'monospace', fontSize: '12px' }}>
+                        Rp {Math.ceil(m.outputPricePer1K).toLocaleString('id-ID')}
+                      </td>
+                      <td style={{ padding: '10px 14px', textAlign: 'right', color: 'var(--text-secondary)' }}>
+                        {(m.contextWindow / 1000).toFixed(0)}K
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
 
-      {/* Frequently Asked Questions */}
-      <div className="glass-card" style={{ padding: '30px' }}>
-        <h2 style={{ fontSize: '24px', fontWeight: '700', marginBottom: '24px', display: 'flex', alignItems: 'center', gap: '10px' }}>
-          <span style={{ padding: '6px', background: 'rgba(239, 68, 68, 0.1)', borderRadius: '6px', display: 'inline-flex' }}>
-            <HelpCircle size={18} style={{ color: '#ef4444' }} />
-          </span>
-          Pertanyaan yang Sering Diajukan (FAQ)
-        </h2>
-
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-          <div>
-            <h4 style={{ fontSize: '15px', fontWeight: '600', marginBottom: '6px' }}>Bagaimana sistem pemotongan saldo bekerja?</h4>
-            <p style={{ fontSize: '13px', color: 'var(--text-secondary)', lineHeight: '1.6' }}>
-              Setiap kali Anda mengirim perintah (request) ke AI Router, gateway 9router akan mencatat total token input (prompt) dan output (respon). Setelah request selesai, saldo kredit yang Anda alokasikan pada API Key tersebut akan otomatis dipotong secara real-time berdasarkan harga per model yang Anda gunakan.
-            </p>
-          </div>
-
-          <div style={{ borderTop: '1px solid var(--border-color)', paddingTop: '16px' }}>
-            <h4 style={{ fontSize: '15px', fontWeight: '600', marginBottom: '6px' }}>Apa yang terjadi jika saldo kredit API Key saya habis?</h4>
-            <p style={{ fontSize: '13px', color: 'var(--text-secondary)', lineHeight: '1.6' }}>
-              Jika saldo kredit pada API key Anda habis (mencapai Rp 0 atau di bawahnya), request AI selanjutnya akan ditolak dengan error `402 Insufficient credits`. Anda dapat menambah (top up) kredit ke API Key tersebut kapan saja mengambil dari saldo utama akun Markaz-Arshy Anda.
-            </p>
-          </div>
-
-          <div style={{ borderTop: '1px solid var(--border-color)', paddingTop: '16px' }}>
-            <h4 style={{ fontSize: '15px', fontWeight: '600', marginBottom: '6px' }}>Dapatkah saya membatasi API Key saya untuk model tertentu saja?</h4>
-            <p style={{ fontSize: '13px', color: 'var(--text-secondary)', lineHeight: '1.6' }}>
-              Ya! Saat membuat API Key baru di dashboard, Anda dapat membatasi kunci tersebut agar hanya dapat digunakan untuk memanggil satu model khusus, atau memilih opsi "All Models" jika ingin mengizinkan akses ke semua model yang terdaftar.
-            </p>
+        {/* ═══ FAQ ═══ */}
+        <div className="glass-card" style={{ padding: '28px' }}>
+          <h2 style={{ fontSize: '18px', fontWeight: '700', marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <HelpCircle size={20} style={{ color: '#f59e0b' }} />
+            Pertanyaan Umum (FAQ)
+          </h2>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+            {faqData.map((faq, i) => (
+              <FAQItem
+                key={i}
+                question={faq.q}
+                answer={faq.a}
+                isOpen={openFaq === i}
+                onToggle={() => setOpenFaq(openFaq === i ? null : i)}
+              />
+            ))}
           </div>
         </div>
-      </div>
 
+      </div>
     </div>
   );
 }
