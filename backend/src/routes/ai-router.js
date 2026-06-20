@@ -213,6 +213,115 @@ router.get('/keys', requireAuth, async (req, res) => {
 });
 
 /* ═══════════════════════════════════════
+   GLOBAL USAGE SUMMARY (all keys, optional filter)
+   GET /usage/summary?apiKeyId=&startDate=&endDate=
+   ═══════════════════════════════════════ */
+router.get('/usage/summary', requireAuth, async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const { apiKeyId, startDate, endDate } = req.query;
+
+    const where = { userId };
+    if (apiKeyId) where.apiKeyId = parseInt(apiKeyId);
+    if (startDate || endDate) {
+      where.createdAt = {};
+      if (startDate) where.createdAt.gte = new Date(startDate);
+      if (endDate) where.createdAt.lte = new Date(endDate);
+    }
+
+    const [agg, byModel, byDay] = await Promise.all([
+      prisma.aIUsage.aggregate({
+        where,
+        _sum: { inputTokens: true, outputTokens: true, totalTokens: true, totalCost: true },
+        _count: true,
+      }),
+      prisma.aIUsage.groupBy({
+        by: ['modelId'],
+        where,
+        _sum: { totalTokens: true, totalCost: true },
+        _count: true,
+      }),
+      prisma.aIUsage.groupBy({
+        by: ['createdAt'],
+        where,
+        _sum: { totalTokens: true, totalCost: true },
+        _count: true,
+        orderBy: { createdAt: 'asc' },
+      }),
+    ]);
+
+    // Enrich model data
+    const modelIds = byModel.map(m => m.modelId);
+    const models = await prisma.aIModel.findMany({ where: { id: { in: modelIds } }, select: { id: true, name: true, modelId: true } });
+    const modelMap = Object.fromEntries(models.map(m => [m.id, m]));
+
+    const enrichedByModel = byModel.map(m => ({
+      model: modelMap[m.modelId] || { name: 'Unknown', modelId: 'unknown' },
+      totalTokens: m._sum.totalTokens || 0,
+      totalCost: m._sum.totalCost || 0,
+      requestCount: m._count,
+    }));
+
+    // Group by day
+    const dailyMap = {};
+    for (const d of byDay) {
+      const day = d.createdAt.toISOString().slice(0, 10);
+      if (!dailyMap[day]) dailyMap[day] = { date: day, tokens: 0, cost: 0, requests: 0 };
+      dailyMap[day].tokens += d._sum.totalTokens || 0;
+      dailyMap[day].cost += d._sum.totalCost || 0;
+      dailyMap[day].requests += d._count;
+    }
+
+    res.json({
+      totalRequests: agg._count || 0,
+      totalTokens: (agg._sum.inputTokens || 0) + (agg._sum.outputTokens || 0),
+      inputTokens: agg._sum.inputTokens || 0,
+      outputTokens: agg._sum.outputTokens || 0,
+      totalCost: agg._sum.totalCost || 0,
+      byModel: enrichedByModel,
+      chartData: Object.values(dailyMap),
+    });
+  } catch (error) {
+    console.error('Error fetching usage summary:', error);
+    res.status(500).json({ error: 'Failed to fetch usage summary' });
+  }
+});
+
+/* ═══════════════════════════════════════
+   USAGE LOGS (per-request detail)
+   GET /usage/logs?apiKeyId=&startDate=&endDate=&limit=50
+   ═══════════════════════════════════════ */
+router.get('/usage/logs', requireAuth, async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const { apiKeyId, startDate, endDate, limit = '50' } = req.query;
+
+    const where = { userId };
+    if (apiKeyId) where.apiKeyId = parseInt(apiKeyId);
+    if (startDate || endDate) {
+      where.createdAt = {};
+      if (startDate) where.createdAt.gte = new Date(startDate);
+      if (endDate) where.createdAt.lte = new Date(endDate);
+    }
+
+    const logs = await prisma.aIUsage.findMany({
+      where,
+      include: {
+        model: { select: { name: true, modelId: true } },
+        apiKey: { select: { keyName: true, apiKey: true } },
+      },
+      orderBy: { createdAt: 'desc' },
+      take: parseInt(limit),
+    });
+
+    res.json(logs);
+  } catch (error) {
+    console.error('Error fetching usage logs:', error);
+    res.status(500).json({ error: 'Failed to fetch usage logs' });
+  }
+});
+
+/* ═══════════════════════════════════════
    UPDATE API KEY
    ═══════════════════════════════════════ */
 router.put('/keys/:id', requireAuth, async (req, res) => {

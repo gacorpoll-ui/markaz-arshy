@@ -17,7 +17,7 @@ export default function AIKeyCard({ apiKey, onTopUp, onDelete, onToggleActive })
   };
 
   const handleViewUsage = () => {
-    navigate(`/dashboard/ai-keys/${apiKey.id}/usage`);
+    navigate('/dashboard/ai-keys/usage', { state: { selectedKeyId: apiKey.id } });
   };
 
   // Tier badge color

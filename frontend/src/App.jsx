@@ -114,6 +114,7 @@ export default function App() {
             <Route path="/docs/ai" element={<AIDocs />} />
             <Route path="/ai-docs" element={<AIDocs />} />
             <Route path="/dashboard/ai-keys" element={user ? <AIKeys user={user} token={token} /> : <Navigate to="/login" />} />
+            <Route path="/dashboard/ai-keys/usage" element={user ? <AIUsageAnalyticsPage user={user} token={token} /> : <Navigate to="/login" />} />
             <Route path="/dashboard/ai-keys/:id/usage" element={user ? <AIUsageAnalyticsPage user={user} token={token} /> : <Navigate to="/login" />} />
 
             {/* Dashboard User with Nested Routes — harus sudah terverifikasi */}

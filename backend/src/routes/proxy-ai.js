@@ -6,10 +6,107 @@ const router = express.Router();
 
 const NINE_ROUTER_URL = process.env.AI_ROUTER_URL || 'http://localhost:20128';
 
+// Helper: record usage in background (fire-and-forget)
+async function recordUsage({ apiKey, endpoint, body, responseStatus, latencyMs, responseBody }) {
+  try {
+    const keyData = await prisma.aIApiKey.findUnique({ where: { apiKey } });
+    if (!keyData) return;
+
+    const modelId = body?.model || 'unknown';
+    let aiModel = await prisma.aIModel.findUnique({ where: { modelId } });
+    if (!aiModel) {
+      // Auto-create model
+      const provider = await prisma.aIProvider.upsert({
+        where: { slug: 'other' },
+        update: {},
+        create: { name: 'Other', slug: 'other', isActive: true },
+      });
+      aiModel = await prisma.aIModel.create({
+        data: {
+          providerId: provider.id,
+          name: modelId,
+          modelId,
+          inputPricePerToken: 0.00001,
+          outputPricePerToken: 0.00003,
+          contextWindow: 128000,
+          isActive: true,
+        },
+      });
+    }
+
+    // Extract token usage from response
+    let inputTokens = 0, outputTokens = 0;
+    if (responseBody?.usage) {
+      inputTokens = responseBody.usage.prompt_tokens || responseBody.usage.input_tokens || 0;
+      outputTokens = responseBody.usage.completion_tokens || responseBody.usage.output_tokens || 0;
+    } else if (responseBody?.choices?.[0]) {
+      // Estimate from content length
+      const content = responseBody.choices[0]?.message?.content || '';
+      outputTokens = Math.ceil(content.length / 4);
+      inputTokens = Math.ceil((JSON.stringify(body?.messages || [])).length / 4);
+    }
+
+    const totalTokens = inputTokens + outputTokens;
+    const EXCHANGE_RATE = 15000;
+    const inputCost = (inputTokens / 1000) * aiModel.inputPricePerToken * EXCHANGE_RATE;
+    const outputCost = (outputTokens / 1000) * aiModel.outputPricePerToken * EXCHANGE_RATE;
+    const totalCost = inputCost + outputCost;
+
+    const requestId = `req_${crypto.randomBytes(8).toString('hex')}`;
+
+    await prisma.$transaction(async (tx) => {
+      await tx.aIUsage.create({
+        data: {
+          requestId,
+          apiKeyId: keyData.id,
+          userId: keyData.userId,
+          modelId: aiModel.id,
+          inputTokens,
+          outputTokens,
+          totalTokens,
+          inputCost,
+          outputCost,
+          totalCost,
+          endpoint,
+          statusCode: responseStatus,
+          latencyMs,
+          metadata: JSON.stringify({ model: modelId }),
+        },
+      });
+
+      await tx.aIApiKey.update({
+        where: { id: keyData.id },
+        data: {
+          creditsBalance: { decrement: totalCost },
+          lastUsedAt: new Date(),
+        },
+      });
+
+      await tx.aITransaction.create({
+        data: {
+          userId: keyData.userId,
+          apiKeyId: keyData.id,
+          amount: -totalCost,
+          type: 'USAGE',
+          description: `Usage: ${modelId}`,
+          balanceBefore: keyData.creditsBalance,
+          balanceAfter: keyData.creditsBalance - totalCost,
+          relatedUsageId: null,
+        },
+      });
+    });
+
+    console.log(`[USAGE] ${apiKey.slice(0, 15)}... model=${modelId} tokens=${totalTokens} cost=Rp${Math.ceil(totalCost)}`);
+  } catch (err) {
+    console.error('[USAGE] Record failed:', err.message);
+  }
+}
+
 // ═══════════════════════════════════════
-// POST /chat/completions — Pass-through to 9router
+// POST /chat/completions
 // ═══════════════════════════════════════
 router.post('/chat/completions', async (req, res) => {
+  const startTime = Date.now();
   try {
     const apiKey = (req.headers['authorization'] || '').replace('Bearer ', '');
     if (!apiKey) return res.status(401).json({ error: { message: 'API key required', type: 'authentication_error' } });
@@ -29,19 +126,39 @@ router.post('/chat/completions', async (req, res) => {
       const reader = response.body.getReader();
       const decoder = new TextDecoder();
       let buf = '';
+      let fullContent = '';
       while (true) {
         const { done, value } = await reader.read();
         if (done) break;
         buf += decoder.decode(value, { stream: true });
         const lines = buf.split('\n');
         buf = lines.pop();
-        for (const l of lines) res.write(l + '\n');
+        for (const l of lines) {
+          res.write(l + '\n');
+          if (l.startsWith('data: ') && l.includes('choices')) {
+            try {
+              const chunk = JSON.parse(l.slice(6));
+              if (chunk.choices?.[0]?.delta?.content) fullContent += chunk.choices[0].delta.content;
+              if (chunk.usage) {
+                // Record usage from final chunk
+                const latencyMs = Date.now() - startTime;
+                recordUsage({ apiKey, endpoint: '/v1/chat/completions', body: req.body, responseStatus: response.status, latencyMs, responseBody: chunk });
+              }
+            } catch {}
+          }
+        }
       }
       if (buf) res.write(buf);
       res.end();
     } else {
       const data = await response.json();
+      const latencyMs = Date.now() - startTime;
       res.status(response.status).json(data);
+
+      // Record usage
+      if (response.ok && data) {
+        recordUsage({ apiKey, endpoint: '/v1/chat/completions', body: req.body, responseStatus: response.status, latencyMs, responseBody: data });
+      }
     }
     console.log(`[PROXY] chat: ${apiKey.slice(0, 15)}... model=${req.body.model}`);
   } catch (error) {
@@ -51,7 +168,7 @@ router.post('/chat/completions', async (req, res) => {
 });
 
 // ═══════════════════════════════════════
-// GET /models — Pass-through to 9router
+// GET /models
 // ═══════════════════════════════════════
 router.get('/models', async (req, res) => {
   try {
@@ -68,9 +185,9 @@ router.get('/models', async (req, res) => {
 
 // ═══════════════════════════════════════
 // POST /messages — Anthropic Messages API (Claude Code)
-// Converts Anthropic → OpenAI → 9router → back to Anthropic
 // ═══════════════════════════════════════
 router.post('/messages', async (req, res) => {
+  const startTime = Date.now();
   try {
     const apiKey = req.headers['x-api-key'] || (req.headers['authorization'] || '').replace('Bearer ', '');
     if (!apiKey) return res.status(401).json({ type: 'error', error: { type: 'authentication_error', message: 'API key required' } });
@@ -102,7 +219,6 @@ router.post('/messages', async (req, res) => {
 
     const ct = response.headers.get('content-type') || '';
 
-    // Streaming: OpenAI SSE → Anthropic SSE
     if (stream && ct.includes('text/event-stream')) {
       res.setHeader('Content-Type', 'text/event-stream');
       res.setHeader('Cache-Control', 'no-cache');
@@ -138,6 +254,10 @@ router.post('/messages', async (req, res) => {
                 res.write(`event: content_block_stop\ndata: ${JSON.stringify({ type: 'content_block_stop', index: 0 })}\n\n`);
                 res.write(`event: message_delta\ndata: ${JSON.stringify({ type: 'message_delta', delta: { stop_reason: sr, stop_sequence: null }, usage: { output_tokens: chunk.usage?.completion_tokens || 0 } })}\n\n`);
                 res.write(`event: message_stop\ndata: ${JSON.stringify({ type: 'message_stop' })}\n\n`);
+
+                // Record usage
+                const latencyMs = Date.now() - startTime;
+                recordUsage({ apiKey, endpoint: '/v1/messages', body: req.body, responseStatus: response.status, latencyMs, responseBody: chunk });
               }
             } catch {}
           }
@@ -146,9 +266,13 @@ router.post('/messages', async (req, res) => {
       res.end();
 
     } else {
-      // Non-streaming: OpenAI → Anthropic
       const data = await response.json();
+      const latencyMs = Date.now() - startTime;
       if (data.error) return res.status(response.status).json({ type: 'error', error: { type: 'api_error', message: data.error.message || 'Unknown error' } });
+
+      // Record usage
+      recordUsage({ apiKey, endpoint: '/v1/messages', body: req.body, responseStatus: response.status, latencyMs, responseBody: data });
+
       const content = data.choices?.[0]?.message?.content || '';
       res.status(200).json({
         id: `msg_${crypto.randomBytes(12).toString('hex')}`,

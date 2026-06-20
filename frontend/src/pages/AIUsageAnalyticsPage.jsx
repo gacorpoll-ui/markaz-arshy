@@ -1,229 +1,292 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import { LineChart, DollarSign, Cpu, Clock, Calendar, ChevronLeft, Download } from 'lucide-react';
+import { useNavigate, useLocation } from 'react-router-dom';
+import { LineChart, DollarSign, Cpu, Clock, ChevronLeft, Download, Filter } from 'lucide-react';
 import AIUsageChart from '../components/AIUsageChart';
 
 /**
- * AI Usage Analytics Page - Menampilkan detail penggunaan API key tertentu
+ * AI Usage Analytics Page — Global usage dashboard with per-key filter
  */
 export default function AIUsageAnalyticsPage({ user, token }) {
-  const { id } = useParams(); // apiKeyId
   const navigate = useNavigate();
+  const location = useLocation();
   const [loading, setLoading] = useState(true);
-  const [apiKeyData, setApiKeyData] = useState(null);
-  const [usageSummary, setUsageSummary] = useState(null);
-  const [usageLogs, setUsageLogs] = useState([]);
-  const [timeframe, setTimeframe] = useState('7d'); // 7d, 30d, all
+  const [apiKeys, setApiKeys] = useState([]);
+  const [selectedKeyId, setSelectedKeyId] = useState(location.state?.selectedKeyId || '');
+  const [timeframe, setTimeframe] = useState('7d');
+  const [summary, setSummary] = useState(null);
+  const [logs, setLogs] = useState([]);
   const [error, setError] = useState('');
 
   useEffect(() => {
-    if (!user) {
-      navigate('/login');
-      return;
+    if (!user) { navigate('/login'); return; }
+    fetchKeys();
+  }, [user]);
+
+  useEffect(() => {
+    if (user) fetchUsageData();
+  }, [selectedKeyId, timeframe, user]);
+
+  const fetchKeys = async () => {
+    try {
+      const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/ai-router/keys`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = await res.json();
+      setApiKeys(data);
+    } catch (err) {
+      console.error('Error fetching keys:', err);
     }
-    fetchUsageData();
-  }, [id, timeframe, user]);
+  };
 
   const fetchUsageData = async () => {
     setLoading(true);
     setError('');
     try {
-      // Fetch API Key details (optional, but good for context)
-      const keyResponse = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/ai-router/keys?id=${id}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      const keyData = await keyResponse.json();
-      setApiKeyData(keyData[0] || null); // Assuming API returns an array, take the first
-
-      // Calculate dates for timeframe
       const endDate = new Date();
       const startDate = new Date();
       if (timeframe === '7d') startDate.setDate(endDate.getDate() - 7);
       else if (timeframe === '30d') startDate.setDate(endDate.getDate() - 30);
-      // 'all' means no startDate filter
 
-      const params = new URLSearchParams({
-        apiKeyId: id,
-        ...(timeframe !== 'all' && { startDate: startDate.toISOString(), endDate: endDate.toISOString() }),
-      });
+      const params = new URLSearchParams();
+      if (selectedKeyId) params.set('apiKeyId', selectedKeyId);
+      if (timeframe !== 'all') {
+        params.set('startDate', startDate.toISOString());
+        params.set('endDate', endDate.toISOString());
+      }
 
-      // Fetch Usage Summary
-      const summaryResponse = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/ai-router/usage/summary?${params.toString()}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      const summaryData = await summaryResponse.json();
-      setUsageSummary(summaryData);
+      const [summaryRes, logsRes] = await Promise.all([
+        fetch(`${import.meta.env.VITE_API_BASE_URL}/api/ai-router/usage/summary?${params}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        }),
+        fetch(`${import.meta.env.VITE_API_BASE_URL}/api/ai-router/usage/logs?${params}&limit=100`, {
+          headers: { Authorization: `Bearer ${token}` },
+        }),
+      ]);
 
-      // Fetch Usage Logs
-      const logsResponse = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/ai-router/usage/logs?${params.toString()}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      const logsData = await logsResponse.json();
-      setUsageLogs(logsData);
-
+      setSummary(await summaryRes.json());
+      setLogs(await logsRes.json());
     } catch (err) {
-      console.error('Error fetching usage data:', err);
-      setError('Failed to fetch usage data.');
+      console.error('Error fetching usage:', err);
+      setError('Gagal memuat data usage');
     } finally {
       setLoading(false);
     }
   };
 
   const getPriceColor = (cost) => {
-    if (cost > 7500) return '#ef4444'; // Red (lebih dari Rp 7.500)
-    if (cost > 1500) return '#facc15'; // Yellow (lebih dari Rp 1.500)
-    return '#22c55e'; // Green
+    if (cost > 7500) return '#ef4444';
+    if (cost > 1500) return '#facc15';
+    return '#22c55e';
   };
 
-  if (loading) {
-    return (
-      <div style={{ textAlign: 'center', padding: '60px 20px', color: 'var(--text-muted)' }}>
-        Loading usage data...
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div style={{ textAlign: 'center', padding: '60px 20px', color: '#ef4444' }}>
-        <AlertCircle size={24} style={{ marginBottom: '16px' }} />
-        <p>{error}</p>
-        <button onClick={() => navigate(-1)} className="btn btn-primary" style={{ marginTop: '20px' }}>
-          <ChevronLeft size={18} /> Back
-        </button>
-      </div>
-    );
-  }
+  const formatNumber = (n) => (n || 0).toLocaleString();
 
   return (
     <div className="container" style={{ paddingTop: '40px', paddingBottom: '60px' }}>
       {/* Header */}
-      <div style={{ marginBottom: '40px' }}>
-        <button onClick={() => navigate(-1)} className="btn-text" style={{ marginBottom: '20px' }}>
-          <ChevronLeft size={18} /> Back to My API Keys
+      <div style={{ marginBottom: '30px' }}>
+        <button onClick={() => navigate('/dashboard/ai-keys')} className="btn-text" style={{ marginBottom: '20px' }}>
+          <ChevronLeft size={18} /> Kembali ke API Keys
         </button>
-        <h1 style={{
-          fontFamily: 'var(--font-title)',
-          fontSize: '32px',
-          fontWeight: '700',
-          marginBottom: '8px',
-        }}>
-          Usage Analytics for "{apiKeyData?.keyName || 'API Key'}"
+        <h1 style={{ fontFamily: 'var(--font-title)', fontSize: '32px', fontWeight: '700', marginBottom: '8px' }}>
+          📊 Usage Analytics
         </h1>
         <p style={{ fontSize: '14px', color: 'var(--text-secondary)' }}>
-          Monitor your AI model usage, costs, and request logs.
+          Pantau penggunaan AI secara global atau filter per API key.
         </p>
       </div>
 
-      {/* Timeframe Filter */}
-      <div style={{ display: 'flex', gap: '10px', marginBottom: '30px' }}>
-        {['7d', '30d', 'all'].map(option => (
-          <button
-            key={option}
-            onClick={() => setTimeframe(option)}
-            className={timeframe === option ? 'btn btn-primary' : 'btn btn-secondary'}
-            style={{ padding: '8px 20px', fontSize: '14px' }}
+      {/* Filters */}
+      <div style={{ display: 'flex', gap: '12px', marginBottom: '30px', flexWrap: 'wrap', alignItems: 'center' }}>
+        {/* Key Filter */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <Filter size={16} style={{ color: 'var(--text-muted)' }} />
+          <select
+            value={selectedKeyId}
+            onChange={(e) => setSelectedKeyId(e.target.value)}
+            style={{
+              background: 'var(--bg-secondary)',
+              border: '1px solid var(--border-color)',
+              borderRadius: 'var(--radius-sm)',
+              padding: '10px 14px',
+              color: 'var(--text-primary)',
+              fontSize: '14px',
+              cursor: 'pointer',
+              minWidth: '200px',
+            }}
           >
-            {option === '7d' ? 'Last 7 Days' : option === '30d' ? 'Last 30 Days' : 'All Time'}
-          </button>
-        ))}
+            <option value="">Semua API Keys</option>
+            {apiKeys.map(k => (
+              <option key={k.id} value={k.id}>{k.keyName} ({k.apiKey.slice(0, 15)}...)</option>
+            ))}
+          </select>
+        </div>
+
+        {/* Timeframe */}
+        <div style={{ display: 'flex', gap: '6px' }}>
+          {[
+            { val: '7d', label: '7 Hari' },
+            { val: '30d', label: '30 Hari' },
+            { val: 'all', label: 'Semua' },
+          ].map(opt => (
+            <button
+              key={opt.val}
+              onClick={() => setTimeframe(opt.val)}
+              className={timeframe === opt.val ? 'btn btn-primary' : 'btn btn-secondary'}
+              style={{ padding: '10px 18px', fontSize: '13px' }}
+            >
+              {opt.label}
+            </button>
+          ))}
+        </div>
       </div>
 
-      {/* Summary Cards */}
-      {usageSummary && (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '20px', marginBottom: '40px' }}>
-          {/* Total Requests */}
-          <div className="glass-card" style={{ padding: '20px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '10px' }}>
-              <Cpu size={24} style={{ color: 'var(--color-primary)' }} />
-              <span style={{ fontSize: '12px', color: 'var(--text-muted)', textTransform: 'uppercase' }}>
-                Total Requests
-              </span>
-            </div>
-            <div style={{ fontSize: '32px', fontWeight: '700', color: 'var(--text-primary)' }}>
-              {usageSummary.totalRequests.toLocaleString()}
-            </div>
-          </div>
-
-          {/* Total Tokens */}
-          <div className="glass-card" style={{ padding: '20px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '10px' }}>
-              <LineChart size={24} style={{ color: 'var(--color-secondary)' }} />
-              <span style={{ fontSize: '12px', color: 'var(--text-muted)', textTransform: 'uppercase' }}>
-                Total Tokens
-              </span>
-            </div>
-            <div style={{ fontSize: '32px', fontWeight: '700', color: 'var(--text-primary)' }}>
-              {usageSummary.totalTokens.toLocaleString()}
-            </div>
-          </div>
-
-          {/* Total Cost */}
-          <div className="glass-card" style={{ padding: '20px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '10px' }}>
-              <DollarSign size={24} style={{ color: 'var(--color-success)' }} />
-              <span style={{ fontSize: '12px', color: 'var(--text-muted)', textTransform: 'uppercase' }}>
-                Total Biaya
-              </span>
-            </div>
-            <div style={{ fontSize: '32px', fontWeight: '700', color: getPriceColor(usageSummary.totalCost) }}>
-              Rp {Math.ceil(usageSummary.totalCost).toLocaleString('id-ID')}
-            </div>
-          </div>
+      {loading ? (
+        <div style={{ textAlign: 'center', padding: '60px 20px', color: 'var(--text-muted)' }}>
+          Loading usage data...
         </div>
-      )}
-
-      {/* Usage Chart */}
-      {usageSummary?.chartData?.length > 0 && (
-        <div className="glass-card" style={{ padding: '20px', marginBottom: '40px' }}>
-          <AIUsageChart data={usageSummary.chartData} title="Daily Usage Overview" />
-        </div>
-      )}
-
-      {/* Recent Usage Logs */}
-      <h2 style={{ fontSize: '24px', fontWeight: '700', marginBottom: '20px' }}>Recent Usage Logs</h2>
-      {usageLogs.length === 0 ? (
-        <div style={{
-          textAlign: 'center',
-          padding: '40px 20px',
-          color: 'var(--text-muted)',
-          background: 'rgba(255, 255, 255, 0.02)',
-          borderRadius: 'var(--radius-md)',
-        }}>
-          <Clock size={48} style={{ marginBottom: '16px', opacity: 0.3 }} />
-          <p>No usage logs found for the selected timeframe.</p>
-        </div>
+      ) : error ? (
+        <div style={{ textAlign: 'center', padding: '60px 20px', color: '#ef4444' }}>{error}</div>
       ) : (
-        <div className="glass-card" style={{ padding: '0', overflowX: 'auto' }}>
-          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '14px' }}>
-            <thead>
-              <tr style={{ borderBottom: '1px solid var(--border-color)' }}>
-                <th style={{ padding: '15px', textAlign: 'left', color: 'var(--text-muted)' }}>Tanggal</th>
-                <th style={{ padding: '15px', textAlign: 'left', color: 'var(--text-muted)' }}>Model</th>
-                <th style={{ padding: '15px', textAlign: 'left', color: 'var(--text-muted)' }}>Token</th>
-                <th style={{ padding: '15px', textAlign: 'left', color: 'var(--text-muted)' }}>Biaya</th>
-                <th style={{ padding: '15px', textAlign: 'left', color: 'var(--text-muted)' }}>Latensi</th>
-                <th style={{ padding: '15px', textAlign: 'left', color: 'var(--text-muted)' }}>Status</th>
-              </tr>
-            </thead>
-            <tbody>
-              {usageLogs.map(log => (
-                <tr key={log.id} style={{ borderBottom: '1px solid var(--border-color)' }}>
-                  <td style={{ padding: '15px', color: 'var(--text-primary)' }}>{new Date(log.createdAt).toLocaleString()}</td>
-                  <td style={{ padding: '15px', color: 'var(--text-primary)' }}>{log.model.name}</td>
-                  <td style={{ padding: '15px', color: 'var(--text-primary)' }}>{log.totalTokens.toLocaleString()}</td>
-                  <td style={{ padding: '15px', color: getPriceColor(log.totalCost) }}>
-                    Rp {Math.ceil(log.totalCost).toLocaleString('id-ID')}
-                  </td>
-                  <td style={{ padding: '15px', color: 'var(--text-primary)' }}>{log.latencyMs} ms</td>
-                  <td style={{ padding: '15px', color: log.statusCode >= 200 && log.statusCode < 300 ? '#22c55e' : '#ef4444' }}>
-                    {log.statusCode} {log.errorMessage ? `(${log.errorMessage})` : ''}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+        <>
+          {/* Summary Cards */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '16px', marginBottom: '30px' }}>
+            <div className="glass-card" style={{ padding: '20px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
+                <Cpu size={18} style={{ color: 'var(--color-primary)' }} />
+                <span style={{ fontSize: '11px', color: 'var(--text-muted)', textTransform: 'uppercase' }}>Requests</span>
+              </div>
+              <div style={{ fontSize: '28px', fontWeight: '700', color: 'var(--text-primary)' }}>
+                {formatNumber(summary?.totalRequests)}
+              </div>
+            </div>
+
+            <div className="glass-card" style={{ padding: '20px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
+                <LineChart size={18} style={{ color: 'var(--color-secondary)' }} />
+                <span style={{ fontSize: '11px', color: 'var(--text-muted)', textTransform: 'uppercase' }}>Tokens</span>
+              </div>
+              <div style={{ fontSize: '28px', fontWeight: '700', color: 'var(--text-primary)' }}>
+                {formatNumber(summary?.totalTokens)}
+              </div>
+              <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '4px' }}>
+                In: {formatNumber(summary?.inputTokens)} / Out: {formatNumber(summary?.outputTokens)}
+              </div>
+            </div>
+
+            <div className="glass-card" style={{ padding: '20px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
+                <DollarSign size={18} style={{ color: 'var(--color-success)' }} />
+                <span style={{ fontSize: '11px', color: 'var(--text-muted)', textTransform: 'uppercase' }}>Biaya</span>
+              </div>
+              <div style={{ fontSize: '28px', fontWeight: '700', color: getPriceColor(summary?.totalCost || 0) }}>
+                Rp {Math.ceil(summary?.totalCost || 0).toLocaleString('id-ID')}
+              </div>
+            </div>
+
+            <div className="glass-card" style={{ padding: '20px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
+                <Clock size={18} style={{ color: '#f59e0b' }} />
+                <span style={{ fontSize: '11px', color: 'var(--text-muted)', textTransform: 'uppercase' }}>Models</span>
+              </div>
+              <div style={{ fontSize: '28px', fontWeight: '700', color: 'var(--text-primary)' }}>
+                {summary?.byModel?.length || 0}
+              </div>
+            </div>
+          </div>
+
+          {/* Per-Model Breakdown */}
+          {summary?.byModel?.length > 0 && (
+            <div className="glass-card" style={{ padding: '24px', marginBottom: '30px' }}>
+              <h3 style={{ fontSize: '18px', fontWeight: '700', marginBottom: '16px' }}>Usage per Model</h3>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))', gap: '12px' }}>
+                {summary.byModel.map((m, i) => (
+                  <div key={i} style={{
+                    background: 'rgba(0,0,0,0.2)',
+                    border: '1px solid var(--border-color)',
+                    borderRadius: 'var(--radius-sm)',
+                    padding: '16px',
+                  }}>
+                    <div style={{ fontSize: '14px', fontWeight: '600', color: 'var(--text-primary)', marginBottom: '8px' }}>
+                      {m.model.name}
+                    </div>
+                    <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '4px' }}>
+                      {m.requestCount} requests · {formatNumber(m.totalTokens)} tokens
+                    </div>
+                    <div style={{ fontSize: '16px', fontWeight: '700', color: getPriceColor(m.totalCost) }}>
+                      Rp {Math.ceil(m.totalCost).toLocaleString('id-ID')}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Chart */}
+          {summary?.chartData?.length > 0 && (
+            <div className="glass-card" style={{ padding: '24px', marginBottom: '30px' }}>
+              <AIUsageChart data={summary.chartData} title="Daily Usage Overview" />
+            </div>
+          )}
+
+          {/* Logs Table */}
+          <h2 style={{ fontSize: '20px', fontWeight: '700', marginBottom: '16px' }}>Recent Requests</h2>
+          {logs.length === 0 ? (
+            <div style={{
+              textAlign: 'center', padding: '40px', color: 'var(--text-muted)',
+              background: 'rgba(255,255,255,0.02)', borderRadius: 'var(--radius-md)',
+            }}>
+              <Clock size={48} style={{ marginBottom: '16px', opacity: 0.3 }} />
+              <p>Belum ada usage data.</p>
+            </div>
+          ) : (
+            <div className="glass-card" style={{ padding: '0', overflowX: 'auto' }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
+                <thead>
+                  <tr style={{ borderBottom: '1px solid var(--border-color)' }}>
+                    <th style={{ padding: '12px 14px', textAlign: 'left', color: 'var(--text-muted)' }}>Waktu</th>
+                    <th style={{ padding: '12px 14px', textAlign: 'left', color: 'var(--text-muted)' }}>Key</th>
+                    <th style={{ padding: '12px 14px', textAlign: 'left', color: 'var(--text-muted)' }}>Model</th>
+                    <th style={{ padding: '12px 14px', textAlign: 'right', color: 'var(--text-muted)' }}>Tokens</th>
+                    <th style={{ padding: '12px 14px', textAlign: 'right', color: 'var(--text-muted)' }}>Biaya</th>
+                    <th style={{ padding: '12px 14px', textAlign: 'right', color: 'var(--text-muted)' }}>Latency</th>
+                    <th style={{ padding: '12px 14px', textAlign: 'right', color: 'var(--text-muted)' }}>Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {logs.map(log => (
+                    <tr key={log.id} style={{ borderBottom: '1px solid var(--border-color)' }}>
+                      <td style={{ padding: '12px 14px', color: 'var(--text-primary)' }}>
+                        {new Date(log.createdAt).toLocaleString('id-ID')}
+                      </td>
+                      <td style={{ padding: '12px 14px', color: 'var(--text-muted)', fontFamily: 'monospace', fontSize: '12px' }}>
+                        {log.apiKey?.keyName || '-'}
+                      </td>
+                      <td style={{ padding: '12px 14px', color: 'var(--text-primary)' }}>
+                        {log.model?.name || log.model?.modelId || '-'}
+                      </td>
+                      <td style={{ padding: '12px 14px', textAlign: 'right', color: 'var(--text-primary)' }}>
+                        {formatNumber(log.totalTokens)}
+                      </td>
+                      <td style={{ padding: '12px 14px', textAlign: 'right', color: getPriceColor(log.totalCost) }}>
+                        Rp {Math.ceil(log.totalCost).toLocaleString('id-ID')}
+                      </td>
+                      <td style={{ padding: '12px 14px', textAlign: 'right', color: 'var(--text-muted)' }}>
+                        {log.latencyMs}ms
+                      </td>
+                      <td style={{
+                        padding: '12px 14px', textAlign: 'right',
+                        color: log.statusCode >= 200 && log.statusCode < 300 ? '#22c55e' : '#ef4444',
+                      }}>
+                        {log.statusCode}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </>
       )}
     </div>
   );
