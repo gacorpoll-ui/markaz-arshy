@@ -79,24 +79,11 @@ router.post('/keys/create', requireAuth, async (req, res) => {
     const { keyName, tier = 'BASIC', modelId, initialCredits = 0 } = req.body;
     const userId = req.user.id;
 
-    // Validate tier
-    const validTiers = ['BASIC', 'PRO', 'ENTERPRISE'];
-    if (!validTiers.includes(tier)) {
-      return res.status(400).json({ error: 'Invalid tier' });
-    }
+    if (!keyName) return res.status(400).json({ error: 'Key name is required' });
 
-    // Tier-based rate limits
-    const rateLimits = { BASIC: 10, PRO: 60, ENTERPRISE: 300 };
-    const rateLimit = rateLimits[tier];
-
-    // Generate unique API key starting with 'ma-'
-    const randomBytes = crypto.randomBytes(24).toString('hex');
-    const apiKey = `ma-${randomBytes}`;
-
-    // ═══ Also create key on 9router ═══
-    let nineRouterKey = null;
+    // ═══ Create key on 9router ═══
+    let skKey = null;
     try {
-      // Login to 9router with admin session
       const loginRes = await fetch(`${NINE_ROUTER_URL}/api/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -108,17 +95,20 @@ router.post('/keys/create', requireAuth, async (req, res) => {
         const keyRes = await fetch(`${NINE_ROUTER_URL}/api/keys`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', 'Cookie': cookie },
-          body: JSON.stringify({ name: `ma-${keyName}` }),
+          body: JSON.stringify({ name: keyName }),
         });
         if (keyRes.ok) {
           const keyData = await keyRes.json();
-          nineRouterKey = keyData.key; // sk-xxx
-          console.log(`[AI ROUTE] Created 9router key for user ${userId}: ${nineRouterKey.slice(0, 15)}...`);
+          skKey = keyData.key;
+          console.log(`[AI ROUTE] Created 9router key for user ${userId}: ${skKey.slice(0, 15)}...`);
         }
       }
     } catch (err) {
       console.error('[AI ROUTE] Failed to create 9router key:', err.message);
-      // Continue — ma-* key still created, just no 9router key yet
+    }
+
+    if (!skKey) {
+      return res.status(500).json({ error: 'Failed to create API key on router' });
     }
 
     // Deduct initial credits from user balance if needed
@@ -127,48 +117,34 @@ router.post('/keys/create', requireAuth, async (req, res) => {
       if (user.balance < initialCredits) {
         return res.status(400).json({ error: 'Insufficient balance' });
       }
-
-      // Deduct from user balance
       await prisma.user.update({
         where: { id: userId },
         data: { balance: { decrement: initialCredits } },
       });
-
-      // Create balance transaction
       await prisma.balanceTransaction.create({
-        data: {
-          userId,
-          amount: -initialCredits,
-          type: 'AI_TOPUP',
-          description: `Top-up AI credits for "${keyName}"`,
-        },
+        data: { userId, amount: -initialCredits, type: 'AI_TOPUP', description: `Top-up AI credits for "${keyName}"` },
       });
     }
 
-    // Create API key
+    // Store sk-* key directly in Markaz Arshy DB
     const newKey = await prisma.aIApiKey.create({
       data: {
         userId,
         modelId: modelId || null,
         keyName,
-        apiKey,
+        apiKey: skKey, // sk-* key directly!
+        nineRouterKey: skKey,
         tier,
-        rateLimit,
+        rateLimit: 300,
         creditsBalance: initialCredits,
         isActive: true,
-        nineRouterKey,
       },
-      include: {
-        model: {
-          select: { name: true, modelId: true },
-        },
-      },
+      include: { model: { select: { name: true, modelId: true } } },
     });
 
     res.status(201).json({
       id: newKey.id,
-      apiKey: newKey.apiKey,
-      nineRouterKey: newKey.nineRouterKey,
+      apiKey: newKey.apiKey, // This IS the sk-* key
       keyName: newKey.keyName,
       tier: newKey.tier,
       rateLimit: newKey.rateLimit,

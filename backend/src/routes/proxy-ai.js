@@ -5,73 +5,18 @@ import prisma from '../db.js';
 const router = express.Router();
 
 const NINE_ROUTER_URL = process.env.AI_ROUTER_URL || 'http://localhost:20128';
-const NINE_ROUTER_EMAIL = 'admin';
-const NINE_ROUTER_PASSWORD = 'Riri@150187';
 
 // ═══════════════════════════════════════
-// 9router Session
-// ═══════════════════════════════════════
-let _cookie = null;
-let _expires = 0;
-
-async function login9Router() {
-  if (_cookie && Date.now() < _expires) return _cookie;
-  const res = await fetch(`${NINE_ROUTER_URL}/api/auth/login`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ email: NINE_ROUTER_EMAIL, password: NINE_ROUTER_PASSWORD }),
-  });
-  if (!res.ok) throw new Error(`9router login failed: ${res.status}`);
-  const sc = res.headers.get('set-cookie');
-  if (!sc) throw new Error('No cookie');
-  _cookie = sc.split(';')[0];
-  _expires = Date.now() + 23 * 60 * 60 * 1000;
-  return _cookie;
-}
-
-// ═══════════════════════════════════════
-// Resolve ma-* → sk-* (auto-create if missing)
-// ═══════════════════════════════════════
-async function resolveKey(apiKey) {
-  if (!apiKey.startsWith('ma-')) return apiKey; // already sk-*
-
-  const keyData = await prisma.aIApiKey.findUnique({ where: { apiKey } });
-  if (!keyData || !keyData.isActive) return null;
-
-  if (keyData.nineRouterKey) return keyData.nineRouterKey;
-
-  // Auto-create on 9router
-  try {
-    const cookie = await login9Router();
-    const r = await fetch(`${NINE_ROUTER_URL}/api/keys`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Cookie': cookie },
-      body: JSON.stringify({ name: `ma-${keyData.keyName || keyData.id}` }),
-    });
-    if (r.ok) {
-      const d = await r.json();
-      await prisma.aIApiKey.update({ where: { apiKey }, data: { nineRouterKey: d.key } });
-      console.log(`[PROXY] Auto-created 9router key for ${apiKey.slice(0, 15)}...`);
-      return d.key;
-    }
-  } catch (e) { console.error('[PROXY] Auto-create failed:', e.message); }
-  return null;
-}
-
-// ═══════════════════════════════════════
-// POST /chat/completions
+// POST /chat/completions — Pass-through to 9router
 // ═══════════════════════════════════════
 router.post('/chat/completions', async (req, res) => {
   try {
     const apiKey = (req.headers['authorization'] || '').replace('Bearer ', '');
     if (!apiKey) return res.status(401).json({ error: { message: 'API key required', type: 'authentication_error' } });
 
-    const routerKey = await resolveKey(apiKey);
-    if (!routerKey) return res.status(401).json({ error: { message: 'Invalid or inactive API key', type: 'authentication_error' } });
-
     const response = await fetch(`${NINE_ROUTER_URL}/v1/chat/completions`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${routerKey}` },
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` },
       body: JSON.stringify(req.body),
     });
 
@@ -106,14 +51,13 @@ router.post('/chat/completions', async (req, res) => {
 });
 
 // ═══════════════════════════════════════
-// GET /models
+// GET /models — Pass-through to 9router
 // ═══════════════════════════════════════
 router.get('/models', async (req, res) => {
   try {
     const apiKey = (req.headers['x-api-key'] || req.headers['authorization'] || '').replace('Bearer ', '');
-    const routerKey = await resolveKey(apiKey).catch(() => apiKey);
     const response = await fetch(`${NINE_ROUTER_URL}/v1/models`, {
-      headers: { 'Authorization': `Bearer ${routerKey || ''}` },
+      headers: { 'Authorization': `Bearer ${apiKey}` },
     });
     const data = await response.json();
     res.status(response.status).json(data);
@@ -123,19 +67,17 @@ router.get('/models', async (req, res) => {
 });
 
 // ═══════════════════════════════════════
-// POST /messages (Anthropic → OpenAI → 9router → Anthropic)
+// POST /messages — Anthropic Messages API (Claude Code)
+// Converts Anthropic → OpenAI → 9router → back to Anthropic
 // ═══════════════════════════════════════
 router.post('/messages', async (req, res) => {
   try {
     const apiKey = req.headers['x-api-key'] || (req.headers['authorization'] || '').replace('Bearer ', '');
     if (!apiKey) return res.status(401).json({ type: 'error', error: { type: 'authentication_error', message: 'API key required' } });
 
-    const routerKey = await resolveKey(apiKey);
-    if (!routerKey) return res.status(401).json({ type: 'error', error: { type: 'authentication_error', message: 'Invalid or inactive API key' } });
-
     const { model, messages, max_tokens, system, stream, temperature } = req.body;
 
-    // Anthropic → OpenAI
+    // Anthropic → OpenAI format
     const openaiMessages = [];
     if (system) {
       const t = typeof system === 'string' ? system : Array.isArray(system) ? system.map(s => s.text || '').join('\n') : String(system);
@@ -154,7 +96,7 @@ router.post('/messages', async (req, res) => {
 
     const response = await fetch(`${NINE_ROUTER_URL}/v1/chat/completions`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${routerKey}` },
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` },
       body: JSON.stringify(body),
     });
 
@@ -219,9 +161,9 @@ router.post('/messages', async (req, res) => {
       });
     }
 
-    console.log(`[PROXY] Anthropic→OpenAI: ${apiKey.slice(0, 15)}... model=${model} stream=${!!stream}`);
+    console.log(`[PROXY] messages: ${apiKey.slice(0, 15)}... model=${model} stream=${!!stream}`);
   } catch (error) {
-    console.error('[PROXY] Messages error:', error.message);
+    console.error('[PROXY] messages error:', error.message);
     res.status(500).json({ type: 'error', error: { type: 'api_error', message: 'Proxy error: ' + error.message } });
   }
 });
