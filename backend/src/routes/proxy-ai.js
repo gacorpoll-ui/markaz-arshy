@@ -98,7 +98,7 @@ async function recordUsage({ apiKey, endpoint, body, responseStatus, latencyMs, 
 
     console.log(`[USAGE] ${apiKey.slice(0, 15)}... model=${modelId} tokens=${totalTokens} cost=Rp${Math.ceil(totalCost)}`);
   } catch (err) {
-    console.error('[USAGE] Record failed:', err.message);
+    console.error('[USAGE] ⚠️ Record failed for key:', apiKey.slice(0,15), 'Error:', err.message, err.stack);
   }
 }
 
