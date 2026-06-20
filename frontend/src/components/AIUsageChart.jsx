@@ -4,43 +4,37 @@ import { Chart as ChartJS, CategoryScale, LinearScale, PointElement, LineElement
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend);
 
-/**
- * AIUsageChart - Displays AI usage data in a line chart.
- * Expected data format:
- * [
- *   { date: '2026-06-10', totalTokens: 10000, totalCost: 0.05 },
- *   { date: '2026-06-11', totalTokens: 15000, totalCost: 0.08 },
- *   ...
- * ]
- */
 export default function AIUsageChart({ data, title = 'AI Usage Over Time' }) {
   const chartData = {
     labels: data.map(item => item.date),
     datasets: [
       {
         label: 'Total Tokens',
-        data: data.map(item => item.totalTokens),
-        borderColor: 'rgba(79, 172, 254, 1)',
-        backgroundColor: 'rgba(79, 172, 254, 0.2)',
+        data: data.map(item => item.tokens || item.totalTokens || 0),
+        borderColor: '#4facfe',
+        backgroundColor: 'rgba(79, 172, 254, 0.15)',
         fill: true,
         tension: 0.3,
-        pointBackgroundColor: 'rgba(79, 172, 254, 1)',
-        pointBorderColor: '#fff',
-        pointHoverBackgroundColor: '#fff',
-        pointHoverBorderColor: 'rgba(79, 172, 254, 1)',
+        pointBackgroundColor: '#4facfe',
+        pointBorderColor: 'rgba(255,255,255,0.3)',
+        pointRadius: 4,
+        pointHoverRadius: 6,
+        borderWidth: 2,
+        yAxisID: 'y',
       },
       {
-        label: 'Total Cost ($)',
-        data: data.map(item => item.totalCost),
-        borderColor: 'rgba(168, 85, 247, 1)',
-        backgroundColor: 'rgba(168, 85, 247, 0.2)',
+        label: 'Total Cost (Rp)',
+        data: data.map(item => item.cost || item.totalCost || 0),
+        borderColor: '#a855f7',
+        backgroundColor: 'rgba(168, 85, 247, 0.15)',
         fill: true,
         tension: 0.3,
-        pointBackgroundColor: 'rgba(168, 85, 247, 1)',
-        pointBorderColor: '#fff',
-        pointHoverBackgroundColor: '#fff',
-        pointHoverBorderColor: 'rgba(168, 85, 247, 1)',
-        yAxisID: 'y1', // Use a secondary Y-axis for cost
+        pointBackgroundColor: '#a855f7',
+        pointBorderColor: 'rgba(255,255,255,0.3)',
+        pointRadius: 4,
+        pointHoverRadius: 6,
+        borderWidth: 2,
+        yAxisID: 'y1',
       },
     ],
   };
@@ -48,109 +42,73 @@ export default function AIUsageChart({ data, title = 'AI Usage Over Time' }) {
   const options = {
     responsive: true,
     maintainAspectRatio: false,
+    interaction: { mode: 'index', intersect: false },
     plugins: {
       legend: {
         position: 'top',
-        labels: {
-          color: 'var(--text-secondary)',
-          font: {
-            size: 12,
-          },
-        },
+        labels: { color: '#94a3b8', font: { size: 12 }, usePointStyle: true, pointStyle: 'rectRounded' },
       },
       title: {
         display: true,
         text: title,
-        color: 'var(--text-primary)',
-        font: {
-          size: 16,
-          weight: 'bold',
-        },
+        color: '#e2e8f0',
+        font: { size: 15, weight: '600' },
+        padding: { bottom: 16 },
       },
       tooltip: {
+        backgroundColor: 'rgba(15, 23, 42, 0.95)',
+        titleColor: '#e2e8f0',
+        bodyColor: '#94a3b8',
+        borderColor: 'rgba(79, 172, 254, 0.3)',
+        borderWidth: 1,
+        padding: 12,
         callbacks: {
-          label: function (context) {
-            let label = context.dataset.label || '';
-            if (label) {
-              label += ': ';
+          label: function (ctx) {
+            if (ctx.dataset.label === 'Total Cost (Rp)') {
+              return ` Rp ${Math.ceil(ctx.raw).toLocaleString('id-ID')}`;
             }
-            if (context.dataset.label === 'Total Cost ($)') {
-              label += `$${context.raw.toFixed(4)}`;
-            } else {
-              label += `${context.raw.toLocaleString()} tokens`;
-            }
-            return label;
+            return ` ${ctx.raw.toLocaleString()} tokens`;
           }
         },
       },
     },
     scales: {
       x: {
-        ticks: {
-          color: 'var(--text-muted)',
-          font: {
-            size: 10,
-          },
-        },
-        grid: {
-          color: 'rgba(255, 255, 255, 0.05)',
-        },
+        ticks: { color: '#64748b', font: { size: 10 } },
+        grid: { color: 'rgba(255, 255, 255, 0.04)' },
+        border: { color: 'rgba(255, 255, 255, 0.08)' },
       },
       y: {
         type: 'linear',
         display: true,
         position: 'left',
         ticks: {
-          color: 'var(--text-muted)',
-          font: {
-            size: 10,
-          },
-          callback: function (value) {
-            return `${(value / 1000).toFixed(0)}K`;
-          }
+          color: '#4facfe',
+          font: { size: 10 },
+          callback: (v) => `${(v / 1000).toFixed(0)}K`,
         },
-        grid: {
-          color: 'rgba(255, 255, 255, 0.05)',
-        },
-        title: {
-          display: true,
-          text: 'Tokens',
-          color: 'var(--text-secondary)',
-          font: {
-            size: 12,
-          },
-        },
+        grid: { color: 'rgba(255, 255, 255, 0.04)' },
+        border: { color: 'rgba(255, 255, 255, 0.08)' },
+        title: { display: true, text: 'Tokens', color: '#4facfe', font: { size: 11 } },
       },
-      y1: { // Secondary Y-axis for cost
+      y1: {
         type: 'linear',
         display: true,
         position: 'right',
         ticks: {
-          color: 'var(--text-muted)',
-          font: {
-            size: 10,
-          },
-          callback: function (value) {
-            return `$${value.toFixed(2)}`;
-          }
+          color: '#a855f7',
+          font: { size: 10 },
+          callback: (v) => `Rp${Math.ceil(v).toLocaleString('id-ID')}`,
         },
-        grid: {
-          drawOnChartArea: false, // Only draw the grid for the main Y-axis
-        },
-        title: {
-          display: true,
-          text: 'Cost (USD)',
-          color: 'var(--text-secondary)',
-          font: {
-            size: 12,
-          },
-        },
+        grid: { drawOnChartArea: false },
+        border: { color: 'rgba(255, 255, 255, 0.08)' },
+        title: { display: true, text: 'Biaya (Rp)', color: '#a855f7', font: { size: 11 } },
       },
     },
   };
 
   return (
-    <div style={{ height: '300px' }}>
+    <div style={{ height: '280px' }}>
       <Line data={chartData} options={options} />
     </div>
   );
