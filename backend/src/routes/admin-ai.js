@@ -83,14 +83,25 @@ router.delete('/ai-providers/:id', requireAuth, requireAdmin, async (req, res) =
   try {
     const { id } = req.params;
 
-    await prisma.aIProvider.delete({
+    // First check if provider exists
+    const provider = await prisma.aIProvider.findUnique({
       where: { id: parseInt(id) },
+      include: { models: true },
     });
+    if (!provider) {
+      return res.status(404).json({ error: 'Provider tidak ditemukan.' });
+    }
 
-    res.json({ message: 'Provider deleted successfully' });
+    // Delete all child models first (cascade)
+    if (provider.models.length > 0) {
+      await prisma.aIModel.deleteMany({ where: { providerId: parseInt(id) } });
+    }
+    await prisma.aIProvider.delete({ where: { id: parseInt(id) } });
+
+    res.json({ message: `Provider "${provider.name}" berhasil dihapus beserta ${provider.models.length} model.` });
   } catch (error) {
     console.error('Error deleting AI provider:', error);
-    res.status(500).json({ error: 'Failed to delete AI provider' });
+    res.status(500).json({ error: 'Gagal menghapus provider: ' + error.message });
   }
 });
 
@@ -187,22 +198,8 @@ router.put('/ai-models/:id', requireAuth, requireAdmin, async (req, res) => {
 });
 
 /* ═══════════════════════════════════════
-   DELETE AI MODEL (Admin)
+   DELETE AI MODEL (Admin) — better version at line 401
    ═══════════════════════════════════════ */
-router.delete('/ai-models/:id', requireAuth, requireAdmin, async (req, res) => {
-  try {
-    const { id } = req.params;
-
-    await prisma.aIModel.delete({
-      where: { id: parseInt(id) },
-    });
-
-    res.json({ message: 'Model deleted successfully' });
-  } catch (error) {
-    console.error('Error deleting AI model:', error);
-    res.status(500).json({ error: 'Failed to delete AI model' });
-  }
-});
 
 /* ═══════════════════════════════════════
    AI ROUTER STATISTICS (Admin)
@@ -360,72 +357,6 @@ router.post('/ai-sync-9router', requireAuth, requireAdmin, async (req, res) => {
 });
 
 /* ═══════════════════════════════════════
-   DELETE AI PROVIDER (Admin)
-   ═══════════════════════════════════════ */
-router.delete('/ai-providers/:id', requireAuth, requireAdmin, async (req, res) => {
-  try {
-    const { id } = req.params;
-    const existing = await prisma.aIProvider.findUnique({
-      where: { id: parseInt(id) },
-      include: { models: true },
-    });
-    if (!existing) {
-      return res.status(404).json({ error: 'Provider tidak ditemukan.' });
-    }
-
-    // Delete all models first, then the provider
-    if (existing.models.length > 0) {
-      await prisma.aIModel.deleteMany({ where: { providerId: parseInt(id) } });
-    }
-    await prisma.aIProvider.delete({ where: { id: parseInt(id) } });
-
-    res.json({ message: `Provider "${existing.name}" berhasil dihapus beserta ${existing.models.length} model.` });
-  } catch (error) {
-    console.error('Error deleting provider:', error);
-    res.status(500).json({ error: 'Gagal menghapus provider.' });
-  }
-});
-
-/* ═══════════════════════════════════════
-   EDIT AI MODEL (Admin)
-   ═══════════════════════════════════════ */
-router.put('/ai-models/:id', requireAuth, requireAdmin, async (req, res) => {
-  try {
-    const { id } = req.params;
-    const { name, modelId, inputPricePerToken, outputPricePerToken, contextWindow, isActive } = req.body;
-
-    const existing = await prisma.aIModel.findUnique({ where: { id: parseInt(id) } });
-    if (!existing) {
-      return res.status(404).json({ error: 'Model tidak ditemukan.' });
-    }
-
-    if (modelId && modelId.trim() !== existing.modelId) {
-      const duplicate = await prisma.aIModel.findUnique({ where: { modelId: modelId.trim() } });
-      if (duplicate) {
-        return res.status(400).json({ error: `Model ID "${modelId.trim()}" sudah digunakan.` });
-      }
-    }
-
-    const model = await prisma.aIModel.update({
-      where: { id: parseInt(id) },
-      data: {
-        ...(name !== undefined && { name: name.trim() }),
-        ...(modelId !== undefined && { modelId: modelId.trim() }),
-        ...(inputPricePerToken !== undefined && { inputPricePerToken: parseFloat(inputPricePerToken) }),
-        ...(outputPricePerToken !== undefined && { outputPricePerToken: parseFloat(outputPricePerToken) }),
-        ...(contextWindow !== undefined && { contextWindow: parseInt(contextWindow) }),
-        ...(typeof isActive === 'boolean' && { isActive }),
-      },
-    });
-
-    res.json(model);
-  } catch (error) {
-    console.error('Error updating model:', error);
-    res.status(500).json({ error: 'Failed to update model' });
-  }
-});
-
-/* ═══════════════════════════════════════
    DELETE AI MODEL (Admin)
    ═══════════════════════════════════════ */
 router.delete('/ai-models/:id', requireAuth, requireAdmin, async (req, res) => {
@@ -439,7 +370,7 @@ router.delete('/ai-models/:id', requireAuth, requireAdmin, async (req, res) => {
     res.json({ message: 'Model berhasil dihapus.' });
   } catch (error) {
     console.error('Error deleting model:', error);
-    res.status(500).json({ error: 'Failed to delete model' });
+    res.status(500).json({ error: 'Gagal menghapus model.' });
   }
 });
 
