@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { Cpu, Key, ArrowRight, HelpCircle, Code, Settings, Copy, Info } from 'lucide-react';
+import { Cpu, Key, ArrowRight, HelpCircle, Code, Settings, Copy, Info, Terminal } from 'lucide-react';
+import CLIToolCards from '../components/CLIToolCards';
 
 export default function AIDocs() {
   const aiRouterUrl = import.meta.env.VITE_AI_ROUTER_PUBLIC_URL || 'https://ai.markaz-arshy.com/v1';
-  const [activeTab, setActiveTab] = useState('cursor');
+  const [activeTab, setActiveTab] = useState('cli-tools');
   const [providers, setProviders] = useState([]);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
@@ -162,6 +163,14 @@ export default function AIDocs() {
         {/* Tabs Headers */}
         <div style={{ display: 'flex', borderBottom: '1px solid var(--border-color)', marginBottom: '30px', gap: '10px', overflowX: 'auto' }}>
           <button 
+            className={`tab-btn ${activeTab === 'cli-tools' ? 'active' : ''}`}
+            onClick={() => setActiveTab('cli-tools')}
+            style={{ padding: '12px 24px', background: 'transparent', border: 'none', color: activeTab === 'cli-tools' ? 'var(--color-primary)' : 'var(--text-muted)', borderBottom: activeTab === 'cli-tools' ? '2px solid var(--color-primary)' : 'none', fontWeight: '600', cursor: 'pointer', whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', gap: '6px' }}
+          >
+            <Terminal size={14} />
+            CLI Tools
+          </button>
+          <button 
             className={`tab-btn ${activeTab === 'cursor' ? 'active' : ''}`}
             onClick={() => setActiveTab('cursor')}
             style={{ padding: '12px 24px', background: 'transparent', border: 'none', color: activeTab === 'cursor' ? 'var(--color-primary)' : 'var(--text-muted)', borderBottom: activeTab === 'cursor' ? '2px solid var(--color-primary)' : 'none', fontWeight: '600', cursor: 'pointer', whiteSpace: 'nowrap' }}
@@ -197,6 +206,19 @@ export default function AIDocs() {
             Python SDK
           </button>
         </div>
+
+        {/* Tab Content: CLI Tools */}
+        {activeTab === 'cli-tools' && (
+          <div className="animate-fade-in">
+            <div style={{ marginBottom: '20px' }}>
+              <h3 style={{ fontSize: '18px', fontWeight: '700', marginBottom: '8px' }}>🚀 CLI Tools — One-Click Setup</h3>
+              <p style={{ fontSize: '14px', color: 'var(--text-secondary)', lineHeight: '1.6' }}>
+                Pilih tool AI coding favorit Anda, lalu copy konfigurasi yang sudah di-generate. Tinggal paste ke terminal/IDE Anda — selesai!
+              </p>
+            </div>
+            <CLIToolCards apiKey={null} />
+          </div>
+        )}
 
         {/* Tab Content: Cursor */}
         {activeTab === 'cursor' && (

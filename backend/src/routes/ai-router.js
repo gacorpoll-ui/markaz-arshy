@@ -148,7 +148,36 @@ router.post('/keys/create', requireAuth, async (req, res) => {
 });
 
 /* ═══════════════════════════════════════
-   GET USER'S API KEYS
+   GET USER'S FULL API KEYS (unmasked, for CLI tool config generation)
+   ═══════════════════════════════════════ */
+router.get('/keys/mine', requireAuth, async (req, res) => {
+  try {
+    const userId = req.user.id;
+
+    const keys = await prisma.aIApiKey.findMany({
+      where: { userId, isActive: true },
+      select: {
+        id: true,
+        keyName: true,
+        apiKey: true,  // Full key — only returned for the user's own keys
+        tier: true,
+        creditsBalance: true,
+        model: {
+          select: { name: true, modelId: true },
+        },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    res.json(keys);
+  } catch (error) {
+    console.error('Error fetching API keys:', error);
+    res.status(500).json({ error: 'Failed to fetch API keys' });
+  }
+});
+
+/* ═══════════════════════════════════════
+   GET USER'S API KEYS (masked)
    ═══════════════════════════════════════ */
 router.get('/keys', requireAuth, async (req, res) => {
   try {
