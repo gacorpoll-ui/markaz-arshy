@@ -22,6 +22,14 @@ export default function AIUsageAnalyticsPage({ user, token }) {
     fetchKeys();
   }, [user]);
 
+  // Auto-refresh usage data every 30 seconds
+  useEffect(() => {
+    const interval = setInterval(() => {
+      if (user && !loading) fetchUsageData();
+    }, 30000);
+    return () => clearInterval(interval);
+  }, [user, loading, selectedKeyId, timeframe]);
+
   useEffect(() => {
     if (user) fetchUsageData();
   }, [selectedKeyId, timeframe, user]);

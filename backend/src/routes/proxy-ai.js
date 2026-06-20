@@ -130,6 +130,7 @@ router.post('/chat/completions', async (req, res) => {
       const decoder = new TextDecoder();
       let buf = '';
       let fullContent = '';
+      let usageRecorded = false;
       while (true) {
         const { done, value } = await reader.read();
         if (done) break;
@@ -142,10 +143,24 @@ router.post('/chat/completions', async (req, res) => {
             try {
               const chunk = JSON.parse(l.slice(6));
               if (chunk.choices?.[0]?.delta?.content) fullContent += chunk.choices[0].delta.content;
-              if (chunk.usage) {
-                // Record usage from final chunk
+              if (chunk.choices?.[0]?.finish_reason) {
+                // Stream ended - record usage NOW
                 const latencyMs = Date.now() - startTime;
-                recordUsage({ apiKey, endpoint: '/v1/chat/completions', body: req.body, responseStatus: response.status, latencyMs, responseBody: chunk });
+                const content = fullContent || '';
+                const inputMsgs = req.body.messages || [];
+                const inputText = inputMsgs.map(m => typeof m.content === 'string' ? m.content : '').join('');
+                recordUsage({
+                  apiKey, endpoint: '/v1/chat/completions', body: req.body,
+                  responseStatus: response.status, latencyMs,
+                  responseBody: {
+                    model: chunk.model || req.body.model || 'unknown',
+                    usage: chunk.usage || {
+                      prompt_tokens: Math.ceil(inputText.length / 4),
+                      completion_tokens: Math.ceil(content.length / 4),
+                    },
+                  },
+                });
+                usageRecorded = true;
               }
             } catch {}
           }
@@ -153,6 +168,24 @@ router.post('/chat/completions', async (req, res) => {
       }
       if (buf) res.write(buf);
       res.end();
+
+      // Fallback: if stream ended without finish_reason, record anyway
+      if (!usageRecorded) {
+        const latencyMs = Date.now() - startTime;
+        const inputMsgs = req.body.messages || [];
+        const inputText = inputMsgs.map(m => typeof m.content === 'string' ? m.content : '').join('');
+        recordUsage({
+          apiKey, endpoint: '/v1/chat/completions', body: req.body,
+          responseStatus: response.status, latencyMs,
+          responseBody: {
+            model: req.body.model || 'unknown',
+            usage: {
+              prompt_tokens: Math.ceil(inputText.length / 4),
+              completion_tokens: Math.ceil(fullContent.length / 4),
+            },
+          },
+        });
+      }
     } else {
       const data = await response.json();
       const latencyMs = Date.now() - startTime;
@@ -235,6 +268,8 @@ router.post('/messages', async (req, res) => {
       const reader = response.body.getReader();
       const decoder = new TextDecoder();
       let buf = '';
+      let fullContent = '';
+      let usageRecorded = false;
       try {
         while (true) {
           const { done, value } = await reader.read();
@@ -250,6 +285,7 @@ router.post('/messages', async (req, res) => {
               const chunk = JSON.parse(d);
               const delta = chunk.choices?.[0]?.delta;
               if (delta?.content) {
+                fullContent += delta.content;
                 res.write(`event: content_block_delta\ndata: ${JSON.stringify({ type: 'content_block_delta', index: 0, delta: { type: 'text_delta', text: delta.content } })}\n\n`);
               }
               if (chunk.choices?.[0]?.finish_reason) {
@@ -260,13 +296,42 @@ router.post('/messages', async (req, res) => {
 
                 // Record usage
                 const latencyMs = Date.now() - startTime;
-                recordUsage({ apiKey, endpoint: '/v1/messages', body: req.body, responseStatus: response.status, latencyMs, responseBody: chunk });
+                const inputText = messages?.map(m => typeof m.content === 'string' ? m.content : Array.isArray(m.content) ? m.content.map(b => b.text || '').join('') : '').join('') || '';
+                recordUsage({
+                  apiKey, endpoint: '/v1/messages', body: req.body,
+                  responseStatus: response.status, latencyMs,
+                  responseBody: {
+                    model: chunk.model || model || 'unknown',
+                    usage: chunk.usage || {
+                      prompt_tokens: Math.ceil(inputText.length / 4),
+                      completion_tokens: Math.ceil(fullContent.length / 4),
+                    },
+                  },
+                });
+                usageRecorded = true;
               }
             } catch {}
           }
         }
       } catch (e) { console.error('[PROXY] Stream error:', e.message); }
       res.end();
+
+      // Fallback: record if not already recorded
+      if (!usageRecorded) {
+        const latencyMs = Date.now() - startTime;
+        const inputText = messages?.map(m => typeof m.content === 'string' ? m.content : Array.isArray(m.content) ? m.content.map(b => b.text || '').join('') : '').join('') || '';
+        recordUsage({
+          apiKey, endpoint: '/v1/messages', body: req.body,
+          responseStatus: response.status, latencyMs,
+          responseBody: {
+            model: model || 'unknown',
+            usage: {
+              prompt_tokens: Math.ceil(inputText.length / 4),
+              completion_tokens: Math.ceil(fullContent.length / 4),
+            },
+          },
+        });
+      }
 
     } else {
       const data = await response.json();
