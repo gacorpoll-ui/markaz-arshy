@@ -8,6 +8,7 @@ import { Cpu, Key, Zap, ArrowRight, ExternalLink, Shield, BarChart3, Copy, Check
  */
 export default function AIRouterCatalog({ user, token }) {
   const [providers, setProviders] = useState([]);
+  const [combos, setCombos] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedProvider, setSelectedProvider] = useState('all');
   const [copied, setCopied] = useState(false);
@@ -18,6 +19,7 @@ export default function AIRouterCatalog({ user, token }) {
 
   useEffect(() => {
     fetchProviders();
+    fetchCombos();
   }, []);
 
   const fetchProviders = async () => {
@@ -29,6 +31,16 @@ export default function AIRouterCatalog({ user, token }) {
       console.error('Error fetching AI providers:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchCombos = async () => {
+    try {
+      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/ai-router/combos`);
+      const data = await response.json();
+      setCombos(Array.isArray(data) ? data : []);
+    } catch (error) {
+      console.error('Error fetching combos:', error);
     }
   };
 
@@ -259,6 +271,104 @@ export default function AIRouterCatalog({ user, token }) {
           ))}
         </div>
       </section>
+
+      {/* ═══ MODEL COMBOS ═══ */}
+      {combos.length > 0 && (
+        <section style={{ padding: '60px 24px', maxWidth: '1100px', margin: '0 auto' }}>
+          <div style={{ textAlign: 'center', marginBottom: '32px' }}>
+            <h2 style={{ fontSize: '28px', fontWeight: '800', color: 'var(--text-primary)', marginBottom: '8px' }}>
+              🔥 Model Combos
+            </h2>
+            <p style={{ fontSize: '14px', color: 'var(--text-muted)', maxWidth: '600px', margin: '0 auto' }}>
+              Model gabungan dari berbagai provider dengan automatic fallback. Satu model ID, akses ke banyak provider.
+            </p>
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '16px' }}>
+            {combos.map(combo => (
+              <div
+                key={combo.id}
+                className="glass-card"
+                style={{
+                  padding: '20px',
+                  transition: 'all 0.2s',
+                  cursor: 'pointer',
+                }}
+                onClick={() => {
+                  navigator.clipboard.writeText(combo.name);
+                  setCopied(true);
+                  setTimeout(() => setCopied(false), 1500);
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.transform = 'translateY(-2px)';
+                  e.currentTarget.style.borderColor = '#6366f1';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.transform = 'translateY(0)';
+                  e.currentTarget.style.borderColor = 'var(--border-color)';
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '10px' }}>
+                  <div style={{
+                    width: '36px', height: '36px', borderRadius: '10px',
+                    background: 'rgba(99, 102, 241, 0.1)',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    fontSize: '18px',
+                  }}>
+                    🎯
+                  </div>
+                  <div>
+                    <h3 style={{ fontSize: '15px', fontWeight: '700', color: 'var(--text-primary)', margin: 0 }}>
+                      {combo.displayName || combo.name}
+                    </h3>
+                    <code style={{ fontSize: '11px', color: 'var(--text-muted)', fontFamily: 'monospace' }}>
+                      {combo.name}
+                    </code>
+                  </div>
+                </div>
+
+                {combo.description && (
+                  <p style={{ fontSize: '12px', color: 'var(--text-secondary)', marginBottom: '12px', lineHeight: '1.4' }}>
+                    {combo.description}
+                  </p>
+                )}
+
+                {/* Provider badges */}
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px', marginBottom: '12px' }}>
+                  {combo.models.slice(0, 4).map((m, idx) => {
+                    const provider = m.split('/')[0];
+                    const colors = { 'openai': '#10a37f', 'anthropic': '#d97757', 'google-ai': '#4285f4' };
+                    return (
+                      <span key={idx} style={{
+                        padding: '2px 8px', borderRadius: '4px',
+                        background: `${colors[provider] || '#4facfe'}15`,
+                        color: colors[provider] || '#4facfe',
+                        fontSize: '10px', fontWeight: '600',
+                      }}>
+                        {m}
+                      </span>
+                    );
+                  })}
+                  {combo.models.length > 4 && (
+                    <span style={{ fontSize: '10px', color: 'var(--text-muted)', display: 'flex', alignItems: 'center' }}>
+                      +{combo.models.length - 4} more
+                    </span>
+                  )}
+                </div>
+
+                {/* Copy hint */}
+                <div style={{
+                  display: 'flex', alignItems: 'center', gap: '6px',
+                  fontSize: '11px', color: '#6366f1',
+                }}>
+                  <Copy size={12} />
+                  Klik untuk copy model ID
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
 
       {/* ═══ MODEL CATALOG ═══ */}
       <section style={{ padding: '60px 24px', maxWidth: '1100px', margin: '0 auto' }}>

@@ -343,6 +343,133 @@ router.post('/ai-sync-9router', requireAuth, requireAdmin, async (req, res) => {
     console.error('Error syncing 9router models:', error);
     res.status(500).json({ error: `Sync failed: ${error.message}` });
   }
+/* ═══════════════════════════════════════
+   GET ALL AI COMBOS (Admin)
+   ═══════════════════════════════════════ */
+router.get('/ai-combos', requireAuth, requireAdmin, async (req, res) => {
+  try {
+    const combos = await prisma.aICombo.findMany({
+      orderBy: { createdAt: 'desc' },
+    });
+
+    const combosWithParsed = combos.map(c => ({
+      ...c,
+      models: JSON.parse(c.models || '[]'),
+    }));
+
+    res.json(combosWithParsed);
+  } catch (error) {
+    console.error('Error fetching combos:', error);
+    res.status(500).json({ error: 'Failed to fetch combos' });
+  }
+});
+
+/* ═══════════════════════════════════════
+   CREATE AI COMBO (Admin)
+   ═══════════════════════════════════════ */
+router.post('/ai-combos', requireAuth, requireAdmin, async (req, res) => {
+  try {
+    const { name, displayName, description, models } = req.body;
+
+    if (!name || !name.trim()) {
+      return res.status(400).json({ error: 'Nama combo wajib diisi.' });
+    }
+
+    // Validate name format: a-z, A-Z, 0-9, -, _, .
+    if (!/^[a-zA-Z0-9_.\-]+$/.test(name.trim())) {
+      return res.status(400).json({ error: 'Nama combo hanya boleh huruf, angka, - _ .' });
+    }
+
+    // Check unique name
+    const existing = await prisma.aICombo.findUnique({ where: { name: name.trim() } });
+    if (existing) {
+      return res.status(400).json({ error: `Combo "${name.trim()}" sudah ada.` });
+    }
+
+    const combo = await prisma.aICombo.create({
+      data: {
+        name: name.trim(),
+        displayName: displayName?.trim() || name.trim(),
+        description: description?.trim() || null,
+        models: JSON.stringify(models || []),
+        isActive: true,
+      },
+    });
+
+    res.status(201).json({
+      ...combo,
+      models: JSON.parse(combo.models),
+    });
+  } catch (error) {
+    console.error('Error creating combo:', error);
+    res.status(500).json({ error: 'Failed to create combo' });
+  }
+});
+
+/* ═══════════════════════════════════════
+   UPDATE AI COMBO (Admin)
+   ═══════════════════════════════════════ */
+router.put('/ai-combos/:id', requireAuth, requireAdmin, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { name, displayName, description, models, isActive } = req.body;
+
+    const existing = await prisma.aICombo.findUnique({ where: { id: parseInt(id) } });
+    if (!existing) {
+      return res.status(404).json({ error: 'Combo tidak ditemukan.' });
+    }
+
+    // If renaming, check uniqueness
+    if (name && name.trim() !== existing.name) {
+      if (!/^[a-zA-Z0-9_.\-]+$/.test(name.trim())) {
+        return res.status(400).json({ error: 'Nama combo hanya boleh huruf, angka, - _ .' });
+      }
+      const duplicate = await prisma.aICombo.findUnique({ where: { name: name.trim() } });
+      if (duplicate) {
+        return res.status(400).json({ error: `Combo "${name.trim()}" sudah ada.` });
+      }
+    }
+
+    const combo = await prisma.aICombo.update({
+      where: { id: parseInt(id) },
+      data: {
+        ...(name && { name: name.trim() }),
+        ...(displayName !== undefined && { displayName: displayName.trim() || name?.trim() }),
+        ...(description !== undefined && { description: description?.trim() || null }),
+        ...(models !== undefined && { models: JSON.stringify(models) }),
+        ...(typeof isActive === 'boolean' && { isActive }),
+      },
+    });
+
+    res.json({
+      ...combo,
+      models: JSON.parse(combo.models),
+    });
+  } catch (error) {
+    console.error('Error updating combo:', error);
+    res.status(500).json({ error: 'Failed to update combo' });
+  }
+});
+
+/* ═══════════════════════════════════════
+   DELETE AI COMBO (Admin)
+   ═══════════════════════════════════════ */
+router.delete('/ai-combos/:id', requireAuth, requireAdmin, async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const existing = await prisma.aICombo.findUnique({ where: { id: parseInt(id) } });
+    if (!existing) {
+      return res.status(404).json({ error: 'Combo tidak ditemukan.' });
+    }
+
+    await prisma.aICombo.delete({ where: { id: parseInt(id) } });
+
+    res.json({ message: 'Combo berhasil dihapus.' });
+  } catch (error) {
+    console.error('Error deleting combo:', error);
+    res.status(500).json({ error: 'Failed to delete combo' });
+  }
 });
 
 export default router;

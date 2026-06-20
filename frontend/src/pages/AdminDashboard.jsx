@@ -17,6 +17,7 @@ import AdminCategories      from '../components/AdminCategories';
 import AdminUsers           from '../components/AdminUsers';
 import AdminReviews         from '../components/AdminReviews';
 import AdminAIProviders     from '../components/AdminAIProviders';
+import AdminCombos           from '../components/AdminCombos';
 import AdminSkeleton        from '../components/AdminSkeleton';
 
 const NAV_ITEMS = [
@@ -31,6 +32,7 @@ const NAV_ITEMS = [
   { to: '/admin/users',          end: false, icon: Users,            label: 'Pengguna',       badge: null },
   { to: '/admin/reviews',        end: false, icon: Eye,              label: 'Ulasan',         badgeKey: 'reviews' },
   { to: '/admin/ai-providers',   end: false, icon: Shield,           label: 'AI Providers',   badge: null },
+  { to: '/admin/ai-combos',      end: false, icon: Shield,           label: 'AI Combos',      badge: null },
 ];
 
 export default function AdminDashboard({ user, token }) {
@@ -239,6 +241,7 @@ export default function AdminDashboard({ user, token }) {
             <Route path="/users"           element={<AdminUsers token={token} />} />
             <Route path="/reviews"         element={<AdminReviews token={token} />} />
             <Route path="/ai-providers"    element={<AdminAIProviders token={token} />} />
+            <Route path="/ai-combos"       element={<AdminCombos token={token} />} />
           </Routes>
         </div>
       </main>

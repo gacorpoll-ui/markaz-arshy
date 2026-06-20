@@ -35,6 +35,34 @@ router.get('/providers', async (req, res) => {
 });
 
 /* ═══════════════════════════════════════
+   GET AI COMBOS (public)
+   ═══════════════════════════════════════ */
+router.get('/combos', async (req, res) => {
+  try {
+    const combos = await prisma.aICombo.findMany({
+      where: { isActive: true },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    // Parse JSON models string and attach provider info
+    const combosWithModels = combos.map(combo => ({
+      id: combo.id,
+      name: combo.name,
+      displayName: combo.displayName,
+      description: combo.description,
+      models: JSON.parse(combo.models || '[]'),
+      isActive: combo.isActive,
+      createdAt: combo.createdAt,
+    }));
+
+    res.json(combosWithModels);
+  } catch (error) {
+    console.error('Error fetching AI combos:', error);
+    res.status(500).json({ error: 'Failed to fetch AI combos' });
+  }
+});
+
+/* ═══════════════════════════════════════
    GET AI MODELS
    ═══════════════════════════════════════ */
 router.get('/models', async (req, res) => {

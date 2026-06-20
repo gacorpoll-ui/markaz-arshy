@@ -238,6 +238,17 @@ model AIModel {
   updatedAt           DateTime    @updatedAt
 }
 
+model AICombo {
+  id                  Int       @id @default(autoincrement())
+  name                String    @unique // "gemini-3.5-flash-high" — used as model ID in API
+  displayName         String?   // "Gemini 3.5 Flash High" — shown in UI
+  description         String?   // Description for the combo
+  models              String    @default("[]") // JSON array: ["openai/gpt-4o", "google-ai/gemini-2.5-flash", ...]
+  isActive            Boolean   @default(true)
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+}
+
 model AIApiKey {
   id              Int             @id @default(autoincrement())
   userId          Int
