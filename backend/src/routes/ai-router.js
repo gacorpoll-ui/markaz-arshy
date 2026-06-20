@@ -204,17 +204,8 @@ router.get('/keys', requireAuth, async (req, res) => {
       orderBy: { createdAt: 'desc' },
     });
 
-    // Mask API keys (reveal first 10 characters and last 5 characters, censor the middle)
-    const maskedKeys = keys.map(key => {
-      const first10 = key.apiKey.slice(0, 10);
-      const last5 = key.apiKey.slice(-5);
-      return {
-        ...key,
-        apiKey: `${first10}••••••••${last5}`
-      };
-    });
-
-    res.json(maskedKeys);
+    // Return full sk-* key so user can copy it for use in Cursor/Claude Code
+    res.json(keys);
   } catch (error) {
     console.error('Error fetching API keys:', error);
     res.status(500).json({ error: 'Failed to fetch API keys' });
