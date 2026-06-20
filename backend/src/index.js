@@ -17,6 +17,7 @@ import adminPaymentRouter from './routes/admin-payment.js';
 import aiRouter from './routes/ai-router.js';
 import aiRouterWebhook from './routes/ai-router-webhook.js';
 import adminAIRouter from './routes/admin-ai.js';
+import proxyAIRouter from './routes/proxy-ai.js';
 import prisma from './db.js';
 
 const app = express();
@@ -32,6 +33,10 @@ app.use('/uploads', express.static('uploads'));
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', message: 'Markaz-Arshy Server is running.' });
 });
+
+// AI Proxy: /v1/* — used by Claude Code, Cline, Cursor, etc.
+// Mounted BEFORE other routes to intercept /v1/chat/completions, /v1/models
+app.use('/v1', proxyAIRouter);
 
 // API Routes
 app.use('/api/auth', authRouter);

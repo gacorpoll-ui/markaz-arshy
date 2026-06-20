@@ -291,23 +291,49 @@ router.post('/ai-sync-9router', requireAuth, requireAdmin, async (req, res) => {
       const modelId = item.id;
       if (!modelId) continue;
 
-      // Infer provider slug and name
-      let providerSlug = item.owned_by || '';
+      const modelIdLower = modelId.toLowerCase();
+      const ownedBy = (item.owned_by || '').toLowerCase();
+
+      // Infer provider slug and name (case-insensitive)
+      let providerSlug = '';
       let providerName = '';
 
-      if (providerSlug.includes('openai') || modelId.startsWith('gpt') || modelId.startsWith('text-embedding') || modelId.startsWith('o1') || modelId.startsWith('o3')) {
+      if (ownedBy.includes('openai') || modelIdLower.startsWith('gpt') || modelIdLower.startsWith('text-embedding') || modelIdLower.startsWith('o1') || modelIdLower.startsWith('o3')) {
         providerSlug = 'openai';
         providerName = 'OpenAI';
-      } else if (providerSlug.includes('anthropic') || modelId.includes('claude')) {
+      } else if (ownedBy.includes('anthropic') || modelIdLower.includes('claude')) {
         providerSlug = 'anthropic';
         providerName = 'Anthropic';
-      } else if (providerSlug.includes('google') || modelId.includes('gemini')) {
+      } else if (ownedBy.includes('google') || ownedBy === 'gc' || modelIdLower.includes('gemini')) {
         providerSlug = 'google-ai';
         providerName = 'Google AI';
+      } else if (ownedBy === 'combo') {
+        // Combo models — route by model name
+        if (modelIdLower.includes('claude')) {
+          providerSlug = 'anthropic';
+          providerName = 'Anthropic';
+        } else if (modelIdLower.includes('gemini') || modelIdLower.includes('gemma')) {
+          providerSlug = 'google-ai';
+          providerName = 'Google AI';
+        } else if (modelIdLower.includes('gpt') || modelIdLower.includes('o1') || modelIdLower.includes('o3')) {
+          providerSlug = 'openai';
+          providerName = 'OpenAI';
+        } else {
+          // Generic combo provider for unclassified models
+          providerSlug = '9router';
+          providerName = '9Router Combo';
+        }
       } else {
-        providerSlug = providerSlug.toLowerCase().replace(/[^a-z0-9]/g, '-') || 'other';
+        providerSlug = ownedBy.replace(/[^a-z0-9]/g, '-') || 'other';
         providerName = item.owned_by || 'Other Providers';
       }
+
+      // Generate a nice display name
+      let displayName = modelId
+        .replace(/^gc\//, '')  // strip provider prefix like "gc/"
+        .split(/[-_]/)
+        .map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
+        .join(' ');
 
       // Upsert the provider in our DB
       const dbProvider = await prisma.aIProvider.upsert({
@@ -316,7 +342,7 @@ router.post('/ai-sync-9router', requireAuth, requireAdmin, async (req, res) => {
         create: {
           name: providerName,
           slug: providerSlug,
-          description: `Automatically synced provider from 9router`,
+          description: `Automatically synced from 9router`,
           isActive: true
         }
       });
@@ -327,9 +353,9 @@ router.post('/ai-sync-9router', requireAuth, requireAdmin, async (req, res) => {
         update: {},
         create: {
           providerId: dbProvider.id,
-          name: modelId.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' '),
+          name: displayName,
           modelId: modelId,
-          // Reasonable default cost per 1M tokens in USD ($0.01 inputs / $0.03 outputs)
+          // Default cost per 1M tokens in USD ($0.01 inputs / $0.03 outputs)
           inputPricePerToken: 0.00001,
           outputPricePerToken: 0.00003,
           contextWindow: 128000,
