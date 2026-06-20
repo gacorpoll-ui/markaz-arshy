@@ -314,7 +314,18 @@ router.get('/usage/logs', requireAuth, async (req, res) => {
       take: parseInt(limit),
     });
 
-    res.json(logs);
+    // Enrich with actual model from metadata
+    const enriched = logs.map(l => {
+      let meta = {};
+      try { meta = JSON.parse(l.metadata || '{}'); } catch {}
+      return {
+        ...l,
+        actualModel: meta.actualModel || l.model?.modelId || 'unknown',
+        requestedModel: meta.requestedModel || l.model?.modelId || 'unknown',
+      };
+    });
+
+    res.json(enriched);
   } catch (error) {
     console.error('Error fetching usage logs:', error);
     res.status(500).json({ error: 'Failed to fetch usage logs' });

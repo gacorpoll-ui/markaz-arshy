@@ -263,7 +263,12 @@ export default function AIUsageAnalyticsPage({ user, token }) {
                         {log.apiKey?.keyName || '-'}
                       </td>
                       <td style={{ padding: '12px 14px', color: 'var(--text-primary)' }}>
-                        {log.model?.name || log.model?.modelId || '-'}
+                        <span style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                          <span style={{ fontWeight: '600' }}>{log.actualModel || log.model?.modelId || '-'}</span>
+                          {log.actualModel && log.actualModel !== log.model?.modelId && (
+                            <span style={{ fontSize: '10px', color: 'var(--text-muted)' }}>via {log.model?.name || log.model?.modelId}</span>
+                          )}
+                        </span>
                       </td>
                       <td style={{ padding: '12px 14px', textAlign: 'right', color: 'var(--text-primary)' }}>
                         {formatNumber(log.totalTokens)}

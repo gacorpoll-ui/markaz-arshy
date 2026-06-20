@@ -54,6 +54,9 @@ async function recordUsage({ apiKey, endpoint, body, responseStatus, latencyMs, 
 
     const requestId = `req_${crypto.randomBytes(8).toString('hex')}`;
 
+    // Capture actual model from response (9router may route "code" to "mimo-auto" etc)
+    const actualModel = responseBody?.model || modelId;
+
     await prisma.$transaction(async (tx) => {
       await tx.aIUsage.create({
         data: {
@@ -70,7 +73,7 @@ async function recordUsage({ apiKey, endpoint, body, responseStatus, latencyMs, 
           endpoint,
           statusCode: responseStatus,
           latencyMs,
-          metadata: JSON.stringify({ model: modelId }),
+          metadata: JSON.stringify({ requestedModel: modelId, actualModel }),
         },
       });
 
