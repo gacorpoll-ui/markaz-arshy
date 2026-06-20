@@ -322,6 +322,7 @@ main();`}
       {showCreateModal && (
         <CreateKeyModal
           token={token}
+          aiRouterUrl={aiRouterUrl}
           userBalance={user ? user.balance : 0}
           onClose={() => {
             setShowCreateModal(false);
@@ -457,7 +458,7 @@ function TopUpModal({ apiKey, token, onClose }) {
 /**
  * Create Key Modal Component
  */
-function CreateKeyModal({ token, onClose, userBalance }) {
+function CreateKeyModal({ token, onClose, userBalance, aiRouterUrl }) {
   const [keyName, setKeyName] = useState('');
   const [initialCredits, setInitialCredits] = useState('');
   const [loading, setLoading] = useState(false);
@@ -491,8 +492,7 @@ function CreateKeyModal({ token, onClose, userBalance }) {
 
       const data = await response.json();
       if (response.ok) {
-        const skKey = data.nineRouterKey;
-        alert(`API Key Berhasil Dibuat!\n\nBase URL: ${aiRouterUrl}\nModel: code\n\nGunakan key ini di Cursor/Cline/Claude Code:\n${skKey || data.apiKey}`);
+        alert(`✅ API Key Berhasil Dibuat!\n\n🔑 API Key: ${data.apiKey}\n\nBase URL: ${aiRouterUrl || 'https://ai.markaz-arshy.com/v1'}\nModel: code\n\nGunakan key ini di Cursor/Cline/Claude Code`);
         onClose();
       } else {
         alert(data.error || 'Gagal membuat API Key');

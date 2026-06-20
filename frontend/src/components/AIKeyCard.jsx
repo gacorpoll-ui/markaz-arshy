@@ -12,12 +12,8 @@ export default function AIKeyCard({ apiKey, onTopUp, onDelete, onToggleActive })
   const navigate = useNavigate();
 
   const handleCopy = () => {
-    if (showFullKey) {
-      navigator.clipboard.writeText(apiKey.apiKey.replace(/•/g, ''));
-      alert('API Key copied to clipboard!');
-    } else {
-      alert('Please reveal the API key first');
-    }
+    navigator.clipboard.writeText(apiKey.apiKey);
+    alert('API Key copied to clipboard!');
   };
 
   const handleViewUsage = () => {
