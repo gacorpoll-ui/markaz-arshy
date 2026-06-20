@@ -1,0 +1,17 @@
+# Walkthrough Checklist
+- [x] Navigate to http://localhost:5173/ and view catalog
+- [x] Click 'Daftar', register Demo User (demo@followerstore.com / password123)
+- [x] Verify balance is Rp 0. Fill 'Top-Up Saldo' with 150000 and submit. Confirm instructions.
+- [x] Click 'Keluar' to log out.
+- [x] Click 'Masuk' to log in as admin (admin@followerstore.com / admin123)
+- [ ] Go to 'Admin' section. On 'Approval Deposit', find 'Demo User' and click 'Setujui'.
+- [ ] Go to 'Upload Stok Premium'. Choose 'Netflix Premium...', input 'demo_netflix@netflix.com|demo_pass_123|Profile D - PIN 8888', and upload.
+- [ ] Click 'Keluar'.
+- [ ] Log in as 'demo@followerstore.com' with 'password123'.
+- [ ] Verify balance is Rp 150,000.
+- [ ] Go to 'Katalog'. Click 'Beli Sekarang' on 'Netflix Premium 1 Bulan (Sharing 1 Profile)'.
+- [ ] Click 'Konfirmasi Beli' in checkout modal.
+- [ ] Verify credentials 'demo_netflix@netflix.com' and 'demo_pass_123' are displayed in success modal.
+- [ ] Go to 'Katalog'. Click 'Beli Sekarang' on 'Instagram Followers Real Indonesia', enter 'https://instagram.com/demotarget', qty '1000', and confirm purchase.
+- [ ] Close modal, go to 'Dashboard' and verify both Netflix and SMM orders in purchase history.
+- [ ] Return a summary.
