@@ -219,6 +219,46 @@ export default function AdminAIProviders({ token }) {
     }
   };
 
+  const handleDeleteProvider = async (providerId, providerName) => {
+    if (!window.confirm(`Hapus provider "${providerName}" beserta semua model di dalamnya?`)) return;
+    try {
+      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/admin/ai-providers/${providerId}`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = await response.json();
+      if (response.ok) {
+        alert(data.message || 'Provider berhasil dihapus');
+        fetchProviders();
+      } else {
+        alert(data.error || 'Gagal menghapus provider');
+      }
+    } catch (error) {
+      console.error('Error deleting provider:', error);
+      alert('Gagal menghapus provider');
+    }
+  };
+
+  const handleDeleteModel = async (modelId, modelName) => {
+    if (!window.confirm(`Hapus model "${modelName}"?`)) return;
+    try {
+      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/admin/ai-models/${modelId}`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = await response.json();
+      if (response.ok) {
+        alert(data.message || 'Model berhasil dihapus');
+        fetchProviders();
+      } else {
+        alert(data.error || 'Gagal menghapus model');
+      }
+    } catch (error) {
+      console.error('Error deleting model:', error);
+      alert('Gagal menghapus model');
+    }
+  };
+
   if (loading) {
     return <div style={{ padding: '40px', textAlign: 'center', color: 'var(--text-muted)' }}>Loading...</div>;
   }
@@ -283,10 +323,18 @@ export default function AdminAIProviders({ token }) {
               <button
                 onClick={() => setEditingProvider(provider)}
                 className="btn btn-secondary"
-                style={{ padding: '8px 16px', fontSize: '14px' }}
+                style={{ padding: '8px 16px', fontSize: '14px', display: 'flex', alignItems: 'center', gap: '6px' }}
               >
-                <Edit2 size={16} />
+                <Edit2 size={14} />
                 Edit
+              </button>
+              <button
+                onClick={() => handleDeleteProvider(provider.id, provider.name)}
+                className="btn btn-secondary"
+                style={{ padding: '8px 16px', fontSize: '14px', display: 'flex', alignItems: 'center', gap: '6px', color: '#ef4444', borderColor: 'rgba(239,68,68,0.3)' }}
+              >
+                <Trash2 size={14} />
+                Hapus
               </button>
             </div>
           </div>
@@ -350,21 +398,28 @@ export default function AdminAIProviders({ token }) {
                       </div>
                     </td>
                     <td style={{ padding: '12px', textAlign: 'center' }}>
-                      <div style={{ display: 'flex', gap: '8px', justifyContent: 'center' }}>
+                      <div style={{ display: 'flex', gap: '6px', justifyContent: 'center' }}>
                         <button
                           onClick={() => setEditingModel(model)}
                           className="btn btn-secondary"
-                          style={{ padding: '6px 12px', fontSize: '12px', display: 'flex', alignItems: 'center', gap: '4px' }}
+                          style={{ padding: '5px 10px', fontSize: '11px', display: 'flex', alignItems: 'center', gap: '4px' }}
                         >
-                          <Edit2 size={12} />
+                          <Edit2 size={11} />
                           Edit
                         </button>
                         <button
                           onClick={() => handleToggleModel(model.id, !model.isActive)}
                           className="btn btn-secondary"
-                          style={{ padding: '6px 12px', fontSize: '12px' }}
+                          style={{ padding: '5px 10px', fontSize: '11px' }}
                         >
                           {model.isActive ? 'Disable' : 'Enable'}
+                        </button>
+                        <button
+                          onClick={() => handleDeleteModel(model.id, model.name)}
+                          className="btn btn-secondary"
+                          style={{ padding: '5px 10px', fontSize: '11px', color: '#ef4444', display: 'flex', alignItems: 'center', gap: '3px' }}
+                        >
+                          <Trash2 size={10} />
                         </button>
                       </div>
                     </td>
@@ -444,7 +499,7 @@ export default function AdminAIProviders({ token }) {
 }
 
 /**
- * EditModelModal Component
+ * EditModelModal Component — Robust version
  */
 function EditModelModal({ model, onClose, onSave }) {
   const [name, setName] = useState(model.name || '');
@@ -453,141 +508,182 @@ function EditModelModal({ model, onClose, onSave }) {
   const [outputPrice, setOutputPrice] = useState(model.outputPricePerToken || 0);
   const [contextWindow, setContextWindow] = useState(model.contextWindow || 0);
   const [loading, setLoading] = useState(false);
+  const [errors, setErrors] = useState({});
+
+  const validate = () => {
+    const errs = {};
+    if (!name.trim()) errs.name = 'Nama model wajib diisi';
+    if (!modelId.trim()) errs.modelId = 'Model ID wajib diisi';
+    if (parseFloat(inputPrice) < 0) errs.inputPrice = 'Harga tidak boleh negatif';
+    if (parseFloat(outputPrice) < 0) errs.outputPrice = 'Harga tidak boleh negatif';
+    if (parseInt(contextWindow) < 0) errs.contextWindow = 'Context window tidak boleh negatif';
+    setErrors(errs);
+    return Object.keys(errs).length === 0;
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!name || !modelId) {
-      alert('Nama dan ID Model wajib diisi');
-      return;
-    }
+    if (!validate()) return;
     setLoading(true);
-    await onSave(model.id, {
-      name,
-      modelId,
-      inputPricePerToken: parseFloat(inputPrice),
-      outputPricePerToken: parseFloat(outputPrice),
-      contextWindow: parseInt(contextWindow),
-    });
+    try {
+      await onSave(model.id, {
+        name: name.trim(),
+        modelId: modelId.trim(),
+        inputPricePerToken: parseFloat(inputPrice),
+        outputPricePerToken: parseFloat(outputPrice),
+        contextWindow: parseInt(contextWindow),
+      });
+    } catch (err) {
+      alert('Gagal menyimpan: ' + err.message);
+    }
     setLoading(false);
   };
 
+  const inputStyle = (hasError) => ({
+    width: '100%',
+    padding: '10px 12px',
+    background: 'rgba(0,0,0,0.2)',
+    border: `1px solid ${hasError ? '#ef4444' : 'var(--border-color)'}`,
+    borderRadius: '8px',
+    color: 'var(--text-primary)',
+    fontSize: '13px',
+    boxSizing: 'border-box',
+    outline: 'none',
+  });
+
   return (
     <div style={{
-      position: 'fixed',
-      top: 0,
-      left: 0,
-      right: 0,
-      bottom: 0,
-      background: 'rgba(0, 0, 0, 0.7)',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      zIndex: 1000,
-      padding: '20px',
+      position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+      background: 'rgba(0, 0, 0, 0.6)', backdropFilter: 'blur(4px)',
+      display: 'flex', alignItems: 'center', justifyContent: 'center',
+      zIndex: 1000, padding: '20px',
     }}>
       <div style={{
-        background: 'var(--bg-secondary)',
-        borderRadius: 'var(--radius-md)',
-        padding: '30px',
-        maxWidth: '500px',
-        width: '100%',
+        background: 'var(--bg-secondary)', borderRadius: '16px', padding: '28px',
+        maxWidth: '520px', width: '100%', maxHeight: '85vh', overflow: 'auto',
         border: '1px solid var(--border-color)',
-        boxShadow: '0 20px 25px -5px rgb(0 0 0 / 0.5)',
+        boxShadow: '0 20px 60px rgba(0,0,0,0.5)',
       }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-          <h2 style={{ fontSize: '22px', fontWeight: '700' }}>Edit Model AI</h2>
-          <button onClick={onClose} style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}>
+        {/* Header */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+          <div>
+            <h2 style={{ fontSize: '20px', fontWeight: '700', margin: 0 }}>Edit Model AI</h2>
+            <p style={{ fontSize: '12px', color: 'var(--text-muted)', margin: '4px 0 0' }}>
+              ID: <code style={{ background: 'rgba(0,0,0,0.1)', padding: '2px 6px', borderRadius: '4px' }}>{model.modelId}</code>
+            </p>
+          </div>
+          <button onClick={onClose} style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', padding: '4px' }}>
             <X size={20} />
           </button>
         </div>
 
         <form onSubmit={handleSubmit}>
+          {/* Name */}
           <div style={{ marginBottom: '16px' }}>
-            <label style={{ display: 'block', marginBottom: '6px', fontSize: '13px', fontWeight: '600' }}>Nama Model</label>
+            <label style={{ display: 'block', marginBottom: '6px', fontSize: '12px', fontWeight: '600', color: 'var(--text-secondary)' }}>
+              Nama Model
+            </label>
             <input
               type="text"
-              className="form-input"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              style={{ width: '100%', padding: '10px', background: 'rgba(0,0,0,0.2)', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-sm)', color: 'var(--text-primary)' }}
-              required
+              placeholder="GPT-4o"
+              style={inputStyle(errors.name)}
             />
+            {errors.name && <span style={{ fontSize: '11px', color: '#ef4444', marginTop: '4px', display: 'block' }}>{errors.name}</span>}
           </div>
 
+          {/* Model ID */}
           <div style={{ marginBottom: '16px' }}>
-            <label style={{ display: 'block', marginBottom: '6px', fontSize: '13px', fontWeight: '600' }}>Model ID (9router/API name)</label>
+            <label style={{ display: 'block', marginBottom: '6px', fontSize: '12px', fontWeight: '600', color: 'var(--text-secondary)' }}>
+              Model ID (API name)
+            </label>
             <input
               type="text"
-              className="form-input"
               value={modelId}
               onChange={(e) => setModelId(e.target.value)}
-              style={{ width: '100%', padding: '10px', background: 'rgba(0,0,0,0.2)', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-sm)', color: 'var(--text-primary)' }}
-              required
+              placeholder="gpt-4o"
+              style={{ ...inputStyle(errors.modelId), fontFamily: 'monospace' }}
             />
+            {errors.modelId && <span style={{ fontSize: '11px', color: '#ef4444', marginTop: '4px', display: 'block' }}>{errors.modelId}</span>}
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '16px' }}>
+          {/* Price Grid */}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '16px' }}>
             <div>
-              <label style={{ display: 'block', marginBottom: '6px', fontSize: '13px', fontWeight: '600' }}>Harga Input / 1K Token ($ USD)</label>
+              <label style={{ display: 'block', marginBottom: '6px', fontSize: '12px', fontWeight: '600', color: 'var(--text-secondary)' }}>
+                Harga Input / 1K Token ($)
+              </label>
               <input
                 type="number"
                 step="0.000001"
-                className="form-input"
                 value={inputPrice}
                 onChange={(e) => setInputPrice(e.target.value)}
-                style={{ width: '100%', padding: '10px', background: 'rgba(0,0,0,0.2)', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-sm)', color: 'var(--text-primary)' }}
-                required
+                style={inputStyle(errors.inputPrice)}
               />
-              <span style={{ fontSize: '11px', color: 'var(--text-muted)', display: 'block', marginTop: '4px' }}>
-                Est: Rp {Math.ceil(inputPrice * 1000 * 15000).toLocaleString('id-ID')} / 1M
+              <span style={{ fontSize: '10px', color: 'var(--text-muted)', display: 'block', marginTop: '4px' }}>
+                ≈ Rp {Math.ceil(inputPrice * 1000 * 15000).toLocaleString('id-ID')} / 1M
               </span>
             </div>
             <div>
-              <label style={{ display: 'block', marginBottom: '6px', fontSize: '13px', fontWeight: '600' }}>Harga Output / 1K Token ($ USD)</label>
+              <label style={{ display: 'block', marginBottom: '6px', fontSize: '12px', fontWeight: '600', color: 'var(--text-secondary)' }}>
+                Harga Output / 1K Token ($)
+              </label>
               <input
                 type="number"
                 step="0.000001"
-                className="form-input"
                 value={outputPrice}
                 onChange={(e) => setOutputPrice(e.target.value)}
-                style={{ width: '100%', padding: '10px', background: 'rgba(0,0,0,0.2)', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-sm)', color: 'var(--text-primary)' }}
-                required
+                style={inputStyle(errors.outputPrice)}
               />
-              <span style={{ fontSize: '11px', color: 'var(--text-muted)', display: 'block', marginTop: '4px' }}>
-                Est: Rp {Math.ceil(outputPrice * 1000 * 15000).toLocaleString('id-ID')} / 1M
+              <span style={{ fontSize: '10px', color: 'var(--text-muted)', display: 'block', marginTop: '4px' }}>
+                ≈ Rp {Math.ceil(outputPrice * 1000 * 15000).toLocaleString('id-ID')} / 1M
               </span>
             </div>
           </div>
 
+          {/* Context Window */}
           <div style={{ marginBottom: '24px' }}>
-            <label style={{ display: 'block', marginBottom: '6px', fontSize: '13px', fontWeight: '600' }}>Context Window (Tokens)</label>
+            <label style={{ display: 'block', marginBottom: '6px', fontSize: '12px', fontWeight: '600', color: 'var(--text-secondary)' }}>
+              Context Window (Tokens)
+            </label>
             <input
               type="number"
-              className="form-input"
               value={contextWindow}
               onChange={(e) => setContextWindow(e.target.value)}
-              style={{ width: '100%', padding: '10px', background: 'rgba(0,0,0,0.2)', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-sm)', color: 'var(--text-primary)' }}
-              required
+              placeholder="128000"
+              style={inputStyle(errors.contextWindow)}
             />
+            <span style={{ fontSize: '10px', color: 'var(--text-muted)', display: 'block', marginTop: '4px' }}>
+              {(contextWindow / 1000).toFixed(0)}K tokens
+            </span>
           </div>
 
-          <div style={{ display: 'flex', gap: '12px' }}>
+          {/* Actions */}
+          <div style={{ display: 'flex', gap: '10px' }}>
             <button
               type="button"
               onClick={onClose}
-              className="btn btn-secondary"
-              style={{ flex: 1, padding: '12px', cursor: 'pointer' }}
+              style={{
+                flex: 1, padding: '11px', borderRadius: '10px',
+                border: '1px solid var(--border-color)', background: 'transparent',
+                color: 'var(--text-secondary)', fontSize: '13px', fontWeight: '600', cursor: 'pointer',
+              }}
               disabled={loading}
             >
-              Cancel
+              Batal
             </button>
             <button
               type="submit"
-              className="btn btn-primary"
-              style={{ flex: 1, padding: '12px', cursor: 'pointer' }}
+              style={{
+                flex: 2, padding: '11px', borderRadius: '10px',
+                border: 'none', background: 'var(--color-primary)', color: 'white',
+                fontSize: '13px', fontWeight: '600', cursor: loading ? 'default' : 'pointer',
+                opacity: loading ? 0.6 : 1,
+              }}
               disabled={loading}
             >
-              {loading ? 'Saving...' : 'Save Changes'}
+              {loading ? 'Menyimpan...' : '💾 Simpan Perubahan'}
             </button>
           </div>
         </form>

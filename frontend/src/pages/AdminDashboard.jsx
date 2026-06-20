@@ -6,45 +6,43 @@ import {
   ChevronRight, LogOut, Bell, User
 } from 'lucide-react';
 
-import AdminOverview        from '../components/AdminOverview';
-import AdminDeposits        from '../components/AdminDeposits';
-import AdminProducts        from '../components/AdminProducts';
-import AdminProductStock    from '../components/AdminProductStock';
-import AdminAllOrders       from '../components/AdminAllOrders';
-import AdminManualBalance   from '../components/AdminManualBalance';
-import AdminPaymentMethods  from '../components/AdminPaymentMethods';
-import AdminCategories      from '../components/AdminCategories';
-import AdminUsers           from '../components/AdminUsers';
-import AdminReviews         from '../components/AdminReviews';
-import AdminAIProviders     from '../components/AdminAIProviders';
-import AdminCombos           from '../components/AdminCombos';
-import AdminSkeleton        from '../components/AdminSkeleton';
+import AdminOverview from '../components/AdminOverview';
+import AdminDeposits from '../components/AdminDeposits';
+import AdminProducts from '../components/AdminProducts';
+import AdminProductStock from '../components/AdminProductStock';
+import AdminAllOrders from '../components/AdminAllOrders';
+import AdminManualBalance from '../components/AdminManualBalance';
+import AdminPaymentMethods from '../components/AdminPaymentMethods';
+import AdminCategories from '../components/AdminCategories';
+import AdminUsers from '../components/AdminUsers';
+import AdminReviews from '../components/AdminReviews';
+import AdminAIProviders from '../components/AdminAIProviders';
+import AdminSkeleton from '../components/AdminSkeleton';
 
 const NAV_ITEMS = [
-  { to: '/admin',                end: true,  icon: LayoutDashboard, label: 'Overview',      badge: null },
-  { to: '/admin/deposits',       end: false, icon: Wallet,          label: 'Approval',       badgeKey: 'deposits' },
-  { to: '/admin/orders',         end: false, icon: BarChart2,        label: 'Pesanan',        badge: null },
-  { to: '/admin/products',       end: false, icon: Package,          label: 'Produk',         badge: null },
-  { to: '/admin/categories',     end: false, icon: Tags,             label: 'Kategori',       badge: null },
-  { to: '/admin/stock',          end: false, icon: PlusCircle,       label: 'Stok Premium',   badge: null },
-  { to: '/admin/balance',        end: false, icon: Wallet,           label: 'Saldo Manual',   badge: null },
-  { to: '/admin/payment-methods',end: false, icon: Settings,         label: 'Pembayaran',     badge: null },
-  { to: '/admin/users',          end: false, icon: Users,            label: 'Pengguna',       badge: null },
-  { to: '/admin/reviews',        end: false, icon: Eye,              label: 'Ulasan',         badgeKey: 'reviews' },
-  { to: '/admin/ai-providers',   end: false, icon: Shield,           label: 'AI Providers',   badge: null },
-  { to: '/admin/ai-combos',      end: false, icon: Shield,           label: 'AI Combos',      badge: null },
+  { to: '/admin', end: true, icon: LayoutDashboard, label: 'Overview', badge: null },
+  { to: '/admin/deposits', end: false, icon: Wallet, label: 'Approval', badgeKey: 'deposits' },
+  { to: '/admin/orders', end: false, icon: BarChart2, label: 'Pesanan', badge: null },
+  { to: '/admin/products', end: false, icon: Package, label: 'Produk', badge: null },
+  { to: '/admin/categories', end: false, icon: Tags, label: 'Kategori', badge: null },
+  { to: '/admin/stock', end: false, icon: PlusCircle, label: 'Stok Premium', badge: null },
+  { to: '/admin/balance', end: false, icon: Wallet, label: 'Saldo Manual', badge: null },
+  { to: '/admin/payment-methods', end: false, icon: Settings, label: 'Pembayaran', badge: null },
+  { to: '/admin/users', end: false, icon: Users, label: 'Pengguna', badge: null },
+  { to: '/admin/reviews', end: false, icon: Eye, label: 'Ulasan', badgeKey: 'reviews' },
+  { to: '/admin/ai-providers', end: false, icon: Shield, label: 'AI Providers', badge: null },
 ];
 
 export default function AdminDashboard({ user, token }) {
-  const [stats, setStats]                   = useState(null);
-  const [pendingDeposits, setPendingDeposits]= useState([]);
-  const [pendingReviews, setPendingReviews]  = useState(0);
-  const [allOrders, setAllOrders]            = useState([]);
-  const [products, setProducts]              = useState([]);
-  const [categories, setCategories]          = useState([]);
-  const [paymentMethods, setPaymentMethods]  = useState([]);
-  const [loading, setLoading]                = useState(true);
-  const [syncing, setSyncing]                = useState(false);
+  const [stats, setStats] = useState(null);
+  const [pendingDeposits, setPendingDeposits] = useState([]);
+  const [pendingReviews, setPendingReviews] = useState(0);
+  const [allOrders, setAllOrders] = useState([]);
+  const [products, setProducts] = useState([]);
+  const [categories, setCategories] = useState([]);
+  const [paymentMethods, setPaymentMethods] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [syncing, setSyncing] = useState(false);
 
   const navigate = useNavigate();
 
@@ -60,9 +58,9 @@ export default function AdminDashboard({ user, token }) {
       const H = { 'Authorization': `Bearer ${token}` };
 
       const [statsR, pendR, ordR, catR, prodR, pmR] = await Promise.all([
-        fetch(`${import.meta.env.VITE_API_BASE_URL}/api/admin/stats`,            { headers: H }),
+        fetch(`${import.meta.env.VITE_API_BASE_URL}/api/admin/stats`, { headers: H }),
         fetch(`${import.meta.env.VITE_API_BASE_URL}/api/admin/deposits/pending`, { headers: H }),
-        fetch(`${import.meta.env.VITE_API_BASE_URL}/api/admin/orders`,           { headers: H }),
+        fetch(`${import.meta.env.VITE_API_BASE_URL}/api/admin/orders`, { headers: H }),
         fetch(`${import.meta.env.VITE_API_BASE_URL}/api/catalog/categories`),
         fetch(`${import.meta.env.VITE_API_BASE_URL}/api/catalog/products`),
         fetch(`${import.meta.env.VITE_API_BASE_URL}/api/deposits/payment-methods`, { headers: H }),
@@ -70,7 +68,7 @@ export default function AdminDashboard({ user, token }) {
 
       const [sD, pD, oD, cD, prD, pmD] = await Promise.all([
         statsR.json(), pendR.json(), ordR.json(),
-        catR.json(),  prodR.json(), pmR.json(),
+        catR.json(), prodR.json(), pmR.json(),
       ]);
 
       const revR = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/reviews/admin`, { headers: H });
@@ -97,8 +95,8 @@ export default function AdminDashboard({ user, token }) {
     return res;
   };
 
-  const handleConfirmDeposit      = async (id) => { const r = await api(`${import.meta.env.VITE_API_BASE_URL}/api/admin/deposits/${id}/confirm`, { method: 'POST' }); if (r.ok) fetchAdminData(); };
-  const handleRejectDeposit       = async (id) => { const r = await api(`${import.meta.env.VITE_API_BASE_URL}/api/admin/deposits/${id}/reject`,  { method: 'POST' }); if (r.ok) fetchAdminData(); };
+  const handleConfirmDeposit = async (id) => { const r = await api(`${import.meta.env.VITE_API_BASE_URL}/api/admin/deposits/${id}/confirm`, { method: 'POST' }); if (r.ok) fetchAdminData(); };
+  const handleRejectDeposit = async (id) => { const r = await api(`${import.meta.env.VITE_API_BASE_URL}/api/admin/deposits/${id}/reject`, { method: 'POST' }); if (r.ok) fetchAdminData(); };
 
   const handleAddProduct = async (data) => {
     const r = await api(`${import.meta.env.VITE_API_BASE_URL}/api/admin/products`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
@@ -230,18 +228,17 @@ export default function AdminDashboard({ user, token }) {
         {/* Route content */}
         <div className="adm-content-area">
           <Routes>
-            <Route path="/"                element={loading ? <AdminSkeleton /> : <AdminOverview stats={stats} loading={loading} />} />
-            <Route path="/deposits"        element={<AdminDeposits pendingDeposits={pendingDeposits} handleConfirmDeposit={handleConfirmDeposit} handleRejectDeposit={handleRejectDeposit} loading={loading} />} />
-            <Route path="/products"        element={<AdminProducts products={products} categories={categories} handleAddProduct={handleAddProduct} loading={loading} />} />
-            <Route path="/categories"      element={<AdminCategories categories={categories} handleAddCategory={handleAddCategory} handleDeleteCategory={handleDeleteCategory} loading={loading} />} />
-            <Route path="/stock"           element={<AdminProductStock products={products} handleUploadStock={handleUploadStock} loading={loading} />} />
-            <Route path="/orders"          element={<AdminAllOrders allOrders={allOrders} loading={loading} />} />
-            <Route path="/balance"         element={<AdminManualBalance handleManualBalance={handleManualBalance} loading={loading} />} />
+            <Route path="/" element={loading ? <AdminSkeleton /> : <AdminOverview stats={stats} loading={loading} />} />
+            <Route path="/deposits" element={<AdminDeposits pendingDeposits={pendingDeposits} handleConfirmDeposit={handleConfirmDeposit} handleRejectDeposit={handleRejectDeposit} loading={loading} />} />
+            <Route path="/products" element={<AdminProducts products={products} categories={categories} handleAddProduct={handleAddProduct} loading={loading} />} />
+            <Route path="/categories" element={<AdminCategories categories={categories} handleAddCategory={handleAddCategory} handleDeleteCategory={handleDeleteCategory} loading={loading} />} />
+            <Route path="/stock" element={<AdminProductStock products={products} handleUploadStock={handleUploadStock} loading={loading} />} />
+            <Route path="/orders" element={<AdminAllOrders allOrders={allOrders} loading={loading} />} />
+            <Route path="/balance" element={<AdminManualBalance handleManualBalance={handleManualBalance} loading={loading} />} />
             <Route path="/payment-methods" element={<AdminPaymentMethods paymentMethods={paymentMethods} handleAddPaymentMethod={handleAddPaymentMethod} handleTogglePaymentMethod={handleTogglePaymentMethod} loading={loading} />} />
-            <Route path="/users"           element={<AdminUsers token={token} />} />
-            <Route path="/reviews"         element={<AdminReviews token={token} />} />
-            <Route path="/ai-providers"    element={<AdminAIProviders token={token} />} />
-            <Route path="/ai-combos"       element={<AdminCombos token={token} />} />
+            <Route path="/users" element={<AdminUsers token={token} />} />
+            <Route path="/reviews" element={<AdminReviews token={token} />} />
+            <Route path="/ai-providers" element={<AdminAIProviders token={token} />} />
           </Routes>
         </div>
       </main>
