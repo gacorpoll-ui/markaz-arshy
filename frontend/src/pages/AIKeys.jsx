@@ -96,21 +96,13 @@ export default function AIKeys({ user, token }) {
         marginBottom: '28px',
       }}>
         <div style={{ fontSize: '13px', fontWeight: '600', color: 'var(--text-primary)', marginBottom: '12px' }}>⚡ Quick Setup</div>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '16px' }}>
-          <div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', justifyContent: 'space-between' }}>
+          <div style={{ flex: 1 }}>
             <div style={{ fontSize: '11px', color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: '6px', fontWeight: '600' }}>Base URL</div>
-            <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
-              <code style={{ fontSize: '12px', color: 'var(--color-primary)', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{aiRouterUrl}</code>
-              <button onClick={copyAll} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)', padding: '4px' }} title="Copy"><Copy size={14} /></button>
+            <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+              <code style={{ fontSize: '13px', color: 'var(--color-primary)', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', background: 'rgba(0,0,0,0.2)', padding: '6px 10px', borderRadius: '4px' }}>{aiRouterUrl}</code>
+              <button onClick={copyAll} style={{ background: 'none', border: '1px solid var(--border-color)', borderRadius: '6px', cursor: 'pointer', color: 'var(--text-muted)', padding: '6px 10px', fontSize: '12px', display: 'flex', alignItems: 'center', gap: '4px' }} title="Copy"><Copy size={13} /> Copy</button>
             </div>
-          </div>
-          <div>
-            <div style={{ fontSize: '11px', color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: '6px', fontWeight: '600' }}>Model</div>
-            <code style={{ fontSize: '12px', color: 'var(--color-secondary)' }}>code</code>
-          </div>
-          <div>
-            <div style={{ fontSize: '11px', color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: '6px', fontWeight: '600' }}>Format</div>
-            <code style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>OpenAI Compatible</code>
           </div>
         </div>
         <div style={{ marginTop: '12px', paddingTop: '10px', borderTop: '1px solid rgba(79,172,254,0.1)' }}>
