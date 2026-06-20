@@ -491,7 +491,8 @@ function CreateKeyModal({ token, onClose, userBalance }) {
 
       const data = await response.json();
       if (response.ok) {
-        alert('Berhasil membuat API Key baru!');
+        const skKey = data.nineRouterKey;
+        alert(`API Key Berhasil Dibuat!\n\nBase URL: ${aiRouterUrl}\nModel: code\n\nGunakan key ini di Cursor/Cline/Claude Code:\n${skKey || data.apiKey}`);
         onClose();
       } else {
         alert(data.error || 'Gagal membuat API Key');

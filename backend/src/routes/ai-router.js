@@ -93,6 +93,34 @@ router.post('/keys/create', requireAuth, async (req, res) => {
     const randomBytes = crypto.randomBytes(24).toString('hex');
     const apiKey = `ma-${randomBytes}`;
 
+    // ═══ Also create key on 9router ═══
+    let nineRouterKey = null;
+    try {
+      // Login to 9router with admin session
+      const loginRes = await fetch(`${NINE_ROUTER_URL}/api/auth/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: 'admin', password: 'Riri@150187' }),
+      });
+      const setCookie = loginRes.headers.get('set-cookie');
+      if (setCookie) {
+        const cookie = setCookie.split(';')[0];
+        const keyRes = await fetch(`${NINE_ROUTER_URL}/api/keys`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Cookie': cookie },
+          body: JSON.stringify({ name: `ma-${keyName}` }),
+        });
+        if (keyRes.ok) {
+          const keyData = await keyRes.json();
+          nineRouterKey = keyData.key; // sk-xxx
+          console.log(`[AI ROUTE] Created 9router key for user ${userId}: ${nineRouterKey.slice(0, 15)}...`);
+        }
+      }
+    } catch (err) {
+      console.error('[AI ROUTE] Failed to create 9router key:', err.message);
+      // Continue — ma-* key still created, just no 9router key yet
+    }
+
     // Deduct initial credits from user balance if needed
     if (initialCredits > 0) {
       const user = await prisma.user.findUnique({ where: { id: userId } });
@@ -128,6 +156,7 @@ router.post('/keys/create', requireAuth, async (req, res) => {
         rateLimit,
         creditsBalance: initialCredits,
         isActive: true,
+        nineRouterKey,
       },
       include: {
         model: {
@@ -139,11 +168,13 @@ router.post('/keys/create', requireAuth, async (req, res) => {
     res.status(201).json({
       id: newKey.id,
       apiKey: newKey.apiKey,
+      nineRouterKey: newKey.nineRouterKey,
       keyName: newKey.keyName,
       tier: newKey.tier,
       rateLimit: newKey.rateLimit,
       creditsBalance: newKey.creditsBalance,
       model: newKey.model,
+      baseUrl: 'https://ai.markaz-arshy.com/v1',
     });
   } catch (error) {
     console.error('Error creating API key:', error);
