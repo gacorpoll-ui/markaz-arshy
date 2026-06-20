@@ -28,8 +28,8 @@ async function recordUsage({ apiKey, endpoint, body, responseStatus, latencyMs, 
           providerId: provider.id,
           name: modelId,
           modelId,
-          inputPricePerToken: 0.00001,
-          outputPricePerToken: 0.00003,
+          inputPricePer1K: 150,    // Default Rp 150/1K input tokens
+          outputPricePer1K: 450,   // Default Rp 450/1K output tokens
           contextWindow: 128000,
           isActive: true,
         },
@@ -49,9 +49,8 @@ async function recordUsage({ apiKey, endpoint, body, responseStatus, latencyMs, 
     }
 
     const totalTokens = inputTokens + outputTokens;
-    const EXCHANGE_RATE = 15000;
-    const inputCost = (inputTokens / 1000) * aiModel.inputPricePerToken * EXCHANGE_RATE;
-    const outputCost = (outputTokens / 1000) * aiModel.outputPricePerToken * EXCHANGE_RATE;
+    const inputCost = (inputTokens / 1000) * aiModel.inputPricePer1K;
+    const outputCost = (outputTokens / 1000) * aiModel.outputPricePer1K;
     const totalCost = inputCost + outputCost;
 
     const requestId = `req_${crypto.randomBytes(8).toString('hex')}`;

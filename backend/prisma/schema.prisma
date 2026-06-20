@@ -228,8 +228,8 @@ model AIModel {
   provider            AIProvider  @relation(fields: [providerId], references: [id])
   name                String      // "GPT-4o", "Claude 3.5 Sonnet"
   modelId             String      @unique // "gpt-4o", "claude-3-5-sonnet"
-  inputPricePerToken  Float       // Price per 1k input tokens
-  outputPricePerToken Float       // Price per 1k output tokens
+  inputPricePer1K     Float       // Harga input per 1K tokens (Rp)
+  outputPricePer1K    Float       // Harga output per 1K tokens (Rp)
   contextWindow       Int         // Max tokens (e.g. 128000)
   isActive            Boolean     @default(true)
   apiKeys             AIApiKey[]

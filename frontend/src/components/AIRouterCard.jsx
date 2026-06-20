@@ -91,7 +91,7 @@ export default function AIRouterCard({ model, provider }) {
         {/* Pricing */}
         <div style={{ textAlign: 'right' }}>
           <div style={{ fontSize: '24px', fontWeight: '700', color: 'var(--color-primary)' }}>
-            {formatPrice(model.inputPricePerToken)}
+            {formatPrice(model.inputPricePer1K)}
           </div>
           <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
             per 1 juta input token
@@ -138,7 +138,7 @@ export default function AIRouterCard({ model, provider }) {
             </span>
           </div>
           <div style={{ fontSize: '15px', fontWeight: '600', color: 'var(--text-primary)', whiteSpace: 'nowrap' }}>
-            {formatPrice(model.outputPricePerToken)}/1M
+            {formatPrice(model.outputPricePer1K)}/1M
           </div>
         </div>
 

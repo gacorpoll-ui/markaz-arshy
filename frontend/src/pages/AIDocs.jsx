@@ -429,10 +429,10 @@ except Exception as e:
                     <td style={{ padding: '12px', color: 'var(--text-primary)' }}>{m.name}</td>
                     <td style={{ padding: '12px', color: 'var(--text-secondary)', fontFamily: 'monospace', fontSize: '12px' }}>{m.modelId}</td>
                     <td style={{ padding: '12px', textAlign: 'right', color: 'var(--text-primary)' }}>
-                      Rp {Math.ceil(m.inputPricePerToken * 1000 * 15000).toLocaleString('id-ID')}
+                      Rp {Math.ceil(m.inputPricePer1K).toLocaleString('id-ID')}
                     </td>
                     <td style={{ padding: '12px', textAlign: 'right', color: 'var(--text-primary)' }}>
-                      Rp {Math.ceil(m.outputPricePerToken * 1000 * 15000).toLocaleString('id-ID')}
+                      Rp {Math.ceil(m.outputPricePer1K).toLocaleString('id-ID')}
                     </td>
                     <td style={{ padding: '12px', textAlign: 'right', color: 'var(--text-primary)' }}>
                       {(m.contextWindow / 1000).toFixed(0)}K

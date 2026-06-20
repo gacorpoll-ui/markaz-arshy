@@ -376,10 +376,10 @@ export default function AdminAIProviders({ token }) {
                       {model.modelId}
                     </td>
                     <td style={{ padding: '12px', textAlign: 'right', color: 'var(--text-primary)' }}>
-                      Rp {Math.ceil(model.inputPricePerToken * 1000000 * 15000).toLocaleString('id-ID')}
+                      Rp {Math.ceil(model.inputPricePer1K * 1000).toLocaleString('id-ID')}
                     </td>
                     <td style={{ padding: '12px', textAlign: 'right', color: 'var(--text-primary)' }}>
-                      Rp {Math.ceil(model.outputPricePerToken * 1000000 * 15000).toLocaleString('id-ID')}
+                      Rp {Math.ceil(model.outputPricePer1K * 1000).toLocaleString('id-ID')}
                     </td>
                     <td style={{ padding: '12px', textAlign: 'right', color: 'var(--text-primary)' }}>
                       {(model.contextWindow / 1000).toFixed(0)}K
@@ -504,8 +504,8 @@ export default function AdminAIProviders({ token }) {
 function EditModelModal({ model, onClose, onSave }) {
   const [name, setName] = useState(model.name || '');
   const [modelId, setModelId] = useState(model.modelId || '');
-  const [inputPrice, setInputPrice] = useState(model.inputPricePerToken || 0);
-  const [outputPrice, setOutputPrice] = useState(model.outputPricePerToken || 0);
+  const [inputPrice, setInputPrice] = useState(model.inputPricePer1K || 0);
+  const [outputPrice, setOutputPrice] = useState(model.outputPricePer1K || 0);
   const [contextWindow, setContextWindow] = useState(model.contextWindow || 0);
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState({});
@@ -529,8 +529,8 @@ function EditModelModal({ model, onClose, onSave }) {
       await onSave(model.id, {
         name: name.trim(),
         modelId: modelId.trim(),
-        inputPricePerToken: parseFloat(inputPrice),
-        outputPricePerToken: parseFloat(outputPrice),
+        inputPricePer1K: parseFloat(inputPrice),
+        outputPricePer1K: parseFloat(outputPrice),
         contextWindow: parseInt(contextWindow),
       });
     } catch (err) {
@@ -622,7 +622,7 @@ function EditModelModal({ model, onClose, onSave }) {
                 style={inputStyle(errors.inputPrice)}
               />
               <span style={{ fontSize: '10px', color: 'var(--text-muted)', display: 'block', marginTop: '4px' }}>
-                ≈ Rp {Math.ceil(inputPrice * 1000000 * 15000).toLocaleString('id-ID')} / 1M
+                ≈ Rp {Math.ceil(inputPrice * 1000).toLocaleString('id-ID')} / 1M
               </span>
             </div>
             <div>
@@ -637,7 +637,7 @@ function EditModelModal({ model, onClose, onSave }) {
                 style={inputStyle(errors.outputPrice)}
               />
               <span style={{ fontSize: '10px', color: 'var(--text-muted)', display: 'block', marginTop: '4px' }}>
-                ≈ Rp {Math.ceil(outputPrice * 1000000 * 15000).toLocaleString('id-ID')} / 1M
+                ≈ Rp {Math.ceil(outputPrice * 1000).toLocaleString('id-ID')} / 1M
               </span>
             </div>
           </div>
@@ -920,8 +920,8 @@ function CreateProviderModal({ onClose, onSave }) {
 function CreateModelModal({ providerId, providerName, onClose, onSave }) {
   const [name, setName] = useState('');
   const [modelId, setModelId] = useState('');
-  const [inputPrice, setInputPrice] = useState('0.00001');
-  const [outputPrice, setOutputPrice] = useState('0.00003');
+  const [inputPrice, setInputPrice] = useState('150');
+  const [outputPrice, setOutputPrice] = useState('450');
   const [contextWindow, setContextWindow] = useState('128000');
   const [loading, setLoading] = useState(false);
 
@@ -936,8 +936,8 @@ function CreateModelModal({ providerId, providerName, onClose, onSave }) {
       providerId,
       name,
       modelId,
-      inputPricePerToken: parseFloat(inputPrice),
-      outputPricePerToken: parseFloat(outputPrice),
+      inputPricePer1K: parseFloat(inputPrice),
+      outputPricePer1K: parseFloat(outputPrice),
       contextWindow: parseInt(contextWindow),
     });
     setLoading(false);
@@ -998,7 +998,7 @@ function CreateModelModal({ providerId, providerName, onClose, onSave }) {
                 required
               />
               <span style={{ fontSize: '11px', color: 'var(--text-muted)', display: 'block', marginTop: '4px' }}>
-                Est: Rp {Math.ceil(parseFloat(inputPrice || 0) * 1000000 * 15000).toLocaleString('id-ID')} / 1M
+                Est: Rp {Math.ceil(parseFloat(inputPrice || 0) * 1000).toLocaleString('id-ID')} / 1M
               </span>
             </div>
             <div>
@@ -1010,7 +1010,7 @@ function CreateModelModal({ providerId, providerName, onClose, onSave }) {
                 required
               />
               <span style={{ fontSize: '11px', color: 'var(--text-muted)', display: 'block', marginTop: '4px' }}>
-                Est: Rp {Math.ceil(parseFloat(outputPrice || 0) * 1000000 * 15000).toLocaleString('id-ID')} / 1M
+                Est: Rp {Math.ceil(parseFloat(outputPrice || 0) * 1000).toLocaleString('id-ID')} / 1M
               </span>
             </div>
           </div>

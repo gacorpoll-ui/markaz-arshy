@@ -93,20 +93,17 @@ router.post('/webhook/usage', async (req, res) => {
           providerId: provider.id,
           name: modelIdString.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' '),
           modelId: modelIdString,
-          inputPricePerToken: 0.00001, // default $0.01 per 1K input tokens
-          outputPricePerToken: 0.00003, // default $0.03 per 1K output tokens
+          inputPricePer1K: 150,    // Default Rp 150/1K input tokens
+          outputPricePer1K: 450,   // Default Rp 450/1K output tokens
           contextWindow: 128000,
           isActive: true
         }
       });
     }
 
-    const EXCHANGE_RATE = 15000;
     const totalTokens = inputTokens + outputTokens;
-    const inputCostUSD = (inputTokens / 1000) * aiModel.inputPricePerToken;
-    const outputCostUSD = (outputTokens / 1000) * aiModel.outputPricePerToken;
-    const inputCost = inputCostUSD * EXCHANGE_RATE;
-    const outputCost = outputCostUSD * EXCHANGE_RATE;
+    const inputCost = (inputTokens / 1000) * aiModel.inputPricePer1K;
+    const outputCost = (outputTokens / 1000) * aiModel.outputPricePer1K;
     const totalCost = inputCost + outputCost;
 
     // Dedup check: skip if proxy already recorded this request

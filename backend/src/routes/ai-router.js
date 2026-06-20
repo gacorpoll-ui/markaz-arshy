@@ -25,8 +25,8 @@ router.get('/providers', async (req, res) => {
             id: true,
             name: true,
             modelId: true,
-            inputPricePerToken: true,
-            outputPricePerToken: true,
+            inputPricePer1K: true,
+            outputPricePer1K: true,
             contextWindow: true,
           },
         },
@@ -309,23 +309,21 @@ router.get('/usage/logs', requireAuth, async (req, res) => {
     const logs = await prisma.aIUsage.findMany({
       where,
       include: {
-        model: { select: { name: true, modelId: true, inputPricePerToken: true, outputPricePerToken: true } },
+        model: { select: { name: true, modelId: true, inputPricePer1K: true, outputPricePer1K: true } },
         apiKey: { select: { keyName: true, apiKey: true } },
       },
       orderBy: { createdAt: 'desc' },
       take: parseInt(limit),
     });
 
-    const EXCHANGE_RATE = 15000;
-
     // Enrich with actual model from metadata + pricing breakdown
     const enriched = logs.map(l => {
       let meta = {};
       try { meta = JSON.parse(l.metadata || '{}'); } catch {}
 
-      // Cost breakdown: how was the totalCost calculated?
-      const inputPricePer1K = (l.model?.inputPricePerToken || 0.00001) * EXCHANGE_RATE;
-      const outputPricePer1K = (l.model?.outputPricePerToken || 0.00003) * EXCHANGE_RATE;
+      // Cost breakdown: prices are now directly in Rp per 1K tokens
+      const inputPricePer1K = l.model?.inputPricePer1K || 150;
+      const outputPricePer1K = l.model?.outputPricePer1K || 450;
       const calculatedInputCost = (l.inputTokens / 1000) * inputPricePer1K;
       const calculatedOutputCost = (l.outputTokens / 1000) * outputPricePer1K;
 
@@ -334,9 +332,8 @@ router.get('/usage/logs', requireAuth, async (req, res) => {
         actualModel: meta.actualModel || l.model?.modelId || 'unknown',
         requestedModel: meta.requestedModel || l.model?.modelId || 'unknown',
         pricing: {
-          inputPricePer1K: Math.round(inputPricePer1K),  // Rp per 1K input tokens
-          outputPricePer1K: Math.round(outputPricePer1K), // Rp per 1K output tokens
-          exchangeRate: EXCHANGE_RATE,
+          inputPricePer1K: Math.round(inputPricePer1K),
+          outputPricePer1K: Math.round(outputPricePer1K),
           calculatedInputCost: Math.round(calculatedInputCost),
           calculatedOutputCost: Math.round(calculatedOutputCost),
           formula: `${l.inputTokens} input ÷ 1000 × Rp${Math.round(inputPricePer1K)} + ${l.outputTokens} output ÷ 1000 × Rp${Math.round(outputPricePer1K)}`,

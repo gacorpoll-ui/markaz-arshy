@@ -392,20 +392,20 @@ export default function AIRouterCatalog({ user, token }) {
                     {/* Input Price */}
                     <div style={{ textAlign: 'right', display: 'flex', flexDirection: 'column', alignItems: 'flex-end', justifyContent: 'center' }}>
                       <span style={{ fontSize: '13px', fontWeight: '600', color: 'var(--text-primary)' }}>
-                        {formatPrice(model.inputPricePerToken)}
+                        {formatPrice(model.inputPricePer1K)}
                       </span>
                       <span style={{ fontSize: '10px', color: 'var(--text-muted)' }}>
-                        {formatPriceIDR(model.inputPricePerToken)}
+                        {formatPriceIDR(model.inputPricePer1K)}
                       </span>
                     </div>
 
                     {/* Output Price */}
                     <div style={{ textAlign: 'right', display: 'flex', flexDirection: 'column', alignItems: 'flex-end', justifyContent: 'center' }}>
                       <span style={{ fontSize: '13px', fontWeight: '600', color: 'var(--text-primary)' }}>
-                        {formatPrice(model.outputPricePerToken)}
+                        {formatPrice(model.outputPricePer1K)}
                       </span>
                       <span style={{ fontSize: '10px', color: 'var(--text-muted)' }}>
-                        {formatPriceIDR(model.outputPricePerToken)}
+                        {formatPriceIDR(model.outputPricePer1K)}
                       </span>
                     </div>
 
@@ -438,8 +438,8 @@ export default function AIRouterCatalog({ user, token }) {
                             <div><strong>Model ID:</strong> <code style={{ background: 'rgba(0,0,0,0.2)', padding: '2px 6px', borderRadius: '4px' }}>{model.modelId}</code></div>
                             <div><strong>Provider:</strong> {model.provider.name}</div>
                             <div><strong>Context Window:</strong> {model.contextWindow.toLocaleString()} tokens</div>
-                            <div><strong>Input Price:</strong> {formatPrice(model.inputPricePerToken)} per 1M tokens</div>
-                            <div><strong>Output Price:</strong> {formatPrice(model.outputPricePerToken)} per 1M tokens</div>
+                            <div><strong>Input Price:</strong> {formatPrice(model.inputPricePer1K)} per 1K tokens</div>
+                            <div><strong>Output Price:</strong> {formatPrice(model.outputPricePer1K)} per 1K tokens</div>
                           </div>
                         </div>
 

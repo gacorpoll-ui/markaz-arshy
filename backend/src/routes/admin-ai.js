@@ -114,13 +114,13 @@ router.post('/ai-models', requireAuth, requireAdmin, async (req, res) => {
       providerId,
       name,
       modelId,
-      inputPricePerToken,
-      outputPricePerToken,
+      inputPricePer1K,
+      outputPricePer1K,
       contextWindow,
       isActive,
     } = req.body;
 
-    if (!providerId || !name || !modelId || !inputPricePerToken || !outputPricePerToken || !contextWindow) {
+    if (!providerId || !name || !modelId || !inputPricePer1K || !outputPricePer1K || !contextWindow) {
       return res.status(400).json({ error: 'All fields are required' });
     }
 
@@ -135,8 +135,8 @@ router.post('/ai-models', requireAuth, requireAdmin, async (req, res) => {
         providerId: parseInt(providerId),
         name,
         modelId,
-        inputPricePerToken: parseFloat(inputPricePerToken),
-        outputPricePerToken: parseFloat(outputPricePerToken),
+        inputPricePer1K: parseFloat(inputPricePer1K),
+        outputPricePer1K: parseFloat(outputPricePer1K),
         contextWindow: parseInt(contextWindow),
         isActive: isActive !== undefined ? isActive : true,
       },
@@ -158,8 +158,8 @@ router.put('/ai-models/:id', requireAuth, requireAdmin, async (req, res) => {
     const {
       name,
       modelId,
-      inputPricePerToken,
-      outputPricePerToken,
+      inputPricePer1K,
+      outputPricePer1K,
       contextWindow,
       isActive,
     } = req.body;
@@ -183,8 +183,8 @@ router.put('/ai-models/:id', requireAuth, requireAdmin, async (req, res) => {
       data: {
         ...(name !== undefined && { name: name.trim() }),
         ...(modelId !== undefined && { modelId: modelId.trim() }),
-        ...(inputPricePerToken !== undefined && { inputPricePerToken: parseFloat(inputPricePerToken) }),
-        ...(outputPricePerToken !== undefined && { outputPricePerToken: parseFloat(outputPricePerToken) }),
+        ...(inputPricePer1K !== undefined && { inputPricePer1K: parseFloat(inputPricePer1K) }),
+        ...(outputPricePer1K !== undefined && { outputPricePer1K: parseFloat(outputPricePer1K) }),
         ...(contextWindow !== undefined && { contextWindow: parseInt(contextWindow) }),
         ...(typeof isActive === 'boolean' && { isActive }),
       },
@@ -355,9 +355,9 @@ router.post('/ai-sync-9router', requireAuth, requireAdmin, async (req, res) => {
           providerId: dbProvider.id,
           name: displayName,
           modelId: modelId,
-          // Default cost per 1M tokens in USD ($0.01 inputs / $0.03 outputs)
-          inputPricePerToken: 0.00001,
-          outputPricePerToken: 0.00003,
+          // Default cost per 1K tokens in Rp
+          inputPricePer1K: 150,
+          outputPricePer1K: 450,
           contextWindow: 128000,
           isActive: true
         }
