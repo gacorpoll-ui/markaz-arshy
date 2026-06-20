@@ -376,10 +376,10 @@ export default function AdminAIProviders({ token }) {
                       {model.modelId}
                     </td>
                     <td style={{ padding: '12px', textAlign: 'right', color: 'var(--text-primary)' }}>
-                      Rp {Math.ceil(model.inputPricePerToken * 1000 * 15000).toLocaleString('id-ID')}
+                      Rp {Math.ceil(model.inputPricePerToken * 1000000 * 15000).toLocaleString('id-ID')}
                     </td>
                     <td style={{ padding: '12px', textAlign: 'right', color: 'var(--text-primary)' }}>
-                      Rp {Math.ceil(model.outputPricePerToken * 1000 * 15000).toLocaleString('id-ID')}
+                      Rp {Math.ceil(model.outputPricePerToken * 1000000 * 15000).toLocaleString('id-ID')}
                     </td>
                     <td style={{ padding: '12px', textAlign: 'right', color: 'var(--text-primary)' }}>
                       {(model.contextWindow / 1000).toFixed(0)}K
@@ -612,7 +612,7 @@ function EditModelModal({ model, onClose, onSave }) {
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '16px' }}>
             <div>
               <label style={{ display: 'block', marginBottom: '6px', fontSize: '12px', fontWeight: '600', color: 'var(--text-secondary)' }}>
-                Harga Input / 1K Token ($)
+                Harga Input / 1M Token ($)
               </label>
               <input
                 type="number"
@@ -622,12 +622,12 @@ function EditModelModal({ model, onClose, onSave }) {
                 style={inputStyle(errors.inputPrice)}
               />
               <span style={{ fontSize: '10px', color: 'var(--text-muted)', display: 'block', marginTop: '4px' }}>
-                ≈ Rp {Math.ceil(inputPrice * 1000 * 15000).toLocaleString('id-ID')} / 1M
+                ≈ Rp {Math.ceil(inputPrice * 1000000 * 15000).toLocaleString('id-ID')} / 1M
               </span>
             </div>
             <div>
               <label style={{ display: 'block', marginBottom: '6px', fontSize: '12px', fontWeight: '600', color: 'var(--text-secondary)' }}>
-                Harga Output / 1K Token ($)
+                Harga Output / 1M Token ($)
               </label>
               <input
                 type="number"
@@ -637,7 +637,7 @@ function EditModelModal({ model, onClose, onSave }) {
                 style={inputStyle(errors.outputPrice)}
               />
               <span style={{ fontSize: '10px', color: 'var(--text-muted)', display: 'block', marginTop: '4px' }}>
-                ≈ Rp {Math.ceil(outputPrice * 1000 * 15000).toLocaleString('id-ID')} / 1M
+                ≈ Rp {Math.ceil(outputPrice * 1000000 * 15000).toLocaleString('id-ID')} / 1M
               </span>
             </div>
           </div>
@@ -990,7 +990,7 @@ function CreateModelModal({ providerId, providerName, onClose, onSave }) {
 
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '16px' }}>
             <div>
-              <label style={{ display: 'block', marginBottom: '6px', fontSize: '13px', fontWeight: '600' }}>Harga Input / 1K Token ($ USD)</label>
+              <label style={{ display: 'block', marginBottom: '6px', fontSize: '13px', fontWeight: '600' }}>Harga Input / 1M Token ($ USD)</label>
               <input
                 type="number" step="0.000001" className="form-input"
                 value={inputPrice} onChange={(e) => setInputPrice(e.target.value)}
@@ -998,11 +998,11 @@ function CreateModelModal({ providerId, providerName, onClose, onSave }) {
                 required
               />
               <span style={{ fontSize: '11px', color: 'var(--text-muted)', display: 'block', marginTop: '4px' }}>
-                Est: Rp {Math.ceil(parseFloat(inputPrice || 0) * 1000 * 15000).toLocaleString('id-ID')} / 1M
+                Est: Rp {Math.ceil(parseFloat(inputPrice || 0) * 1000000 * 15000).toLocaleString('id-ID')} / 1M
               </span>
             </div>
             <div>
-              <label style={{ display: 'block', marginBottom: '6px', fontSize: '13px', fontWeight: '600' }}>Harga Output / 1K Token ($ USD)</label>
+              <label style={{ display: 'block', marginBottom: '6px', fontSize: '13px', fontWeight: '600' }}>Harga Output / 1M Token ($ USD)</label>
               <input
                 type="number" step="0.000001" className="form-input"
                 value={outputPrice} onChange={(e) => setOutputPrice(e.target.value)}
@@ -1010,7 +1010,7 @@ function CreateModelModal({ providerId, providerName, onClose, onSave }) {
                 required
               />
               <span style={{ fontSize: '11px', color: 'var(--text-muted)', display: 'block', marginTop: '4px' }}>
-                Est: Rp {Math.ceil(parseFloat(outputPrice || 0) * 1000 * 15000).toLocaleString('id-ID')} / 1M
+                Est: Rp {Math.ceil(parseFloat(outputPrice || 0) * 1000000 * 15000).toLocaleString('id-ID')} / 1M
               </span>
             </div>
           </div>
