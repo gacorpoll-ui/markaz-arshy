@@ -1,6 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Plus, Key, Copy, BarChart3, Trash2, Power, Zap, ExternalLink } from 'lucide-react';
+import { useAISSE } from '../hooks/useAISSE';
 
 /**
  * AI Keys Dashboard — Simple & Professional
@@ -17,6 +18,17 @@ export default function AIKeys({ user, token }) {
     if (!user) { navigate('/login'); return; }
     fetchKeys();
   }, [user]);
+
+  // Real-time: update credits balance via SSE
+  const handleBalance = useCallback((balanceUpdate) => {
+    setApiKeys(prev => prev.map(k =>
+      k.id === balanceUpdate.keyId
+        ? { ...k, creditsBalance: balanceUpdate.newBalance }
+        : k
+    ));
+  }, []);
+
+  useAISSE({ token, onBalance: handleBalance });
 
   useEffect(() => {
     if (location.state?.modelId) {

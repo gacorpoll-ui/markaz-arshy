@@ -1,11 +1,11 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { Line } from 'react-chartjs-2';
 import { Chart as ChartJS, CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend } from 'chart.js';
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend);
 
-export default function AIUsageChart({ data, title = 'AI Usage Over Time' }) {
-  const chartData = {
+export default React.memo(function AIUsageChart({ data, title = 'AI Usage Over Time' }) {
+  const chartData = useMemo(() => ({
     labels: data.map(item => item.date),
     datasets: [
       {
@@ -37,11 +37,12 @@ export default function AIUsageChart({ data, title = 'AI Usage Over Time' }) {
         yAxisID: 'y1',
       },
     ],
-  };
+  }), [data]);
 
-  const options = {
+  const options = useMemo(() => ({
     responsive: true,
     maintainAspectRatio: false,
+    animation: { duration: 300 }, // Faster animations
     interaction: { mode: 'index', intersect: false },
     plugins: {
       legend: {
@@ -105,11 +106,11 @@ export default function AIUsageChart({ data, title = 'AI Usage Over Time' }) {
         title: { display: true, text: 'Biaya (Rp)', color: '#a855f7', font: { size: 11 } },
       },
     },
-  };
+  }), [title]);
 
   return (
     <div style={{ height: '280px' }}>
       <Line data={chartData} options={options} />
     </div>
   );
-}
+});

@@ -1,6 +1,8 @@
 import express from 'express';
 import crypto from 'crypto';
 import prisma from '../db.js';
+import eventBus from '../sse/EventBus.js';
+import { wasRecorded, markRecorded, makeDedupKey } from '../sse/requestDedup.js';
 
 const router = express.Router();
 
@@ -107,6 +109,16 @@ router.post('/webhook/usage', async (req, res) => {
     const outputCost = outputCostUSD * EXCHANGE_RATE;
     const totalCost = inputCost + outputCost;
 
+    // Dedup check: skip if proxy already recorded this request
+    const dedupKey = makeDedupKey(apiKeyData.id, req.body?.endpoint || 'unknown', statusCode, new Date(timestamp).getTime());
+    if (wasRecorded(dedupKey)) {
+      console.log(`[WEBHOOK] Skipping duplicate usage for key ${apiKeyData.id} (already recorded by proxy)`);
+      return res.status(200).json({ message: 'Usage already recorded by proxy' });
+    }
+    markRecorded(dedupKey);
+
+    const newBalance = apiKeyData.creditsBalance - totalCost;
+
     // Ensure we are inside a transaction for atomic updates
     await prisma.$transaction(async (tx) => {
       // Log AI Usage
@@ -148,11 +160,26 @@ router.post('/webhook/usage', async (req, res) => {
           type: 'USAGE',
           description: `Usage for model ${aiModel.name} (req: ${requestId})`,
           balanceBefore: apiKeyData.creditsBalance,
-          balanceAfter: apiKeyData.creditsBalance - totalCost,
+          balanceAfter: newBalance,
           relatedUsageId: newUsage.id,
         },
       });
     }); // End of transaction
+
+    // Emit real-time events AFTER transaction commits
+    eventBus.emitUsage(apiKeyData.userId, {
+      id: null, // webhook doesn't return the usage ID easily, frontend will get it on next refresh
+      model: { name: aiModel.name, modelId: modelIdString },
+      inputTokens,
+      outputTokens,
+      totalTokens,
+      totalCost,
+      statusCode,
+      latencyMs,
+      createdAt: new Date(timestamp).toISOString(),
+      keyName: apiKeyData.keyName,
+    });
+    eventBus.emitBalanceUpdate(apiKeyData.userId, apiKeyData.id, newBalance);
 
     res.status(200).json({ message: 'Usage recorded successfully' });
   } catch (error) {

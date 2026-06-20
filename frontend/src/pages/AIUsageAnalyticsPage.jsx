@@ -1,11 +1,274 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { LineChart, DollarSign, Cpu, Clock, ChevronLeft, Download, Filter } from 'lucide-react';
+import { LineChart, DollarSign, Cpu, Clock, ChevronLeft, Download, Filter, Wifi, WifiOff, Activity, Zap, TrendingUp, Info, X } from 'lucide-react';
 import AIUsageChart from '../components/AIUsageChart';
+import { useAISSE } from '../hooks/useAISSE';
 
-/**
- * AI Usage Analytics Page — Global usage dashboard with per-key filter
- */
+// ═══════════════════════════════════════
+// Utility functions (stable, no re-creation)
+// ═══════════════════════════════════════
+const formatNumber = (n) => (n || 0).toLocaleString();
+const formatCost = (cost) => `Rp ${Math.ceil(cost || 0).toLocaleString('id-ID')}`;
+const formatTime = (date) => new Date(date).toLocaleString('id-ID');
+const formatLatency = (ms) => ms >= 1000 ? `${(ms / 1000).toFixed(1)}s` : `${ms}ms`;
+
+const getPriceColor = (cost) => {
+  if (cost > 7500) return '#ef4444';
+  if (cost > 1500) return '#facc15';
+  return '#22c55e';
+};
+
+const getStatusColor = (code) => code >= 200 && code < 300 ? '#22c55e' : code >= 400 ? '#ef4444' : '#f59e0b';
+
+// ═══════════════════════════════════════
+// Skeleton Loading Component
+// ═══════════════════════════════════════
+function UsageSkeleton() {
+  const skeletonStyle = {
+    background: 'linear-gradient(90deg, rgba(255,255,255,0.04) 25%, rgba(255,255,255,0.08) 50%, rgba(255,255,255,0.04) 75%)',
+    backgroundSize: '200% 100%',
+    animation: 'shimmer 1.5s infinite',
+    borderRadius: 'var(--radius-sm)',
+  };
+
+  return (
+    <div>
+      {/* Summary Cards Skeleton */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '16px', marginBottom: '30px' }}>
+        {[1, 2, 3, 4].map(i => (
+          <div key={i} className="glass-card" style={{ padding: '20px' }}>
+            <div style={{ ...skeletonStyle, width: '60px', height: '12px', marginBottom: '12px' }} />
+            <div style={{ ...skeletonStyle, width: '100px', height: '28px', marginBottom: '8px' }} />
+            <div style={{ ...skeletonStyle, width: '80px', height: '10px' }} />
+          </div>
+        ))}
+      </div>
+
+      {/* Table Skeleton */}
+      <div className="glass-card" style={{ padding: '24px' }}>
+        <div style={{ ...skeletonStyle, width: '150px', height: '18px', marginBottom: '20px' }} />
+        {[1, 2, 3, 4, 5].map(i => (
+          <div key={i} style={{ ...skeletonStyle, width: '100%', height: '40px', marginBottom: '8px' }} />
+        ))}
+      </div>
+
+      <style>{`
+        @keyframes shimmer {
+          0% { background-position: -200% 0; }
+          100% { background-position: 200% 0; }
+        }
+      `}</style>
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════
+// Cost Breakdown Tooltip Component
+// ═══════════════════════════════════════
+function CostBreakdown({ log, onClose }) {
+  const pricing = log.pricing;
+  if (!pricing) return null;
+
+  return (
+    <div style={{
+      position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', display: 'flex',
+      alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: '20px',
+      backdropFilter: 'blur(4px)',
+    }} onClick={onClose}>
+      <div style={{
+        background: 'var(--bg-surface)', borderRadius: 'var(--radius-md)',
+        padding: '28px', maxWidth: '480px', width: '100%',
+        border: '1px solid var(--border-color)', boxShadow: '0 20px 60px rgba(0,0,0,0.5)',
+      }} onClick={e => e.stopPropagation()}>
+        {/* Header */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+          <div>
+            <h3 style={{ fontSize: '18px', fontWeight: '700', marginBottom: '4px' }}>💰 Rincian Biaya</h3>
+            <p style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
+              {log.actualModel || log.model?.modelId} — {formatTime(log.createdAt)}
+            </p>
+          </div>
+          <button onClick={onClose} style={{
+            background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer',
+            padding: '4px', borderRadius: '4px',
+          }}>
+            <X size={20} />
+          </button>
+        </div>
+
+        {/* Pricing Formula */}
+        <div style={{
+          background: 'rgba(0,0,0,0.3)', borderRadius: 'var(--radius-sm)',
+          padding: '14px', marginBottom: '20px', fontFamily: 'monospace', fontSize: '11px',
+          color: 'var(--text-secondary)', lineHeight: 1.8, wordBreak: 'break-all',
+        }}>
+          <div style={{ color: 'var(--text-muted)', marginBottom: '6px', fontFamily: 'var(--font-primary)', fontSize: '10px', textTransform: 'uppercase', fontWeight: '600' }}>
+            Formula Perhitungan
+          </div>
+          <div><span style={{ color: 'var(--color-secondary)' }}>Input:</span> {formatNumber(log.inputTokens)} tokens ÷ 1000 × Rp{formatNumber(pricing.inputPricePer1K)}</div>
+          <div><span style={{ color: '#a855f7' }}>Output:</span> {formatNumber(log.outputTokens)} tokens ÷ 1000 × Rp{formatNumber(pricing.outputPricePer1K)}</div>
+        </div>
+
+        {/* Breakdown */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+          {/* Input Cost */}
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px', background: 'rgba(79,172,254,0.06)', borderRadius: 'var(--radius-sm)', border: '1px solid rgba(79,172,254,0.1)' }}>
+            <div>
+              <div style={{ fontSize: '12px', fontWeight: '600', color: 'var(--color-secondary)' }}>Input Tokens</div>
+              <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '2px' }}>
+                {formatNumber(log.inputTokens)} tokens × Rp{formatNumber(pricing.inputPricePer1K)}/1K
+              </div>
+            </div>
+            <div style={{ fontSize: '16px', fontWeight: '700', color: 'var(--color-secondary)' }}>
+              {formatCost(pricing.calculatedInputCost)}
+            </div>
+          </div>
+
+          {/* Output Cost */}
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px', background: 'rgba(168,85,247,0.06)', borderRadius: 'var(--radius-sm)', border: '1px solid rgba(168,85,247,0.1)' }}>
+            <div>
+              <div style={{ fontSize: '12px', fontWeight: '600', color: '#a855f7' }}>Output Tokens</div>
+              <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '2px' }}>
+                {formatNumber(log.outputTokens)} tokens × Rp{formatNumber(pricing.outputPricePer1K)}/1K
+              </div>
+            </div>
+            <div style={{ fontSize: '16px', fontWeight: '700', color: '#a855f7' }}>
+              {formatCost(pricing.calculatedOutputCost)}
+            </div>
+          </div>
+
+          {/* Divider */}
+          <div style={{ borderTop: '1px solid var(--border-color)', margin: '4px 0' }} />
+
+          {/* Total */}
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px', background: 'rgba(16,185,129,0.06)', borderRadius: 'var(--radius-sm)', border: '1px solid rgba(16,185,129,0.1)' }}>
+            <div>
+              <div style={{ fontSize: '14px', fontWeight: '700', color: 'var(--text-primary)' }}>Total Biaya</div>
+              <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '2px' }}>
+                {formatNumber(log.totalTokens)} total tokens
+              </div>
+            </div>
+            <div style={{ fontSize: '20px', fontWeight: '800', color: getPriceColor(log.totalCost) }}>
+              {formatCost(log.totalCost)}
+            </div>
+          </div>
+        </div>
+
+        {/* Additional Info */}
+        <div style={{ marginTop: '16px', padding: '10px 14px', background: 'rgba(255,255,255,0.02)', borderRadius: 'var(--radius-sm)', fontSize: '11px', color: 'var(--text-muted)', lineHeight: 1.6 }}>
+          <div>💱 Kurs: 1 USD = Rp{formatNumber(pricing.exchangeRate)}</div>
+          <div>⚡ Latency: {formatLatency(log.latencyMs)} · Status: {log.statusCode}</div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════
+// Log Row Component (memoized)
+// ═══════════════════════════════════════
+const LogRow = React.memo(function LogRow({ log, index, onShowBreakdown }) {
+  return (
+    <tr style={{
+      borderBottom: '1px solid var(--border-color)',
+      background: index % 2 === 0 ? 'transparent' : 'rgba(255,255,255,0.015)',
+      transition: 'background 0.2s ease',
+    }}
+    onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(79,172,254,0.04)'}
+    onMouseLeave={(e) => e.currentTarget.style.background = index % 2 === 0 ? 'transparent' : 'rgba(255,255,255,0.015)'}
+    >
+      <td style={{ padding: '12px 14px', color: 'var(--text-secondary)', fontSize: '12px' }}>
+        {formatTime(log.createdAt)}
+      </td>
+      <td style={{ padding: '12px 14px' }}>
+        <span style={{
+          display: 'inline-block', padding: '2px 8px', borderRadius: '4px',
+          background: 'rgba(79,172,254,0.1)', color: 'var(--color-secondary)',
+          fontFamily: 'monospace', fontSize: '11px',
+        }}>
+          {log.apiKey?.keyName || log.keyName || '-'}
+        </span>
+      </td>
+      <td style={{ padding: '12px 14px', color: 'var(--text-primary)' }}>
+        <div style={{ fontWeight: '600', fontSize: '13px' }}>
+          {log.actualModel || log.model?.modelId || '-'}
+        </div>
+        {log.actualModel && log.actualModel !== log.model?.modelId && (
+          <div style={{ fontSize: '10px', color: 'var(--text-muted)', marginTop: '2px' }}>
+            via {log.model?.name || log.model?.modelId}
+          </div>
+        )}
+      </td>
+      <td style={{ padding: '12px 14px', textAlign: 'right', color: 'var(--text-primary)', fontFamily: 'monospace', fontSize: '12px' }}>
+        <div>{formatNumber(log.inputTokens || 0)}</div>
+        <div style={{ fontSize: '10px', color: 'var(--text-muted)' }}>↓ {formatNumber(log.outputTokens || 0)}</div>
+      </td>
+      <td style={{ padding: '12px 14px', textAlign: 'right' }}>
+        <button
+          onClick={() => onShowBreakdown(log)}
+          style={{
+            background: 'none', border: 'none', cursor: 'pointer', padding: '4px 8px',
+            borderRadius: '4px', transition: 'background 0.2s ease',
+            display: 'flex', alignItems: 'center', gap: '4px', marginLeft: 'auto',
+          }}
+          onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.06)'}
+          onMouseLeave={(e) => e.currentTarget.style.background = 'none'}
+          title="Lihat rincian biaya"
+        >
+          <span style={{ fontWeight: '600', color: getPriceColor(log.totalCost), fontSize: '13px' }}>
+            {formatCost(log.totalCost)}
+          </span>
+          <Info size={12} style={{ color: 'var(--text-muted)' }} />
+        </button>
+      </td>
+      <td style={{ padding: '12px 14px', textAlign: 'right', color: 'var(--text-muted)', fontSize: '12px' }}>
+        {formatLatency(log.latencyMs)}
+      </td>
+      <td style={{ padding: '12px 14px', textAlign: 'right' }}>
+        <span style={{
+          display: 'inline-block', padding: '2px 8px', borderRadius: '999px',
+          fontSize: '11px', fontWeight: '600',
+          background: getStatusColor(log.statusCode) === '#22c55e' ? 'rgba(34,197,94,0.12)' : 'rgba(239,68,68,0.12)',
+          color: getStatusColor(log.statusCode),
+        }}>
+          {log.statusCode}
+        </span>
+      </td>
+    </tr>
+  );
+});
+
+// ═══════════════════════════════════════
+// Summary Card Component (memoized)
+// ═══════════════════════════════════════
+const SummaryCard = React.memo(function SummaryCard({ icon: Icon, label, value, subValue, color, subColor }) {
+  return (
+    <div className="glass-card" style={{ padding: '20px', position: 'relative', overflow: 'hidden' }}>
+      {/* Subtle gradient accent */}
+      <div style={{
+        position: 'absolute', top: 0, left: 0, right: 0, height: '3px',
+        background: `linear-gradient(90deg, ${color}, transparent)`,
+        opacity: 0.6,
+      }} />
+      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
+        <Icon size={16} style={{ color }} />
+        <span style={{ fontSize: '11px', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: '600', letterSpacing: '0.5px' }}>{label}</span>
+      </div>
+      <div style={{ fontSize: '26px', fontWeight: '700', color: 'var(--text-primary)', lineHeight: 1.2 }}>
+        {value}
+      </div>
+      {subValue && (
+        <div style={{ fontSize: '11px', color: subColor || 'var(--text-muted)', marginTop: '4px' }}>
+          {subValue}
+        </div>
+      )}
+    </div>
+  );
+});
+
+// ═══════════════════════════════════════
+// Main Component
+// ═══════════════════════════════════════
 export default function AIUsageAnalyticsPage({ user, token }) {
   const navigate = useNavigate();
   const location = useLocation();
@@ -16,38 +279,58 @@ export default function AIUsageAnalyticsPage({ user, token }) {
   const [summary, setSummary] = useState(null);
   const [logs, setLogs] = useState([]);
   const [error, setError] = useState('');
+  const [sseStatus, setSseStatus] = useState('disconnected');
+  const [breakdownLog, setBreakdownLog] = useState(null);
+  const fetchCountRef = useRef(0);
 
+  // ═══ Auth check ═══
   useEffect(() => {
     if (!user) { navigate('/login'); return; }
     fetchKeys();
   }, [user]);
 
-  // Auto-refresh usage data every 30 seconds
-  useEffect(() => {
-    const interval = setInterval(() => {
-      if (user && !loading) fetchUsageData();
-    }, 30000);
-    return () => clearInterval(interval);
-  }, [user, loading, selectedKeyId, timeframe]);
+  // ═══ Real-time: handle incoming usage events via SSE ═══
+  const handleUsage = useCallback((usage) => {
+    setLogs(prev => [{ ...usage, _isNew: true }, ...prev].slice(0, 100));
+    setSummary(prev => {
+      if (!prev) return prev;
+      return {
+        ...prev,
+        totalRequests: prev.totalRequests + 1,
+        totalTokens: prev.totalTokens + (usage.totalTokens || 0),
+        inputTokens: prev.inputTokens + (usage.inputTokens || 0),
+        outputTokens: prev.outputTokens + (usage.outputTokens || 0),
+        totalCost: prev.totalCost + (usage.totalCost || 0),
+      };
+    });
+  }, []);
 
-  useEffect(() => {
-    if (user) fetchUsageData();
-  }, [selectedKeyId, timeframe, user]);
+  // ═══ Real-time: handle balance updates via SSE ═══
+  const handleBalance = useCallback((balanceUpdate) => {
+    setApiKeys(prev => prev.map(k =>
+      k.id === balanceUpdate.keyId ? { ...k, creditsBalance: balanceUpdate.newBalance } : k
+    ));
+  }, []);
 
+  const handleSseStatus = useCallback((status) => setSseStatus(status), []);
+
+  // SSE connection
+  useAISSE({ token, onUsage: handleUsage, onBalance: handleBalance, onConnectionChange: handleSseStatus });
+
+  // ═══ Data fetching ═══
   const fetchKeys = async () => {
     try {
       const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/ai-router/keys`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      const data = await res.json();
-      setApiKeys(data);
+      setApiKeys(await res.json());
     } catch (err) {
       console.error('Error fetching keys:', err);
     }
   };
 
-  const fetchUsageData = async () => {
-    setLoading(true);
+  const fetchUsageData = useCallback(async (silent = false) => {
+    if (!silent) setLoading(true);
     setError('');
     try {
       const endDate = new Date();
@@ -75,73 +358,152 @@ export default function AIUsageAnalyticsPage({ user, token }) {
       setLogs(await logsRes.json());
     } catch (err) {
       console.error('Error fetching usage:', err);
-      setError('Gagal memuat data usage');
+      if (!silent) setError('Gagal memuat data usage');
     } finally {
       setLoading(false);
     }
-  };
+  }, [selectedKeyId, timeframe, token]);
 
-  const getPriceColor = (cost) => {
-    if (cost > 7500) return '#ef4444';
-    if (cost > 1500) return '#facc15';
-    return '#22c55e';
-  };
+  // ═══ Initial fetch + background refresh ═══
+  useEffect(() => {
+    if (user) fetchUsageData();
+  }, [fetchUsageData, user]);
 
-  const formatNumber = (n) => (n || 0).toLocaleString();
+  useEffect(() => {
+    if (!user) return;
+    const interval = setInterval(() => fetchUsageData(true), 120000);
+    return () => clearInterval(interval);
+  }, [fetchUsageData, user]);
+
+  // ═══ Export to CSV ═══
+  const exportCSV = useCallback(() => {
+    if (!logs.length) return;
+    const headers = ['Waktu', 'Key', 'Model', 'Tokens', 'Biaya (Rp)', 'Latency (ms)', 'Status'];
+    const rows = logs.map(log => [
+      formatTime(log.createdAt),
+      log.apiKey?.keyName || log.keyName || '-',
+      log.actualModel || log.model?.modelId || '-',
+      log.totalTokens,
+      Math.ceil(log.totalCost),
+      log.latencyMs,
+      log.statusCode,
+    ]);
+    const csv = [headers, ...rows].map(r => r.join(',')).join('\n');
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `usage-${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }, [logs]);
+
+  // ═══ Memoized values ═══
+  const stats = useMemo(() => {
+    if (!summary) return null;
+    return {
+      avgCostPerRequest: summary.totalRequests > 0 ? summary.totalCost / summary.totalRequests : 0,
+      avgTokensPerRequest: summary.totalRequests > 0 ? summary.totalTokens / summary.totalRequests : 0,
+    };
+  }, [summary]);
 
   return (
-    <div className="container" style={{ paddingTop: '40px', paddingBottom: '60px' }}>
-      {/* Header */}
+    <div className="container" style={{ paddingTop: '40px', paddingBottom: '60px', maxWidth: '1200px' }}>
+      {/* ═══ Header ═══ */}
       <div style={{ marginBottom: '30px' }}>
-        <button onClick={() => navigate('/dashboard/ai-keys')} className="btn-text" style={{ marginBottom: '20px' }}>
+        <button onClick={() => navigate('/dashboard/ai-keys')} className="btn-text" style={{ marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '6px' }}>
           <ChevronLeft size={18} /> Kembali ke API Keys
         </button>
-        <h1 style={{ fontFamily: 'var(--font-title)', fontSize: '32px', fontWeight: '700', marginBottom: '8px' }}>
-          📊 Usage Analytics
-        </h1>
-        <p style={{ fontSize: '14px', color: 'var(--text-secondary)' }}>
-          Pantau penggunaan AI secara global atau filter per API key.
-        </p>
+        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', flexWrap: 'wrap', gap: '16px' }}>
+          <div>
+            <h1 style={{ fontFamily: 'var(--font-title)', fontSize: '28px', fontWeight: '700', marginBottom: '6px' }}>
+              Usage Analytics
+            </h1>
+            <p style={{ fontSize: '13px', color: 'var(--text-muted)' }}>
+              Pantau penggunaan AI secara real-time.
+            </p>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            {/* Export Button */}
+            <button
+              onClick={exportCSV}
+              disabled={!logs.length}
+              style={{
+                display: 'flex', alignItems: 'center', gap: '6px',
+                padding: '8px 14px', borderRadius: 'var(--radius-sm)', fontSize: '12px', fontWeight: '600',
+                background: 'rgba(255,255,255,0.04)', border: '1px solid var(--border-color)',
+                color: logs.length ? 'var(--text-secondary)' : 'var(--text-muted)',
+                cursor: logs.length ? 'pointer' : 'not-allowed',
+                transition: 'all 0.2s ease',
+              }}
+              onMouseEnter={(e) => logs.length && (e.currentTarget.style.background = 'rgba(255,255,255,0.08)')}
+              onMouseLeave={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.04)'}
+            >
+              <Download size={14} /> Export CSV
+            </button>
+            {/* SSE Status Badge */}
+            <div style={{
+              display: 'flex', alignItems: 'center', gap: '6px',
+              padding: '6px 12px', borderRadius: '999px', fontSize: '11px', fontWeight: '600',
+              background: sseStatus === 'connected' ? 'rgba(34,197,94,0.12)' : sseStatus === 'connecting' ? 'rgba(250,204,21,0.12)' : 'rgba(239,68,68,0.12)',
+              color: sseStatus === 'connected' ? '#22c55e' : sseStatus === 'connecting' ? '#facc15' : '#ef4444',
+              transition: 'all 0.3s ease',
+            }}>
+              <span style={{
+                width: '6px', height: '6px', borderRadius: '50%',
+                background: 'currentColor',
+                animation: sseStatus === 'connected' ? 'pulse 2s infinite' : 'none',
+              }} />
+              {sseStatus === 'connected' ? 'Live' : sseStatus === 'connecting' ? 'Connecting...' : 'Offline'}
+            </div>
+          </div>
+        </div>
       </div>
 
-      {/* Filters */}
-      <div style={{ display: 'flex', gap: '12px', marginBottom: '30px', flexWrap: 'wrap', alignItems: 'center' }}>
-        {/* Key Filter */}
+      {/* ═══ Filters ═══ */}
+      <div style={{ display: 'flex', gap: '12px', marginBottom: '28px', flexWrap: 'wrap', alignItems: 'center' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <Filter size={16} style={{ color: 'var(--text-muted)' }} />
+          <Filter size={14} style={{ color: 'var(--text-muted)' }} />
           <select
             value={selectedKeyId}
             onChange={(e) => setSelectedKeyId(e.target.value)}
             style={{
-              background: 'var(--bg-secondary)',
+              background: 'var(--bg-surface)',
               border: '1px solid var(--border-color)',
               borderRadius: 'var(--radius-sm)',
-              padding: '10px 14px',
+              padding: '8px 12px',
               color: 'var(--text-primary)',
-              fontSize: '14px',
+              fontSize: '13px',
               cursor: 'pointer',
-              minWidth: '200px',
+              minWidth: '180px',
+              outline: 'none',
+              transition: 'border-color 0.2s ease',
             }}
+            onFocus={(e) => e.target.style.borderColor = 'var(--color-primary)'}
+            onBlur={(e) => e.target.style.borderColor = 'var(--border-color)'}
           >
             <option value="">Semua API Keys</option>
             {apiKeys.map(k => (
-              <option key={k.id} value={k.id}>{k.keyName} ({k.apiKey.slice(0, 15)}...)</option>
+              <option key={k.id} value={k.id}>{k.keyName}</option>
             ))}
           </select>
         </div>
 
-        {/* Timeframe */}
-        <div style={{ display: 'flex', gap: '6px' }}>
+        <div style={{ display: 'flex', gap: '4px', background: 'rgba(255,255,255,0.03)', padding: '4px', borderRadius: 'var(--radius-sm)' }}>
           {[
-            { val: '7d', label: '7 Hari' },
-            { val: '30d', label: '30 Hari' },
+            { val: '7d', label: '7H' },
+            { val: '30d', label: '30H' },
             { val: 'all', label: 'Semua' },
           ].map(opt => (
             <button
               key={opt.val}
               onClick={() => setTimeframe(opt.val)}
-              className={timeframe === opt.val ? 'btn btn-primary' : 'btn btn-secondary'}
-              style={{ padding: '10px 18px', fontSize: '13px' }}
+              style={{
+                padding: '6px 14px', fontSize: '12px', fontWeight: '600', borderRadius: '6px',
+                border: 'none', cursor: 'pointer', transition: 'all 0.2s ease',
+                background: timeframe === opt.val ? 'var(--grad-primary)' : 'transparent',
+                color: timeframe === opt.val ? '#fff' : 'var(--text-muted)',
+              }}
             >
               {opt.label}
             </button>
@@ -149,80 +511,84 @@ export default function AIUsageAnalyticsPage({ user, token }) {
         </div>
       </div>
 
+      {/* ═══ Content ═══ */}
       {loading ? (
-        <div style={{ textAlign: 'center', padding: '60px 20px', color: 'var(--text-muted)' }}>
-          Loading usage data...
-        </div>
+        <UsageSkeleton />
       ) : error ? (
-        <div style={{ textAlign: 'center', padding: '60px 20px', color: '#ef4444' }}>{error}</div>
+        <div style={{
+          textAlign: 'center', padding: '60px 20px', color: '#ef4444',
+          background: 'rgba(239,68,68,0.05)', borderRadius: 'var(--radius-md)',
+          border: '1px solid rgba(239,68,68,0.1)',
+        }}>
+          <p style={{ fontSize: '15px', fontWeight: '600' }}>{error}</p>
+          <button onClick={() => fetchUsageData()} className="btn btn-secondary" style={{ marginTop: '12px', padding: '8px 16px', fontSize: '12px' }}>
+            Coba Lagi
+          </button>
+        </div>
       ) : (
         <>
-          {/* Summary Cards */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '16px', marginBottom: '30px' }}>
-            <div className="glass-card" style={{ padding: '20px' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
-                <Cpu size={18} style={{ color: 'var(--color-primary)' }} />
-                <span style={{ fontSize: '11px', color: 'var(--text-muted)', textTransform: 'uppercase' }}>Requests</span>
-              </div>
-              <div style={{ fontSize: '28px', fontWeight: '700', color: 'var(--text-primary)' }}>
-                {formatNumber(summary?.totalRequests)}
-              </div>
-            </div>
-
-            <div className="glass-card" style={{ padding: '20px' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
-                <LineChart size={18} style={{ color: 'var(--color-secondary)' }} />
-                <span style={{ fontSize: '11px', color: 'var(--text-muted)', textTransform: 'uppercase' }}>Tokens</span>
-              </div>
-              <div style={{ fontSize: '28px', fontWeight: '700', color: 'var(--text-primary)' }}>
-                {formatNumber(summary?.totalTokens)}
-              </div>
-              <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '4px' }}>
-                In: {formatNumber(summary?.inputTokens)} / Out: {formatNumber(summary?.outputTokens)}
-              </div>
-            </div>
-
-            <div className="glass-card" style={{ padding: '20px' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
-                <DollarSign size={18} style={{ color: 'var(--color-success)' }} />
-                <span style={{ fontSize: '11px', color: 'var(--text-muted)', textTransform: 'uppercase' }}>Biaya</span>
-              </div>
-              <div style={{ fontSize: '28px', fontWeight: '700', color: getPriceColor(summary?.totalCost || 0) }}>
-                Rp {Math.ceil(summary?.totalCost || 0).toLocaleString('id-ID')}
-              </div>
-            </div>
-
-            <div className="glass-card" style={{ padding: '20px' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
-                <Clock size={18} style={{ color: '#f59e0b' }} />
-                <span style={{ fontSize: '11px', color: 'var(--text-muted)', textTransform: 'uppercase' }}>Models</span>
-              </div>
-              <div style={{ fontSize: '28px', fontWeight: '700', color: 'var(--text-primary)' }}>
-                {summary?.byModel?.length || 0}
-              </div>
-            </div>
+          {/* ═══ Summary Cards ═══ */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '14px', marginBottom: '28px' }}>
+            <SummaryCard icon={Cpu} label="Requests" value={formatNumber(summary?.totalRequests)} color="var(--color-primary)" />
+            <SummaryCard
+              icon={Activity} label="Tokens" value={formatNumber(summary?.totalTokens)}
+              subValue={`In: ${formatNumber(summary?.inputTokens)} / Out: ${formatNumber(summary?.outputTokens)}`}
+              color="var(--color-secondary)"
+            />
+            <SummaryCard icon={DollarSign} label="Biaya" value={formatCost(summary?.totalCost)} color={getPriceColor(summary?.totalCost || 0)} />
+            <SummaryCard icon={Zap} label="Models" value={summary?.byModel?.length || 0} color="#f59e0b" />
           </div>
 
-          {/* Per-Model Breakdown */}
+          {/* ═══ Quick Stats ═══ */}
+          {stats && stats.avgCostPerRequest > 0 && (
+            <div style={{ display: 'flex', gap: '16px', marginBottom: '28px', flexWrap: 'wrap' }}>
+              <div style={{
+                display: 'flex', alignItems: 'center', gap: '8px',
+                padding: '10px 16px', borderRadius: 'var(--radius-sm)',
+                background: 'rgba(79,172,254,0.06)', border: '1px solid rgba(79,172,254,0.1)',
+                fontSize: '12px', color: 'var(--text-secondary)',
+              }}>
+                <TrendingUp size={14} style={{ color: 'var(--color-secondary)' }} />
+                Rata-rata: <strong style={{ color: 'var(--text-primary)' }}>{formatNumber(Math.round(stats.avgTokensPerRequest))}</strong> tokens/request
+              </div>
+              <div style={{
+                display: 'flex', alignItems: 'center', gap: '8px',
+                padding: '10px 16px', borderRadius: 'var(--radius-sm)',
+                background: 'rgba(16,185,129,0.06)', border: '1px solid rgba(16,185,129,0.1)',
+                fontSize: '12px', color: 'var(--text-secondary)',
+              }}>
+                <DollarSign size={14} style={{ color: 'var(--color-success)' }} />
+                Rata-rata: <strong style={{ color: 'var(--text-primary)' }}>{formatCost(stats.avgCostPerRequest)}</strong>/request
+              </div>
+            </div>
+          )}
+
+          {/* ═══ Per-Model Breakdown ═══ */}
           {summary?.byModel?.length > 0 && (
-            <div className="glass-card" style={{ padding: '24px', marginBottom: '30px' }}>
-              <h3 style={{ fontSize: '18px', fontWeight: '700', marginBottom: '16px' }}>Usage per Model</h3>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))', gap: '12px' }}>
+            <div className="glass-card" style={{ padding: '24px', marginBottom: '28px' }}>
+              <h3 style={{ fontSize: '16px', fontWeight: '700', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <Activity size={18} style={{ color: 'var(--color-primary)' }} /> Usage per Model
+              </h3>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '10px' }}>
                 {summary.byModel.map((m, i) => (
                   <div key={i} style={{
                     background: 'rgba(0,0,0,0.2)',
                     border: '1px solid var(--border-color)',
                     borderRadius: 'var(--radius-sm)',
-                    padding: '16px',
-                  }}>
-                    <div style={{ fontSize: '14px', fontWeight: '600', color: 'var(--text-primary)', marginBottom: '8px' }}>
+                    padding: '14px',
+                    transition: 'border-color 0.2s ease',
+                  }}
+                  onMouseEnter={(e) => e.currentTarget.style.borderColor = 'rgba(79,172,254,0.3)'}
+                  onMouseLeave={(e) => e.currentTarget.style.borderColor = 'var(--border-color)'}
+                  >
+                    <div style={{ fontSize: '13px', fontWeight: '600', color: 'var(--text-primary)', marginBottom: '6px' }}>
                       {m.model.name}
                     </div>
-                    <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '4px' }}>
-                      {m.requestCount} requests · {formatNumber(m.totalTokens)} tokens
+                    <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginBottom: '6px' }}>
+                      {m.requestCount} req · {formatNumber(m.totalTokens)} tok
                     </div>
-                    <div style={{ fontSize: '16px', fontWeight: '700', color: getPriceColor(m.totalCost) }}>
-                      Rp {Math.ceil(m.totalCost).toLocaleString('id-ID')}
+                    <div style={{ fontSize: '15px', fontWeight: '700', color: getPriceColor(m.totalCost) }}>
+                      {formatCost(m.totalCost)}
                     </div>
                   </div>
                 ))}
@@ -230,77 +596,76 @@ export default function AIUsageAnalyticsPage({ user, token }) {
             </div>
           )}
 
-          {/* Chart */}
+          {/* ═══ Chart ═══ */}
           {summary?.chartData?.length > 0 && (
-            <div className="glass-card" style={{ padding: '24px', marginBottom: '30px' }}>
+            <div className="glass-card" style={{ padding: '24px', marginBottom: '28px' }}>
               <AIUsageChart data={summary.chartData} title="Daily Usage Overview" />
             </div>
           )}
 
-          {/* Logs Table */}
-          <h2 style={{ fontSize: '20px', fontWeight: '700', marginBottom: '16px' }}>Recent Requests</h2>
+          {/* ═══ Logs Table ═══ */}
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '14px' }}>
+            <h2 style={{ fontSize: '18px', fontWeight: '700', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <Clock size={18} style={{ color: 'var(--color-primary)' }} /> Recent Requests
+            </h2>
+            <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>{logs.length} entries</span>
+          </div>
+
           {logs.length === 0 ? (
             <div style={{
-              textAlign: 'center', padding: '40px', color: 'var(--text-muted)',
+              textAlign: 'center', padding: '50px 20px', color: 'var(--text-muted)',
               background: 'rgba(255,255,255,0.02)', borderRadius: 'var(--radius-md)',
+              border: '1px dashed var(--border-color)',
             }}>
-              <Clock size={48} style={{ marginBottom: '16px', opacity: 0.3 }} />
-              <p>Belum ada usage data.</p>
+              <Activity size={40} style={{ marginBottom: '12px', opacity: 0.3 }} />
+              <p style={{ fontSize: '14px', fontWeight: '500' }}>Belum ada usage data.</p>
+              <p style={{ fontSize: '12px', marginTop: '4px' }}>Buat request AI untuk mulai melihat data.</p>
             </div>
           ) : (
-            <div className="glass-card" style={{ padding: '0', overflowX: 'auto' }}>
-              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
-                <thead>
-                  <tr style={{ borderBottom: '1px solid var(--border-color)' }}>
-                    <th style={{ padding: '12px 14px', textAlign: 'left', color: 'var(--text-muted)' }}>Waktu</th>
-                    <th style={{ padding: '12px 14px', textAlign: 'left', color: 'var(--text-muted)' }}>Key</th>
-                    <th style={{ padding: '12px 14px', textAlign: 'left', color: 'var(--text-muted)' }}>Model</th>
-                    <th style={{ padding: '12px 14px', textAlign: 'right', color: 'var(--text-muted)' }}>Tokens</th>
-                    <th style={{ padding: '12px 14px', textAlign: 'right', color: 'var(--text-muted)' }}>Biaya</th>
-                    <th style={{ padding: '12px 14px', textAlign: 'right', color: 'var(--text-muted)' }}>Latency</th>
-                    <th style={{ padding: '12px 14px', textAlign: 'right', color: 'var(--text-muted)' }}>Status</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {logs.map(log => (
-                    <tr key={log.id} style={{ borderBottom: '1px solid var(--border-color)' }}>
-                      <td style={{ padding: '12px 14px', color: 'var(--text-primary)' }}>
-                        {new Date(log.createdAt).toLocaleString('id-ID')}
-                      </td>
-                      <td style={{ padding: '12px 14px', color: 'var(--text-muted)', fontFamily: 'monospace', fontSize: '12px' }}>
-                        {log.apiKey?.keyName || '-'}
-                      </td>
-                      <td style={{ padding: '12px 14px', color: 'var(--text-primary)' }}>
-                        <span style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
-                          <span style={{ fontWeight: '600' }}>{log.actualModel || log.model?.modelId || '-'}</span>
-                          {log.actualModel && log.actualModel !== log.model?.modelId && (
-                            <span style={{ fontSize: '10px', color: 'var(--text-muted)' }}>via {log.model?.name || log.model?.modelId}</span>
-                          )}
-                        </span>
-                      </td>
-                      <td style={{ padding: '12px 14px', textAlign: 'right', color: 'var(--text-primary)' }}>
-                        {formatNumber(log.totalTokens)}
-                      </td>
-                      <td style={{ padding: '12px 14px', textAlign: 'right', color: getPriceColor(log.totalCost) }}>
-                        Rp {Math.ceil(log.totalCost).toLocaleString('id-ID')}
-                      </td>
-                      <td style={{ padding: '12px 14px', textAlign: 'right', color: 'var(--text-muted)' }}>
-                        {log.latencyMs}ms
-                      </td>
-                      <td style={{
-                        padding: '12px 14px', textAlign: 'right',
-                        color: log.statusCode >= 200 && log.statusCode < 300 ? '#22c55e' : '#ef4444',
-                      }}>
-                        {log.statusCode}
-                      </td>
+            <div className="glass-card" style={{ padding: '0', overflow: 'hidden' }}>
+              <div style={{ overflowX: 'auto' }}>
+                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
+                  <thead>
+                    <tr style={{ borderBottom: '1px solid var(--border-color)', background: 'rgba(0,0,0,0.2)' }}>
+                      {['Waktu', 'Key', 'Model', 'In / Out', 'Biaya', 'Latency', 'Status'].map(h => (
+                        <th key={h} style={{
+                          padding: '10px 14px', textAlign: h === 'Biaya' || h === 'In / Out' || h === 'Latency' || h === 'Status' ? 'right' : 'left',
+                          color: 'var(--text-muted)', fontSize: '10px', textTransform: 'uppercase', fontWeight: '600', letterSpacing: '0.5px',
+                        }}>
+                          {h}
+                        </th>
+                      ))}
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody>
+                    {logs.map((log, i) => (
+                      <LogRow key={log.id || `log-${i}`} log={log} index={i} onShowBreakdown={setBreakdownLog} />
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             </div>
           )}
         </>
       )}
+
+      {/* ═══ Cost Breakdown Modal ═══ */}
+      {breakdownLog && <CostBreakdown log={breakdownLog} onClose={() => setBreakdownLog(null)} />}
+
+      {/* ═══ CSS Animations ═══ */}
+      <style>{`
+        @keyframes pulse {
+          0%, 100% { opacity: 1; }
+          50% { opacity: 0.4; }
+        }
+        @keyframes fadeSlideIn {
+          from { opacity: 0; transform: translateY(-8px); background: rgba(34,197,94,0.08); }
+          to { opacity: 1; transform: translateY(0); background: transparent; }
+        }
+        @media (max-width: 768px) {
+          .container { padding-left: 16px !important; padding-right: 16px !important; }
+        }
+      `}</style>
     </div>
   );
 }

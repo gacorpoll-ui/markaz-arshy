@@ -1,12 +1,14 @@
 import express from 'express';
 import crypto from 'crypto';
 import prisma from '../db.js';
+import eventBus from '../sse/EventBus.js';
+import { markRecorded, makeDedupKey } from '../sse/requestDedup.js';
 
 const router = express.Router();
 
 const NINE_ROUTER_URL = process.env.AI_ROUTER_URL || 'http://localhost:20128';
 
-// Helper: record usage in background (fire-and-forget)
+// Helper: record usage + deduct credits + emit real-time events
 async function recordUsage({ apiKey, endpoint, body, responseStatus, latencyMs, responseBody }) {
   try {
     const keyData = await prisma.aIApiKey.findUnique({ where: { apiKey } });
@@ -57,8 +59,14 @@ async function recordUsage({ apiKey, endpoint, body, responseStatus, latencyMs, 
     // Capture actual model from response (9router may route "code" to "mimo-auto" etc)
     const actualModel = responseBody?.model || modelId;
 
-    await prisma.$transaction(async (tx) => {
-      await tx.aIUsage.create({
+    // Mark as recorded for dedup (prevents webhook from double-counting)
+    const dedupKey = makeDedupKey(keyData.id, endpoint, responseStatus, Date.now());
+    markRecorded(dedupKey);
+
+    const newBalance = keyData.creditsBalance - totalCost;
+
+    const result = await prisma.$transaction(async (tx) => {
+      const newUsage = await tx.aIUsage.create({
         data: {
           requestId,
           apiKeyId: keyData.id,
@@ -93,13 +101,32 @@ async function recordUsage({ apiKey, endpoint, body, responseStatus, latencyMs, 
           type: 'USAGE',
           description: `Usage: ${modelId}`,
           balanceBefore: keyData.creditsBalance,
-          balanceAfter: keyData.creditsBalance - totalCost,
-          relatedUsageId: null,
+          balanceAfter: newBalance,
+          relatedUsageId: newUsage.id,
         },
       });
+
+      return { usageId: newUsage.id };
     });
 
+    // Emit real-time events AFTER transaction commits
+    eventBus.emitUsage(keyData.userId, {
+      id: result.usageId,
+      model: { name: aiModel.name, modelId: actualModel },
+      inputTokens,
+      outputTokens,
+      totalTokens,
+      totalCost,
+      endpoint,
+      statusCode: responseStatus,
+      latencyMs,
+      createdAt: new Date().toISOString(),
+      keyName: keyData.keyName,
+    });
+    eventBus.emitBalanceUpdate(keyData.userId, keyData.id, newBalance);
+
     console.log(`[USAGE] ${apiKey.slice(0, 15)}... model=${modelId} tokens=${totalTokens} cost=Rp${Math.ceil(totalCost)}`);
+    return result;
   } catch (err) {
     console.error('[USAGE] ⚠️ Record failed for key:', apiKey.slice(0,15), 'Error:', err.message, err.stack);
   }
@@ -149,7 +176,7 @@ router.post('/chat/completions', async (req, res) => {
                 const content = fullContent || '';
                 const inputMsgs = req.body.messages || [];
                 const inputText = inputMsgs.map(m => typeof m.content === 'string' ? m.content : '').join('');
-                recordUsage({
+                await recordUsage({
                   apiKey, endpoint: '/v1/chat/completions', body: req.body,
                   responseStatus: response.status, latencyMs,
                   responseBody: {
@@ -174,7 +201,7 @@ router.post('/chat/completions', async (req, res) => {
         const latencyMs = Date.now() - startTime;
         const inputMsgs = req.body.messages || [];
         const inputText = inputMsgs.map(m => typeof m.content === 'string' ? m.content : '').join('');
-        recordUsage({
+        await recordUsage({
           apiKey, endpoint: '/v1/chat/completions', body: req.body,
           responseStatus: response.status, latencyMs,
           responseBody: {
@@ -193,7 +220,7 @@ router.post('/chat/completions', async (req, res) => {
 
       // Record usage
       if (response.ok && data) {
-        recordUsage({ apiKey, endpoint: '/v1/chat/completions', body: req.body, responseStatus: response.status, latencyMs, responseBody: data });
+        await recordUsage({ apiKey, endpoint: '/v1/chat/completions', body: req.body, responseStatus: response.status, latencyMs, responseBody: data });
       }
     }
     console.log(`[PROXY] chat: ${apiKey.slice(0, 15)}... model=${req.body.model}`);
@@ -297,7 +324,7 @@ router.post('/messages', async (req, res) => {
                 // Record usage
                 const latencyMs = Date.now() - startTime;
                 const inputText = messages?.map(m => typeof m.content === 'string' ? m.content : Array.isArray(m.content) ? m.content.map(b => b.text || '').join('') : '').join('') || '';
-                recordUsage({
+                await recordUsage({
                   apiKey, endpoint: '/v1/messages', body: req.body,
                   responseStatus: response.status, latencyMs,
                   responseBody: {
@@ -320,7 +347,7 @@ router.post('/messages', async (req, res) => {
       if (!usageRecorded) {
         const latencyMs = Date.now() - startTime;
         const inputText = messages?.map(m => typeof m.content === 'string' ? m.content : Array.isArray(m.content) ? m.content.map(b => b.text || '').join('') : '').join('') || '';
-        recordUsage({
+        await recordUsage({
           apiKey, endpoint: '/v1/messages', body: req.body,
           responseStatus: response.status, latencyMs,
           responseBody: {
@@ -339,7 +366,7 @@ router.post('/messages', async (req, res) => {
       if (data.error) return res.status(response.status).json({ type: 'error', error: { type: 'api_error', message: data.error.message || 'Unknown error' } });
 
       // Record usage
-      recordUsage({ apiKey, endpoint: '/v1/messages', body: req.body, responseStatus: response.status, latencyMs, responseBody: data });
+      await recordUsage({ apiKey, endpoint: '/v1/messages', body: req.body, responseStatus: response.status, latencyMs, responseBody: data });
 
       const content = data.choices?.[0]?.message?.content || '';
       res.status(200).json({

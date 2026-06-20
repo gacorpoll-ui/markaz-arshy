@@ -1,7 +1,9 @@
 import express from 'express';
 import crypto from 'crypto';
+import jwt from 'jsonwebtoken';
 import prisma from '../db.js';
 import { requireAuth } from '../middleware/auth.js';
+import eventBus from '../sse/EventBus.js';
 
 const router = express.Router();
 
@@ -307,21 +309,38 @@ router.get('/usage/logs', requireAuth, async (req, res) => {
     const logs = await prisma.aIUsage.findMany({
       where,
       include: {
-        model: { select: { name: true, modelId: true } },
+        model: { select: { name: true, modelId: true, inputPricePerToken: true, outputPricePerToken: true } },
         apiKey: { select: { keyName: true, apiKey: true } },
       },
       orderBy: { createdAt: 'desc' },
       take: parseInt(limit),
     });
 
-    // Enrich with actual model from metadata
+    const EXCHANGE_RATE = 15000;
+
+    // Enrich with actual model from metadata + pricing breakdown
     const enriched = logs.map(l => {
       let meta = {};
       try { meta = JSON.parse(l.metadata || '{}'); } catch {}
+
+      // Cost breakdown: how was the totalCost calculated?
+      const inputPricePer1K = (l.model?.inputPricePerToken || 0.00001) * EXCHANGE_RATE;
+      const outputPricePer1K = (l.model?.outputPricePerToken || 0.00003) * EXCHANGE_RATE;
+      const calculatedInputCost = (l.inputTokens / 1000) * inputPricePer1K;
+      const calculatedOutputCost = (l.outputTokens / 1000) * outputPricePer1K;
+
       return {
         ...l,
         actualModel: meta.actualModel || l.model?.modelId || 'unknown',
         requestedModel: meta.requestedModel || l.model?.modelId || 'unknown',
+        pricing: {
+          inputPricePer1K: Math.round(inputPricePer1K),  // Rp per 1K input tokens
+          outputPricePer1K: Math.round(outputPricePer1K), // Rp per 1K output tokens
+          exchangeRate: EXCHANGE_RATE,
+          calculatedInputCost: Math.round(calculatedInputCost),
+          calculatedOutputCost: Math.round(calculatedOutputCost),
+          formula: `${l.inputTokens} input ÷ 1000 × Rp${Math.round(inputPricePer1K)} + ${l.outputTokens} output ÷ 1000 × Rp${Math.round(outputPricePer1K)}`,
+        },
       };
     });
 
@@ -694,6 +713,84 @@ router.all('/validate-key', async (req, res) => {
     console.error('Error validating API key:', error);
     res.status(500).json({ valid: false, error: 'Internal server error' });
   }
+});
+
+/* ═══════════════════════════════════════
+   SSE STREAM — Real-time usage events
+   GET /events/stream?token=<jwt>
+   ═══════════════════════════════════════ */
+router.get('/events/stream', async (req, res) => {
+  // Auth: Accept token from query param (EventSource can't set headers)
+  let token = req.query.token;
+  if (!token) {
+    const authHeader = req.headers.authorization;
+    if (authHeader?.startsWith('Bearer ')) token = authHeader.slice(7);
+  }
+  if (!token) return res.status(401).json({ error: 'Token required' });
+
+  let userId;
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'super-secret-key-follower-store-2026');
+    const user = await prisma.user.findUnique({ where: { id: decoded.id } });
+    if (!user) return res.status(401).json({ error: 'User not found' });
+    userId = user.id;
+  } catch {
+    return res.status(401).json({ error: 'Invalid token' });
+  }
+
+  // SSE headers
+  res.setHeader('Content-Type', 'text/event-stream');
+  res.setHeader('Cache-Control', 'no-cache');
+  res.setHeader('Connection', 'keep-alive');
+  res.setHeader('X-Accel-Buffering', 'no'); // Disable nginx buffering
+  res.flushHeaders();
+
+  // Send initial keepalive
+  res.write(':ok\n\n');
+
+  // Subscribe to EventBus
+  const onUsage = (event) => {
+    if (event.userId !== userId) return;
+    try {
+      res.write(`event: usage\ndata: ${JSON.stringify({
+        id: event.id,
+        model: event.model,
+        totalTokens: event.totalTokens,
+        totalCost: event.totalCost,
+        inputTokens: event.inputTokens,
+        outputTokens: event.outputTokens,
+        latencyMs: event.latencyMs,
+        statusCode: event.statusCode,
+        createdAt: event.createdAt,
+        keyName: event.keyName,
+      })}\n\n`);
+    } catch {}
+  };
+
+  const onBalance = (event) => {
+    if (event.userId !== userId) return;
+    try {
+      res.write(`event: balance\ndata: ${JSON.stringify({
+        keyId: event.keyId,
+        newBalance: event.newBalance,
+      })}\n\n`);
+    } catch {}
+  };
+
+  eventBus.on('usage:recorded', onUsage);
+  eventBus.on('balance:updated', onBalance);
+
+  // Keepalive ping every 30 seconds
+  const keepalive = setInterval(() => {
+    try { res.write(':ping\n\n'); } catch {}
+  }, 30000);
+
+  // Cleanup on disconnect
+  req.on('close', () => {
+    clearInterval(keepalive);
+    eventBus.off('usage:recorded', onUsage);
+    eventBus.off('balance:updated', onBalance);
+  });
 });
 
 export default router;
