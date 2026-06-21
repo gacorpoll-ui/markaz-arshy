@@ -3,7 +3,6 @@ import crypto from 'crypto';
 import rateLimit from 'express-rate-limit';
 import prisma from '../db.js';
 import eventBus from '../sse/EventBus.js';
-import { wasRecorded, markRecorded, makeDedupKey } from '../sse/requestDedup.js';
 
 const router = express.Router();
 
@@ -18,6 +17,7 @@ const webhookLimiter = rateLimit({
 
 /* ═══════════════════════════════════════
    WEBHOOK FOR USAGE TRACKING (from 9router)
+   SINGLE SOURCE OF TRUTH for all usage recording
    ═══════════════════════════════════════ */
 router.post('/webhook/usage', webhookLimiter, async (req, res) => {
   try {
@@ -37,43 +37,53 @@ router.post('/webhook/usage', webhookLimiter, async (req, res) => {
     const WEBHOOK_SECRET = process.env.AI_WEBHOOK_SECRET;
 
     // --- Webhook Authentication ---
-    const authHeader = req.headers['x-webhook-secret'];
     if (!WEBHOOK_SECRET) {
       console.error('[WEBHOOK] AI_WEBHOOK_SECRET not configured');
       return res.status(500).json({ error: 'Server configuration error' });
     }
+    const authHeader = req.headers['x-webhook-secret'];
     if (!authHeader || authHeader !== WEBHOOK_SECRET) {
       return res.status(403).json({ error: 'Invalid webhook authentication' });
     }
 
-    if (!incomingApiKey || !requestId || !modelIdString || !inputTokens || !outputTokens) {
-      return res.status(400).json({ error: 'Missing required webhook data' });
+    // --- Validate required fields ---
+    if (!incomingApiKey || !requestId || !modelIdString) {
+      return res.status(400).json({ error: 'Missing required webhook data (apiKey, requestId, model)' });
     }
 
-    // Find the API Key
+    // Token counts can be 0 (valid for some requests), but must be numbers
+    const inTokens = typeof inputTokens === 'number' ? inputTokens : 0;
+    const outTokens = typeof outputTokens === 'number' ? outputTokens : 0;
+
+    // --- Dedup by requestId (primary key) ---
+    // This is the ONLY dedup mechanism — simple and reliable
+    const existingUsage = await prisma.aIUsage.findFirst({
+      where: { requestId },
+    });
+    if (existingUsage) {
+      console.log(`[WEBHOOK] Skipping duplicate requestId: ${requestId}`);
+      return res.status(200).json({ message: 'Usage already recorded', usageId: existingUsage.id });
+    }
+
+    // --- Find the API Key ---
     const apiKeyData = await prisma.aIApiKey.findUnique({
       where: { apiKey: incomingApiKey },
-      include: {
-        user: true,
-        model: true,
-      },
+      include: { user: true },
     });
 
     if (!apiKeyData || !apiKeyData.isActive) {
-      // Log this for auditing, but don't leak full API key
-      console.warn('[WEBHOOK] Received for inactive or invalid API key');
+      console.warn(`[WEBHOOK] API key not found or inactive (requestId: ${requestId})`);
       return res.status(200).json({ message: 'API key not found or inactive, usage not recorded' });
     }
 
-    // Find the model
+    // --- Find or auto-create the model ---
     let aiModel = await prisma.aIModel.findUnique({
       where: { modelId: modelIdString },
     });
 
     if (!aiModel) {
-      console.warn('Webhook received for unknown AI model, auto-registering:', modelIdString);
-      
-      // Inferred provider details
+      console.warn(`[WEBHOOK] Auto-registering unknown model: ${modelIdString}`);
+
       let providerSlug = 'other';
       let providerName = 'Other Providers';
       if (modelIdString.startsWith('gpt') || modelIdString.startsWith('o1') || modelIdString.startsWith('o3')) {
@@ -87,72 +97,57 @@ router.post('/webhook/usage', webhookLimiter, async (req, res) => {
         providerName = 'Google AI';
       }
 
-      // Upsert provider in database
       const provider = await prisma.aIProvider.upsert({
         where: { slug: providerSlug },
         update: {},
-        create: {
-          name: providerName,
-          slug: providerSlug,
-          description: 'Auto-created provider on usage webhook',
-          isActive: true
-        }
+        create: { name: providerName, slug: providerSlug, description: 'Auto-created on usage webhook', isActive: true },
       });
 
-      // Create model with generic fallback rates (e.g. $0.01 / 1K input, $0.03 / 1K output)
       aiModel = await prisma.aIModel.create({
         data: {
           providerId: provider.id,
           name: modelIdString.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' '),
           modelId: modelIdString,
-          inputPricePer1K: 150,    // Default Rp 150/1K input tokens
-          outputPricePer1K: 450,   // Default Rp 450/1K output tokens
+          inputPricePer1K: 150,
+          outputPricePer1K: 450,
           contextWindow: 128000,
-          isActive: true
-        }
+          isActive: true,
+        },
       });
     }
 
-    const totalTokens = inputTokens + outputTokens;
-    const inputCost = (inputTokens / 1000) * aiModel.inputPricePer1K;
-    const outputCost = (outputTokens / 1000) * aiModel.outputPricePer1K;
+    // --- Calculate cost ---
+    const totalTokens = inTokens + outTokens;
+    const inputCost = (inTokens / 1000) * aiModel.inputPricePer1K;
+    const outputCost = (outTokens / 1000) * aiModel.outputPricePer1K;
     const totalCost = inputCost + outputCost;
 
-    // Dedup check: skip if proxy already recorded this request
-    const dedupKey = makeDedupKey(apiKeyData.id, req.body?.endpoint || 'unknown', statusCode, new Date(timestamp).getTime());
-    if (wasRecorded(dedupKey)) {
-      console.log(`[WEBHOOK] Skipping duplicate usage for key ${apiKeyData.id} (already recorded by proxy)`);
-      return res.status(200).json({ message: 'Usage already recorded by proxy' });
-    }
-    markRecorded(dedupKey);
-
-    const newBalance = apiKeyData.creditsBalance - totalCost;
-
-    // Ensure we are inside a transaction for atomic updates
-    await prisma.$transaction(async (tx) => {
-      // Log AI Usage
+    // --- Atomic transaction: record usage + deduct balance ---
+    const result = await prisma.$transaction(async (tx) => {
+      // Create usage record
       const newUsage = await tx.aIUsage.create({
         data: {
           requestId,
           apiKeyId: apiKeyData.id,
           userId: apiKeyData.userId,
           modelId: aiModel.id,
-          inputTokens,
-          outputTokens,
+          inputTokens: inTokens,
+          outputTokens: outTokens,
           totalTokens,
           inputCost,
           outputCost,
           totalCost,
-          statusCode,
-          latencyMs,
-          errorMessage,
+          endpoint: metadata?.endpoint || '/webhook',
+          statusCode: statusCode || 200,
+          latencyMs: latencyMs || 0,
+          errorMessage: errorMessage || null,
           metadata: metadata ? JSON.stringify(metadata) : null,
-          createdAt: new Date(timestamp),
+          createdAt: timestamp ? new Date(timestamp) : new Date(),
         },
       });
 
-      // Deduct from API Key's credits balance
-      await tx.aIApiKey.update({
+      // Deduct balance atomically
+      const updatedKey = await tx.aIApiKey.update({
         where: { id: apiKeyData.id },
         data: {
           creditsBalance: { decrement: totalCost },
@@ -160,51 +155,47 @@ router.post('/webhook/usage', webhookLimiter, async (req, res) => {
         },
       });
 
-      // Log AI Transaction for usage
+      // Log transaction
       await tx.aITransaction.create({
         data: {
           userId: apiKeyData.userId,
           apiKeyId: apiKeyData.id,
           amount: -totalCost,
           type: 'USAGE',
-          description: `Usage for model ${aiModel.name} (req: ${requestId})`,
+          description: `Usage: ${aiModel.name}`,
           balanceBefore: apiKeyData.creditsBalance,
-          balanceAfter: newBalance,
+          balanceAfter: updatedKey.creditsBalance,
           relatedUsageId: newUsage.id,
         },
       });
-    }); // End of transaction
 
-    // Emit real-time events AFTER transaction commits
+      return { usageId: newUsage.id, newBalance: updatedKey.creditsBalance };
+    });
+
+    // --- Emit real-time events (after transaction commits) ---
     eventBus.emitUsage(apiKeyData.userId, {
-      id: null, // webhook doesn't return the usage ID easily, frontend will get it on next refresh
+      id: result.usageId,
       model: { name: aiModel.name, modelId: modelIdString },
-      inputTokens,
-      outputTokens,
+      inputTokens: inTokens,
+      outputTokens: outTokens,
       totalTokens,
       totalCost,
-      statusCode,
-      latencyMs,
-      createdAt: new Date(timestamp).toISOString(),
+      endpoint: metadata?.endpoint || '/webhook',
+      statusCode: statusCode || 200,
+      latencyMs: latencyMs || 0,
+      createdAt: (timestamp ? new Date(timestamp) : new Date()).toISOString(),
       keyName: apiKeyData.keyName,
     });
-    eventBus.emitBalanceUpdate(apiKeyData.userId, apiKeyData.id, newBalance);
+    eventBus.emitBalanceUpdate(apiKeyData.userId, apiKeyData.id, result.newBalance);
 
-    res.status(200).json({ message: 'Usage recorded successfully' });
+    console.log(`[WEBHOOK] Recorded: requestId=${requestId} model=${modelIdString} tokens=${totalTokens} cost=Rp${Math.ceil(totalCost)}`);
+
+    res.status(200).json({ message: 'Usage recorded successfully', usageId: result.usageId });
   } catch (error) {
-    console.error('Error processing AI webhook:', error);
-    // Don't return 500 to webhook sender, as it might retry indefinitely.
-    // Instead, log and return 200 with a warning, or a specific error code for the webhook system.
-    res.status(200).json({ message: 'Error processing webhook, please check server logs' });
+    console.error('[WEBHOOK] Error processing usage:', error);
+    // Return 500 so 9router retries — the requestId dedup prevents duplicates
+    res.status(500).json({ error: 'Failed to record usage, please retry' });
   }
 });
-
-// Helper for signature verification if implemented later
-// function verifySignature(rawBody, signature, secret) {
-//   const hmac = crypto.createHmac('sha256', secret);
-//   hmac.update(rawBody);
-//   const digest = `sha256=${hmac.digest('hex')}`;
-//   return crypto.timingSafeEqual(Buffer.from(signature), Buffer.from(digest));
-// }
 
 export default router;
