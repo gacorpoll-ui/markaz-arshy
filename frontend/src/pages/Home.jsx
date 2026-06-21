@@ -474,10 +474,10 @@ export default function Home({ user }) {
       </section>
 
       {/* ══════════ FOOTER ══════════ */}
-      <footer style={{ 
-        background: 'rgba(15, 23, 42, 0.95)', 
-        borderTop: '1px solid var(--border-color)', 
-        padding: '60px 0 30px 0', 
+      <footer className="home-footer" style={{
+        background: 'rgba(15, 23, 42, 0.95)',
+        borderTop: '1px solid var(--border-color)',
+        padding: '60px 0 30px 0',
         marginTop: '80px',
         color: 'var(--text-secondary)'
       }}>

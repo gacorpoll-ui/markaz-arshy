@@ -393,6 +393,21 @@ body {
   .home-stat-item {
     padding: 0 20px !important;
   }
+  .home-footer {
+    display: none !important;
+  }
+  .premium-banner-brands {
+    grid-template-columns: 1fr !important;
+  }
+  .premium-brand-chip {
+    padding: 10px 12px !important;
+  }
+  .premium-brand-name {
+    font-size: 12px !important;
+  }
+  .premium-brand-disc {
+    font-size: 11px !important;
+  }
 }
 
 /* ==========================================
@@ -2701,4 +2716,9 @@ body {
   .hot-deals-grid       { grid-template-columns: 1fr; }
   .home-stats-inner     { flex-direction: column; gap: 20px; }
   .home-stat-divider    { display: none; }
+  .premium-banner       { padding: 24px 16px !important; gap: 24px !important; }
+  .premium-banner-title { font-size: 22px !important; }
+  .premium-banner-desc  { font-size: 13px !important; }
+  .premium-banner-perks { flex-wrap: wrap; gap: 6px !important; }
+  .premium-perk-badge   { font-size: 11px !important; padding: 4px 8px !important; }
 }
