@@ -341,18 +341,26 @@ body {
 
 @media (max-width: 768px) {
   .container {
-    padding: 40px 20px;
+    padding: 24px 16px;
   }
   .navbar {
-    padding: 0 20px;
+    padding: 0 16px;
+    height: 56px;
   }
   .nav-links {
-    display: none; /* simple mobile drawer/stack or hidden for MVP */
+    display: none;
+  }
+  .nav-auth {
+    display: none !important;
+  }
+  .hamburger-btn {
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
   }
   .grid-cols-2, .grid-cols-3 {
     grid-template-columns: 1fr;
   }
-  /* For CatalogPage responsive layout */
   .catalog-layout {
     flex-direction: column;
   }
@@ -362,6 +370,28 @@ body {
   }
   .catalog-main-content {
     margin-top: 30px;
+  }
+  .hero-title {
+    font-size: 34px !important;
+  }
+  .final-cta-title {
+    font-size: 28px !important;
+  }
+  .final-cta-banner {
+    padding: 40px 20px !important;
+  }
+  .home-section {
+    margin: 40px 0 !important;
+  }
+  .premium-banner, .vps-banner {
+    padding: 32px 20px !important;
+  }
+  .feature-icon {
+    width: 40px !important;
+    height: 40px !important;
+  }
+  .home-stat-item {
+    padding: 0 20px !important;
   }
 }
 

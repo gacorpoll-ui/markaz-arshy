@@ -103,6 +103,29 @@ export default function AIRouterCatalog({ user, token }) {
 
   return (
     <div style={{ minHeight: '100vh' }}>
+      {/* Responsive CSS for this page */}
+      <style>{`
+        .ai-features-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; }
+        .ai-table-header, .ai-table-row { display: grid; grid-template-columns: 2.2fr 1fr 0.7fr 1fr 1fr 0.6fr 0.5fr; gap: 10px; }
+        .ai-pricing-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+        .ai-detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+        .ai-table-wrapper { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+        @media (max-width: 768px) {
+          .ai-features-grid { grid-template-columns: repeat(2, 1fr); gap: 12px; }
+          .ai-table-header { display: none; }
+          .ai-table-row { grid-template-columns: 1fr auto; gap: 8px; padding: 14px 16px !important; }
+          .ai-table-row > *:nth-child(n+3) { display: none; }
+          .ai-table-row > *:first-child { grid-column: 1 / -1; }
+          .ai-table-row > *:last-child { position: absolute; right: 16px; top: 14px; }
+          .ai-table-row { position: relative; }
+          .ai-pricing-grid { grid-template-columns: 1fr; gap: 16px; }
+          .ai-detail-grid { grid-template-columns: 1fr; gap: 16px; }
+        }
+        @media (max-width: 480px) {
+          .ai-features-grid { grid-template-columns: 1fr; }
+          .ai-hero-title { font-size: 36px !important; }
+        }
+      `}</style>
 
       {/* ═══════════════════════════════════════
          SECTION 1: HERO
@@ -250,12 +273,9 @@ export default function AIRouterCatalog({ user, token }) {
         padding: '40px 24px',
         borderBottom: '1px solid var(--border-color)',
       }}>
-        <div style={{
+        <div className="ai-features-grid" style={{
           maxWidth: '1000px',
           margin: '0 auto',
-          display: 'grid',
-          gridTemplateColumns: 'repeat(4, 1fr)',
-          gap: '20px',
         }}>
           {[
             { icon: <Key size={18} />, title: '1 API Key', desc: 'Satu key untuk semua model', color: '#4facfe' },
@@ -337,17 +357,13 @@ export default function AIRouterCatalog({ user, token }) {
         </div>
 
         {/* Table Wrapper */}
-        <div style={{
+        <div className="ai-table-wrapper" style={{
           background: 'var(--glass-bg)',
           border: '1px solid var(--border-color)',
           borderRadius: '16px',
-          overflow: 'hidden',
         }}>
           {/* Table Header */}
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: '2.2fr 1fr 0.7fr 1fr 1fr 0.6fr 0.5fr',
-            gap: '10px',
+          <div className="ai-table-header" style={{
             padding: '14px 24px',
             background: 'rgba(255,255,255,0.02)',
             borderBottom: '1px solid var(--border-color)',
@@ -382,11 +398,9 @@ export default function AIRouterCatalog({ user, token }) {
                 <div key={model.id}>
                   {/* Model Row — Card Style */}
                   <div
+                    className="ai-table-row"
                     onClick={() => setExpandedModel(isExpanded ? null : model.id)}
                     style={{
-                      display: 'grid',
-                      gridTemplateColumns: '2.2fr 1fr 0.7fr 1fr 1fr 0.6fr 0.5fr',
-                      gap: '10px',
                       padding: '16px 24px',
                       borderBottom: '1px solid var(--border-color)',
                       cursor: 'pointer',
@@ -498,7 +512,7 @@ export default function AIRouterCatalog({ user, token }) {
                       borderBottom: '1px solid var(--border-color)',
                       borderLeft: '3px solid #00f2fe',
                     }}>
-                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }}>
+                      <div className="ai-detail-grid">
                         {/* Left: Model Info */}
                         <div>
                           <h4 style={{ fontSize: '13px', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '12px' }}>
@@ -577,7 +591,7 @@ export default function AIRouterCatalog({ user, token }) {
           Bayar sesuai penggunaan. Pilih tier sesuai kebutuhan Anda.
         </p>
 
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '20px' }}>
+        <div className="ai-pricing-grid">
           {[
             { tier: 'BASIC', price: 'Rp 0', desc: 'Free tier', rateLimit: '10 req/min', color: '#6366f1', features: ['All models', 'Basic rate limit', 'Usage dashboard'] },
             { tier: 'PRO', price: 'Rp 50.000', desc: 'per bulan', rateLimit: '60 req/min', color: '#4facfe', features: ['All models', 'Higher rate limit', 'Priority support', 'Usage analytics'], popular: true },
