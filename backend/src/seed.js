@@ -1,6 +1,12 @@
 import prisma from './db.js';
 import bcrypt from 'bcryptjs';
 
+// SAFETY: Refuse to run in production
+if (process.env.NODE_ENV === 'production') {
+  console.error('ERROR: Cannot run seed script in production! This will DELETE all data.');
+  process.exit(1);
+}
+
 async function main() {
   console.log('Seeding database...');
 

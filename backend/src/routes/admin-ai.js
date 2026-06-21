@@ -101,7 +101,7 @@ router.delete('/ai-providers/:id', requireAuth, requireAdmin, async (req, res) =
     res.json({ message: `Provider "${provider.name}" berhasil dihapus beserta ${provider.models.length} model.` });
   } catch (error) {
     console.error('Error deleting AI provider:', error);
-    res.status(500).json({ error: 'Gagal menghapus provider: ' + error.message });
+    res.status(500).json({ error: 'Gagal menghapus provider.' });
   }
 });
 
@@ -193,7 +193,7 @@ router.put('/ai-models/:id', requireAuth, requireAdmin, async (req, res) => {
     res.json(model);
   } catch (error) {
     console.error('Error updating AI model:', error);
-    res.status(500).json({ error: 'Gagal mengupdate model: ' + error.message });
+    res.status(500).json({ error: 'Gagal mengupdate model.' });
   }
 });
 
@@ -378,7 +378,7 @@ router.post('/ai-sync-9router', requireAuth, requireAdmin, async (req, res) => {
 
   } catch (error) {
     console.error('Error syncing 9router models:', error);
-    res.status(500).json({ error: `Sync failed: ${error.message}` });
+    res.status(500).json({ error: 'Sync gagal.' });
   }
 });
 

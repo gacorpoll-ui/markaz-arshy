@@ -1,15 +1,25 @@
 import express from 'express';
 import crypto from 'crypto';
+import rateLimit from 'express-rate-limit';
 import prisma from '../db.js';
 import eventBus from '../sse/EventBus.js';
 import { wasRecorded, markRecorded, makeDedupKey } from '../sse/requestDedup.js';
 
 const router = express.Router();
 
+// Rate limiting for webhook
+const webhookLimiter = rateLimit({
+  windowMs: 60 * 1000, // 1 minute
+  max: 100, // 100 requests per minute
+  message: { error: 'Too many webhook requests.' },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
 /* ═══════════════════════════════════════
    WEBHOOK FOR USAGE TRACKING (from 9router)
    ═══════════════════════════════════════ */
-router.post('/webhook/usage', async (req, res) => {
+router.post('/webhook/usage', webhookLimiter, async (req, res) => {
   try {
     const {
       requestId,
@@ -50,8 +60,8 @@ router.post('/webhook/usage', async (req, res) => {
     });
 
     if (!apiKeyData || !apiKeyData.isActive) {
-      // Log this for auditing, but don't error out loudly to sender
-      console.warn('Webhook received for inactive or invalid API key:', incomingApiKey);
+      // Log this for auditing, but don't leak full API key
+      console.warn('[WEBHOOK] Received for inactive or invalid API key');
       return res.status(200).json({ message: 'API key not found or inactive, usage not recorded' });
     }
 

@@ -1,5 +1,6 @@
 import express from 'express';
 import crypto from 'crypto';
+import rateLimit from 'express-rate-limit';
 import prisma from '../db.js';
 import eventBus from '../sse/EventBus.js';
 import { markRecorded, makeDedupKey } from '../sse/requestDedup.js';
@@ -7,6 +8,15 @@ import { markRecorded, makeDedupKey } from '../sse/requestDedup.js';
 const router = express.Router();
 
 const NINE_ROUTER_URL = process.env.AI_ROUTER_URL || 'http://localhost:20128';
+
+// Rate limiting for AI proxy
+const proxyLimiter = rateLimit({
+  windowMs: 60 * 1000, // 1 minute
+  max: 30, // 30 requests per minute per IP
+  message: { error: 'Terlalu banyak request. Silakan tunggu sebentar.' },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
 
 // Mask API key for logging (never log full keys)
 function maskKey(key) {
@@ -140,7 +150,7 @@ async function recordUsage({ apiKey, endpoint, body, responseStatus, latencyMs, 
 // ═══════════════════════════════════════
 // POST /chat/completions
 // ═══════════════════════════════════════
-router.post('/chat/completions', async (req, res) => {
+router.post('/chat/completions', proxyLimiter, async (req, res) => {
   const startTime = Date.now();
   try {
     const apiKey = (req.headers['authorization'] || '').replace('Bearer ', '');
@@ -231,7 +241,7 @@ router.post('/chat/completions', async (req, res) => {
     console.log(`[PROXY] chat: ${maskKey(apiKey)} model=${req.body.model}`);
   } catch (error) {
     console.error('[PROXY] chat error:', error.message);
-    res.status(500).json({ error: { message: 'Proxy error: ' + error.message } });
+    res.status(500).json({ error: { message: 'Internal proxy error.' } });
   }
 });
 
@@ -254,7 +264,7 @@ router.get('/models', async (req, res) => {
 // ═══════════════════════════════════════
 // POST /messages — Anthropic Messages API (Claude Code)
 // ═══════════════════════════════════════
-router.post('/messages', async (req, res) => {
+router.post('/messages', proxyLimiter, async (req, res) => {
   const startTime = Date.now();
   try {
     const apiKey = req.headers['x-api-key'] || (req.headers['authorization'] || '').replace('Bearer ', '');
@@ -388,7 +398,7 @@ router.post('/messages', async (req, res) => {
     console.log(`[PROXY] messages: ${maskKey(apiKey)} model=${model} stream=${!!stream}`);
   } catch (error) {
     console.error('[PROXY] messages error:', error.message);
-    res.status(500).json({ type: 'error', error: { type: 'api_error', message: 'Proxy error: ' + error.message } });
+    res.status(500).json({ type: 'error', error: { type: 'api_error', message: 'Internal proxy error.' } });
   }
 });
 

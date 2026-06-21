@@ -55,6 +55,10 @@ router.post('/request', requireAuth, upload.single('paymentProof'), async (req, 
     return res.status(400).json({ error: 'Minimum deposit adalah Rp 10.000.' });
   }
 
+  if (amount > 50000000) {
+    return res.status(400).json({ error: 'Maximum deposit adalah Rp 50.000.000. Hubungi admin untuk deposit lebih besar.' });
+  }
+
   if (!paymentMethodId) {
     return res.status(400).json({ error: 'Pilih metode pembayaran.' });
   }

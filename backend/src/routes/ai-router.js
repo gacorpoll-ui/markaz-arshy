@@ -102,7 +102,7 @@ router.post('/keys/create', requireAuth, async (req, res) => {
         if (keyRes.ok) {
           const keyData = await keyRes.json();
           skKey = keyData.key;
-          console.log(`[AI ROUTE] Created 9router key for user ${userId}: ${skKey.slice(0, 15)}...`);
+          console.log(`[AI ROUTE] Created 9router key for user ${userId}`);
         }
       }
     } catch (err) {
@@ -431,52 +431,60 @@ router.post('/credits/top-up', requireAuth, async (req, res) => {
       return res.status(404).json({ error: 'API key not found' });
     }
 
-    // Check user balance
-    const user = await prisma.user.findUnique({ where: { id: userId } });
-    if (user.balance < amount) {
-      return res.status(400).json({ error: 'Insufficient balance' });
-    }
+    // Atomic transaction: check balance + deduct + credit in one operation
+    const result = await prisma.$transaction(async (tx) => {
+      // Check user balance with lock
+      const user = await tx.user.findUnique({ where: { id: userId } });
+      if (user.balance < amount) {
+        throw new Error('INSUFFICIENT_BALANCE');
+      }
 
-    // Deduct from user balance
-    await prisma.user.update({
-      where: { id: userId },
-      data: { balance: { decrement: amount } },
-    });
+      // Deduct from user balance
+      const updatedUser = await tx.user.update({
+        where: { id: userId },
+        data: { balance: { decrement: amount } },
+      });
 
-    // Add to API key credits
-    const updatedKey = await prisma.aIApiKey.update({
-      where: { id: apiKeyId },
-      data: { creditsBalance: { increment: amount } },
-    });
+      // Add to API key credits
+      const updatedKey = await tx.aIApiKey.update({
+        where: { id: apiKeyId },
+        data: { creditsBalance: { increment: amount } },
+      });
 
-    // Create transactions
-    await prisma.balanceTransaction.create({
-      data: {
-        userId,
-        amount: -amount,
-        type: 'AI_TOPUP',
-        description: `Top-up AI credits for "${apiKeyData.keyName}"`,
-      },
-    });
+      // Create transactions
+      await tx.balanceTransaction.create({
+        data: {
+          userId,
+          amount: -amount,
+          type: 'AI_TOPUP',
+          description: `Top-up AI credits for "${apiKeyData.keyName}"`,
+        },
+      });
 
-    await prisma.aITransaction.create({
-      data: {
-        userId,
-        apiKeyId,
-        amount,
-        type: 'TOP_UP',
-        description: `Top-up from main balance`,
-        balanceBefore: apiKeyData.creditsBalance,
-        balanceAfter: updatedKey.creditsBalance,
-      },
+      await tx.aITransaction.create({
+        data: {
+          userId,
+          apiKeyId,
+          amount,
+          type: 'TOP_UP',
+          description: `Top-up from main balance`,
+          balanceBefore: apiKeyData.creditsBalance,
+          balanceAfter: updatedKey.creditsBalance,
+        },
+      });
+
+      return { newBalance: updatedKey.creditsBalance };
     });
 
     res.json({
       message: 'Credits topped up successfully',
-      newBalance: updatedKey.creditsBalance,
+      newBalance: result.newBalance,
     });
   } catch (error) {
     console.error('Error topping up credits:', error);
+    if (error.message === 'INSUFFICIENT_BALANCE') {
+      return res.status(400).json({ error: 'Insufficient balance' });
+    }
     res.status(500).json({ error: 'Failed to top up credits' });
   }
 });
@@ -733,7 +741,10 @@ router.get('/events/stream', async (req, res) => {
 
   let userId;
   try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'super-secret-key-follower-store-2026');
+    if (!process.env.JWT_SECRET) {
+      return res.status(500).json({ error: 'Server configuration error' });
+    }
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
     const user = await prisma.user.findUnique({ where: { id: decoded.id } });
     if (!user) return res.status(401).json({ error: 'User not found' });
     userId = user.id;

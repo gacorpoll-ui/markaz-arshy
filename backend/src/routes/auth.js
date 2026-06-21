@@ -57,6 +57,14 @@ router.post('/register', authLimiter, async (req, res) => {
       return res.status(400).json({ error: 'Name, email, and password are required.' });
     }
 
+    // Password complexity: min 8 chars, at least 1 letter and 1 number
+    if (password.length < 8) {
+      return res.status(400).json({ error: 'Password harus minimal 8 karakter.' });
+    }
+    if (!/[a-zA-Z]/.test(password) || !/[0-9]/.test(password)) {
+      return res.status(400).json({ error: 'Password harus mengandung huruf dan angka.' });
+    }
+
     const existing = await prisma.user.findUnique({ where: { email } });
     if (existing) {
       // Jika sudah daftar via Google, beri pesan khusus
@@ -133,7 +141,7 @@ router.post('/verify-email', async (req, res) => {
 /* ═══════════════════════════════════════
    RESEND VERIFICATION CODE
    ═══════════════════════════════════════ */
-router.post('/resend-verification', async (req, res) => {
+router.post('/resend-verification', authLimiter, async (req, res) => {
   try {
     const { email } = req.body;
     if (!email) return res.status(400).json({ error: 'Email diperlukan.' });

@@ -28,9 +28,24 @@ app.use(cors({
   origin: process.env.FRONTEND_URL || 'https://markaz-arshy.com',
   credentials: true,
 }));
-app.use(express.json({ limit: '10mb' }));
-// Serve uploads folder as static
-app.use('/uploads', express.static('uploads'));
+app.use(express.json({ limit: '1mb' }));
+
+// Security headers
+app.use((req, res, next) => {
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('X-Frame-Options', 'DENY');
+  res.setHeader('X-XSS-Protection', '1; mode=block');
+  res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
+  next();
+});
+
+// Serve uploads folder as static (restrict executable content)
+app.use('/uploads', express.static('uploads', {
+  setHeaders: (res) => {
+    res.setHeader('Content-Security-Policy', "default-src 'none'");
+    res.setHeader('X-Content-Type-Options', 'nosniff');
+  }
+}));
 
 // API Health Check
 app.get('/api/health', (req, res) => {

@@ -143,21 +143,21 @@ router.post('/deposits/:id/confirm', async (req, res) => {
       return { deposit: updatedDeposit, user: updatedUser };
     });
 
-    return res.json({
-      message: 'Deposit confirmed successfully, balance updated.',
-      deposit: result.deposit
-    });
-
-    // Notify user about confirmed deposit
+    // Notify user about confirmed deposit (BEFORE response)
     await createNotification(
         result.user.id,
         'DEPOSIT_CONFIRMED',
         `Deposit Anda sebesar Rp ${result.deposit.amount.toLocaleString('id-ID')} telah disetujui. Saldo Anda sekarang Rp ${result.user.balance.toLocaleString('id-ID')}.`,
         '/dashboard'
     );
+
+    return res.json({
+      message: 'Deposit confirmed successfully, balance updated.',
+      deposit: result.deposit
+    });
   } catch (error) {
     console.error('Confirm deposit error:', error);
-    return res.status(400).json({ error: error.message || 'Failed to confirm deposit.' });
+    return res.status(400).json({ error: 'Failed to confirm deposit.' });
   }
 });
 
@@ -187,18 +187,18 @@ router.post('/deposits/:id/reject', async (req, res) => {
       }
     });
 
-    return res.json({
-      message: 'Deposit request rejected.',
-      deposit: updatedDeposit
-    });
-
-    // Notify user about rejected deposit
+    // Notify user about rejected deposit (BEFORE response)
     await createNotification(
         deposit.userId,
         'DEPOSIT_REJECTED',
         `Deposit Anda sebesar Rp ${updatedDeposit.amount.toLocaleString('id-ID')} telah ditolak. Silakan periksa kembali bukti transfer Anda atau hubungi admin.`,
         '/dashboard'
     );
+
+    return res.json({
+      message: 'Deposit request rejected.',
+      deposit: updatedDeposit
+    });
   } catch (error) {
     console.error('Reject deposit error:', error);
     return res.status(500).json({ error: 'Failed to reject deposit.' });
@@ -481,8 +481,26 @@ router.patch('/users/:id/role', async (req, res) => {
   const userId = parseInt(req.params.id);
   const { role } = req.body; // 'USER', 'RESELLER', or 'ADMIN'
 
+  if (isNaN(userId)) {
+    return res.status(400).json({ error: 'Invalid user ID.' });
+  }
+
   if (!['USER', 'RESELLER', 'ADMIN'].includes(role)) {
     return res.status(400).json({ error: 'Invalid role provided.' });
+  }
+
+  // Prevent self-promotion or demotion
+  if (userId === req.user.id) {
+    return res.status(400).json({ error: 'Tidak dapat mengubah role sendiri.' });
+  }
+
+  // Prevent changing other admin roles
+  const targetUser = await prisma.user.findUnique({ where: { id: userId } });
+  if (!targetUser) {
+    return res.status(404).json({ error: 'User not found.' });
+  }
+  if (targetUser.role === 'ADMIN' && req.user.role !== 'ADMIN') {
+    return res.status(403).json({ error: 'Hanya admin yang bisa mengubah role admin lain.' });
   }
 
   try {
