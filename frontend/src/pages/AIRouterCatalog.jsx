@@ -3,8 +3,9 @@ import { useNavigate, Link } from 'react-router-dom';
 import { Cpu, Key, Zap, ArrowRight, ExternalLink, Shield, BarChart3, Copy, Check, ChevronDown, ChevronUp, Terminal, BookOpen } from 'lucide-react';
 
 /**
- * AI Router Catalog — Professional Redesign
- * Single API Key for all models — like OpenRouter/OpenAI
+ * AI Router Catalog — Hybrid Table-Cards Redesign
+ * OpenRouter-inspired, data-rich, developer-focused layout
+ * Single API Key for all models
  */
 export default function AIRouterCatalog({ user, token }) {
   const [providers, setProviders] = useState([]);
@@ -12,6 +13,7 @@ export default function AIRouterCatalog({ user, token }) {
   const [selectedProvider, setSelectedProvider] = useState('all');
   const [copied, setCopied] = useState(false);
   const [expandedModel, setExpandedModel] = useState(null);
+  const [copiedModel, setCopiedModel] = useState(null);
   const navigate = useNavigate();
 
   const baseUrl = import.meta.env.VITE_AI_ROUTER_PUBLIC_URL || 'https://ai.markaz-arshy.com/v1';
@@ -38,16 +40,13 @@ export default function AIRouterCatalog({ user, token }) {
       (p.models || []).map(m => ({ ...m, provider: p }))
     );
 
-  const formatPrice = (pricePerToken) => {
-    const pricePerM = pricePerToken * 1000000;
-    if (pricePerM < 1) return '$' + pricePerM.toFixed(4);
-    return '$' + pricePerM.toFixed(2);
+  // Harga disimpan di DB sebagai Rp per 1K tokens
+  const formatPrice = (pricePer1K) => {
+    return `Rp ${Math.ceil(pricePer1K).toLocaleString('id-ID')}`;
   };
 
-  const formatPriceIDR = (pricePerToken) => {
-    const pricePerM = pricePerToken * 1000000;
-    const priceIDR = pricePerM * 15000;
-    return `Rp ${Math.ceil(priceIDR).toLocaleString('id-ID')}`;
+  const formatPricePerM = (pricePer1K) => {
+    return `Rp ${Math.ceil(pricePer1K * 1000).toLocaleString('id-ID')}`;
   };
 
   const getProviderColor = (slug) => {
@@ -75,6 +74,14 @@ export default function AIRouterCatalog({ user, token }) {
     });
   };
 
+  const copyModelId = (modelId, e) => {
+    e.stopPropagation();
+    navigator.clipboard.writeText(modelId).then(() => {
+      setCopiedModel(modelId);
+      setTimeout(() => setCopiedModel(null), 2000);
+    });
+  };
+
   const getSpeed = (name) => {
     const lower = name.toLowerCase();
     if (lower.includes('mini') || lower.includes('flash') || lower.includes('haiku') || lower.includes('lite')) return { label: 'Fast', color: '#22c55e' };
@@ -82,6 +89,7 @@ export default function AIRouterCatalog({ user, token }) {
     return { label: 'Balanced', color: '#6366f1' };
   };
 
+  // ═══ Loading State ═══
   if (loading) {
     return (
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '60vh', color: 'var(--text-muted)' }}>
@@ -95,7 +103,10 @@ export default function AIRouterCatalog({ user, token }) {
 
   return (
     <div style={{ minHeight: '100vh' }}>
-      {/* ═══ HERO SECTION ═══ */}
+
+      {/* ═══════════════════════════════════════
+         SECTION 1: HERO
+         ═══════════════════════════════════════ */}
       <section style={{
         padding: '80px 24px 60px',
         textAlign: 'center',
@@ -103,22 +114,26 @@ export default function AIRouterCatalog({ user, token }) {
         borderBottom: '1px solid var(--border-color)',
       }}>
         <div style={{ maxWidth: '800px', margin: '0 auto' }}>
+          {/* Badge */}
           <div style={{
             display: 'inline-flex',
             alignItems: 'center',
             gap: '8px',
             padding: '8px 16px',
             borderRadius: '9999px',
-            background: 'rgba(79, 172, 254, 0.1)',
-            border: '1px solid rgba(79, 172, 254, 0.2)',
+            background: 'rgba(0, 242, 254, 0.08)',
+            border: '1px solid rgba(0, 242, 254, 0.2)',
             marginBottom: '24px',
           }}>
-            <Zap size={16} style={{ color: '#4facfe' }} />
-            <span style={{ fontSize: '13px', fontWeight: '600', color: '#4facfe' }}>AI Gateway — OpenAI Compatible</span>
+            <Zap size={14} style={{ color: '#00f2fe' }} />
+            <span style={{ fontSize: '13px', fontWeight: '600', color: '#00f2fe', letterSpacing: '0.3px' }}>
+              AI Gateway — OpenAI Compatible
+            </span>
           </div>
 
+          {/* Title */}
           <h1 style={{
-            fontSize: '48px',
+            fontSize: '52px',
             fontWeight: '800',
             lineHeight: '1.1',
             marginBottom: '20px',
@@ -131,6 +146,7 @@ export default function AIRouterCatalog({ user, token }) {
             <span style={{ color: 'var(--text-primary)' }}>Satu API Key</span>
           </h1>
 
+          {/* Subtitle */}
           <p style={{
             fontSize: '18px',
             color: 'var(--text-secondary)',
@@ -142,29 +158,30 @@ export default function AIRouterCatalog({ user, token }) {
             Kompatibel dengan Cursor, Cline, dan semua tools OpenAI-compatible.
           </p>
 
-          {/* Quick Start Code */}
+          {/* Quick Start Code Block */}
           <div style={{
             background: 'rgba(0, 0, 0, 0.4)',
             border: '1px solid var(--border-color)',
             borderRadius: '12px',
             padding: '20px',
-            maxWidth: '550px',
-            margin: '0 auto 24px',
+            maxWidth: '580px',
+            margin: '0 auto 28px',
             textAlign: 'left',
           }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
-              <span style={{ fontSize: '12px', fontWeight: '600', color: 'var(--text-muted)', textTransform: 'uppercase' }}>
+              <span style={{ fontSize: '11px', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
                 Quick Start
               </span>
               <button
                 onClick={() => copyToClipboard(`curl ${baseUrl}/chat/completions \\\n  -H "Authorization: Bearer YOUR_API_KEY" \\\n  -H "Content-Type: application/json" \\\n  -d '{"model":"gpt-4o-mini","messages":[{"role":"user","content":"Hello!"}]}'`)}
                 style={{
                   display: 'flex', alignItems: 'center', gap: '4px',
-                  background: copied ? '#22c55e' : 'rgba(79, 172, 254, 0.1)',
-                  border: '1px solid ' + (copied ? '#22c55e' : 'rgba(79, 172, 254, 0.2)'),
+                  background: copied ? 'rgba(16, 185, 129, 0.15)' : 'rgba(0, 242, 254, 0.08)',
+                  border: '1px solid ' + (copied ? 'rgba(16, 185, 129, 0.3)' : 'rgba(0, 242, 254, 0.2)'),
                   borderRadius: '6px', padding: '4px 10px',
-                  color: copied ? 'white' : '#4facfe',
+                  color: copied ? '#10b981' : '#00f2fe',
                   fontSize: '11px', fontWeight: '600', cursor: 'pointer',
+                  transition: 'all 0.2s ease',
                 }}
               >
                 {copied ? <><Check size={12} /> Copied!</> : <><Copy size={12} /> Copy</>}
@@ -195,7 +212,7 @@ export default function AIRouterCatalog({ user, token }) {
                   <ArrowRight size={14} />
                 </button>
                 <button
-                  onClick={() => navigate('/ai-docs')}
+                  onClick={() => navigate('/docs/ai')}
                   className="btn btn-secondary"
                   style={{ padding: '12px 28px', fontSize: '15px', fontWeight: '600', display: 'flex', alignItems: 'center', gap: '8px' }}
                 >
@@ -226,7 +243,9 @@ export default function AIRouterCatalog({ user, token }) {
         </div>
       </section>
 
-      {/* ═══ FEATURES STRIP ═══ */}
+      {/* ═══════════════════════════════════════
+         SECTION 2: FEATURES STRIP
+         ═══════════════════════════════════════ */}
       <section style={{
         padding: '40px 24px',
         borderBottom: '1px solid var(--border-color)',
@@ -236,52 +255,65 @@ export default function AIRouterCatalog({ user, token }) {
           margin: '0 auto',
           display: 'grid',
           gridTemplateColumns: 'repeat(4, 1fr)',
-          gap: '24px',
+          gap: '20px',
         }}>
           {[
-            { icon: <Key size={20} />, title: '1 API Key', desc: 'Satu key untuk semua model', color: '#4facfe' },
-            { icon: <Zap size={20} />, title: 'OpenAI Compatible', desc: 'Format API standar industry', color: '#f59e0b' },
-            { icon: <BarChart3 size={20} />, title: 'Real-time Usage', desc: 'Monitor token & cost', color: '#8b5cf6' },
-            { icon: <Shield size={20} />, title: 'Rate Limiting', desc: 'BASIC / PRO / ENTERPRISE', color: '#22c55e' },
+            { icon: <Key size={18} />, title: '1 API Key', desc: 'Satu key untuk semua model', color: '#4facfe' },
+            { icon: <Zap size={18} />, title: 'OpenAI Compatible', desc: 'Format API standar industry', color: '#f59e0b' },
+            { icon: <BarChart3 size={18} />, title: 'Real-time Usage', desc: 'Monitor token & cost', color: '#8b5cf6' },
+            { icon: <Shield size={18} />, title: 'Rate Limiting', desc: 'BASIC / PRO / ENTERPRISE', color: '#22c55e' },
           ].map((feat, i) => (
-            <div key={i} style={{ textAlign: 'center' }}>
+            <div key={i} style={{
+              textAlign: 'center',
+              padding: '20px 12px',
+              borderRadius: '12px',
+              background: 'rgba(255,255,255,0.02)',
+              border: '1px solid var(--border-color)',
+              transition: 'all 0.2s ease',
+            }}
+              onMouseEnter={(e) => { e.currentTarget.style.borderColor = `${feat.color}30`; e.currentTarget.style.background = `${feat.color}05`; }}
+              onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'var(--border-color)'; e.currentTarget.style.background = 'rgba(255,255,255,0.02)'; }}
+            >
               <div style={{
-                width: '44px', height: '44px', borderRadius: '10px',
-                background: `${feat.color}15`, display: 'inline-flex',
+                width: '40px', height: '40px', borderRadius: '10px',
+                background: `${feat.color}12`, display: 'inline-flex',
                 alignItems: 'center', justifyContent: 'center',
                 color: feat.color, marginBottom: '10px',
               }}>
                 {feat.icon}
               </div>
-              <h4 style={{ fontSize: '14px', fontWeight: '700', color: 'var(--text-primary)', marginBottom: '4px' }}>{feat.title}</h4>
-              <p style={{ fontSize: '12px', color: 'var(--text-muted)' }}>{feat.desc}</p>
+              <h4 style={{ fontSize: '13px', fontWeight: '700', color: 'var(--text-primary)', marginBottom: '4px' }}>{feat.title}</h4>
+              <p style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{feat.desc}</p>
             </div>
           ))}
         </div>
       </section>
 
-      {/* ═══ MODEL CATALOG ═══ */}
+      {/* ═══════════════════════════════════════
+         SECTION 3: MODEL CATALOG (Hybrid Table-Cards)
+         ═══════════════════════════════════════ */}
       <section style={{ padding: '60px 24px', maxWidth: '1100px', margin: '0 auto' }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '32px', flexWrap: 'wrap', gap: '16px' }}>
+        {/* Header + Filter */}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '28px', flexWrap: 'wrap', gap: '16px' }}>
           <div>
-            <h2 style={{ fontSize: '28px', fontWeight: '800', color: 'var(--text-primary)', marginBottom: '6px' }}>
+            <h2 style={{ fontSize: '28px', fontWeight: '800', color: 'var(--text-primary)', marginBottom: '6px', fontFamily: 'var(--font-title)' }}>
               Model Catalog
             </h2>
-            <p style={{ fontSize: '14px', color: 'var(--text-muted)' }}>
+            <p style={{ fontSize: '13px', color: 'var(--text-muted)' }}>
               {allModels.length} models tersedia — bayar sesuai penggunaan
             </p>
           </div>
 
-          {/* Provider Filter */}
+          {/* Provider Filter Pills */}
           <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
             <button
               onClick={() => setSelectedProvider('all')}
               style={{
                 padding: '6px 14px', borderRadius: '8px', fontSize: '12px', fontWeight: '600', cursor: 'pointer',
                 background: selectedProvider === 'all' ? 'var(--color-primary)' : 'rgba(255,255,255,0.05)',
-                color: selectedProvider === 'all' ? 'white' : 'var(--text-secondary)',
+                color: selectedProvider === 'all' ? '#070913' : 'var(--text-secondary)',
                 border: selectedProvider === 'all' ? 'none' : '1px solid var(--border-color)',
-                transition: 'all 0.2s',
+                transition: 'all 0.2s ease',
               }}
             >
               Semua
@@ -295,7 +327,7 @@ export default function AIRouterCatalog({ user, token }) {
                   background: selectedProvider === p.slug ? getProviderColor(p.slug) : 'rgba(255,255,255,0.05)',
                   color: selectedProvider === p.slug ? 'white' : 'var(--text-secondary)',
                   border: selectedProvider === p.slug ? 'none' : '1px solid var(--border-color)',
-                  transition: 'all 0.2s',
+                  transition: 'all 0.2s ease',
                 }}
               >
                 {p.name}
@@ -304,7 +336,7 @@ export default function AIRouterCatalog({ user, token }) {
           </div>
         </div>
 
-        {/* Model Table */}
+        {/* Table Wrapper */}
         <div style={{
           background: 'var(--glass-bg)',
           border: '1px solid var(--border-color)',
@@ -314,23 +346,24 @@ export default function AIRouterCatalog({ user, token }) {
           {/* Table Header */}
           <div style={{
             display: 'grid',
-            gridTemplateColumns: '2fr 1.2fr 0.8fr 1fr 1fr 0.6fr',
-            gap: '12px',
+            gridTemplateColumns: '2.2fr 1fr 0.7fr 1fr 1fr 0.6fr 0.5fr',
+            gap: '10px',
             padding: '14px 24px',
             background: 'rgba(255,255,255,0.02)',
             borderBottom: '1px solid var(--border-color)',
-            fontSize: '11px',
+            fontSize: '10px',
             fontWeight: '700',
             color: 'var(--text-muted)',
             textTransform: 'uppercase',
-            letterSpacing: '0.5px',
+            letterSpacing: '0.8px',
           }}>
             <span>Model</span>
             <span>Provider</span>
             <span style={{ textAlign: 'right' }}>Context</span>
-            <span style={{ textAlign: 'right' }}>Input / 1M</span>
-            <span style={{ textAlign: 'right' }}>Output / 1M</span>
+            <span style={{ textAlign: 'right' }}>Input / 1K</span>
+            <span style={{ textAlign: 'right' }}>Output / 1K</span>
             <span style={{ textAlign: 'center' }}>Speed</span>
+            <span style={{ textAlign: 'center' }}></span>
           </div>
 
           {/* Model Rows */}
@@ -340,43 +373,58 @@ export default function AIRouterCatalog({ user, token }) {
               <p>Tidak ada model tersedia</p>
             </div>
           ) : (
-            allModels.map((model, idx) => {
+            allModels.map((model) => {
               const badge = getProviderBadge(model.provider.slug);
               const speed = getSpeed(model.name);
               const isExpanded = expandedModel === model.id;
 
               return (
                 <div key={model.id}>
-                  {/* Model Row */}
+                  {/* Model Row — Card Style */}
                   <div
                     onClick={() => setExpandedModel(isExpanded ? null : model.id)}
                     style={{
                       display: 'grid',
-                      gridTemplateColumns: '2fr 1.2fr 0.8fr 1fr 1fr 0.6fr',
-                      gap: '12px',
+                      gridTemplateColumns: '2.2fr 1fr 0.7fr 1fr 1fr 0.6fr 0.5fr',
+                      gap: '10px',
                       padding: '16px 24px',
                       borderBottom: '1px solid var(--border-color)',
                       cursor: 'pointer',
-                      transition: 'all 0.15s',
-                      background: isExpanded ? 'rgba(79, 172, 254, 0.03)' : 'transparent',
+                      transition: 'all 0.15s ease',
+                      background: isExpanded
+                        ? 'rgba(0, 242, 254, 0.03)'
+                        : 'transparent',
+                      borderLeft: isExpanded ? '3px solid #00f2fe' : '3px solid transparent',
                     }}
                     onMouseEnter={(e) => { if (!isExpanded) e.currentTarget.style.background = 'rgba(255,255,255,0.02)'; }}
                     onMouseLeave={(e) => { if (!isExpanded) e.currentTarget.style.background = 'transparent'; }}
                   >
-                    {/* Model Name */}
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                      <span style={{ fontSize: '15px', fontWeight: '600', color: 'var(--text-primary)' }}>
+                    {/* Model Name + Provider Dot */}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px', minWidth: 0 }}>
+                      <div style={{
+                        width: '8px', height: '8px', borderRadius: '50%',
+                        background: badge.color, flexShrink: 0,
+                        boxShadow: `0 0 6px ${badge.color}60`,
+                      }} />
+                      <span style={{
+                        fontSize: '14px', fontWeight: '600', color: 'var(--text-primary)',
+                        overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                      }}>
                         {model.name}
                       </span>
-                      {isExpanded ? <ChevronUp size={14} style={{ color: 'var(--text-muted)' }} /> : <ChevronDown size={14} style={{ color: 'var(--text-muted)' }} />}
+                      {isExpanded
+                        ? <ChevronUp size={14} style={{ color: 'var(--text-muted)', flexShrink: 0 }} />
+                        : <ChevronDown size={14} style={{ color: 'var(--text-muted)', flexShrink: 0 }} />
+                      }
                     </div>
 
                     {/* Provider Badge */}
                     <div style={{ display: 'flex', alignItems: 'center' }}>
                       <span style={{
                         padding: '3px 10px', borderRadius: '6px',
-                        background: `${badge.color}15`, color: badge.color,
+                        background: `${badge.color}12`, color: badge.color,
                         fontSize: '11px', fontWeight: '600',
+                        whiteSpace: 'nowrap',
                       }}>
                         {badge.name}
                       </span>
@@ -384,7 +432,10 @@ export default function AIRouterCatalog({ user, token }) {
 
                     {/* Context Window */}
                     <div style={{ textAlign: 'right', display: 'flex', alignItems: 'center', justifyContent: 'flex-end' }}>
-                      <span style={{ fontSize: '13px', fontWeight: '600', color: 'var(--text-primary)' }}>
+                      <span style={{
+                        fontSize: '12px', fontWeight: '600', color: 'var(--text-secondary)',
+                        background: 'rgba(255,255,255,0.04)', padding: '2px 8px', borderRadius: '4px',
+                      }}>
                         {(model.contextWindow / 1000).toFixed(0)}K
                       </span>
                     </div>
@@ -395,7 +446,7 @@ export default function AIRouterCatalog({ user, token }) {
                         {formatPrice(model.inputPricePer1K)}
                       </span>
                       <span style={{ fontSize: '10px', color: 'var(--text-muted)' }}>
-                        {formatPriceIDR(model.inputPricePer1K)}
+                        {formatPricePerM(model.inputPricePer1K)} / 1M
                       </span>
                     </div>
 
@@ -405,7 +456,7 @@ export default function AIRouterCatalog({ user, token }) {
                         {formatPrice(model.outputPricePer1K)}
                       </span>
                       <span style={{ fontSize: '10px', color: 'var(--text-muted)' }}>
-                        {formatPriceIDR(model.outputPricePer1K)}
+                        {formatPricePerM(model.outputPricePer1K)} / 1M
                       </span>
                     </div>
 
@@ -413,52 +464,72 @@ export default function AIRouterCatalog({ user, token }) {
                     <div style={{ textAlign: 'center', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                       <span style={{
                         padding: '2px 8px', borderRadius: '4px',
-                        background: `${speed.color}15`, color: speed.color,
+                        background: `${speed.color}12`, color: speed.color,
                         fontSize: '11px', fontWeight: '600',
                       }}>
                         {speed.label}
                       </span>
                     </div>
+
+                    {/* Action Button */}
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <button
+                        onClick={(e) => copyModelId(model.modelId, e)}
+                        style={{
+                          padding: '4px 10px', borderRadius: '6px', fontSize: '11px', fontWeight: '600',
+                          cursor: 'pointer', border: 'none',
+                          background: copiedModel === model.modelId ? 'rgba(16,185,129,0.15)' : 'rgba(0,242,254,0.08)',
+                          color: copiedModel === model.modelId ? '#10b981' : '#00f2fe',
+                          transition: 'all 0.2s ease',
+                        }}
+                        onMouseEnter={(e) => { if (copiedModel !== model.modelId) e.currentTarget.style.background = 'rgba(0,242,254,0.15)'; }}
+                        onMouseLeave={(e) => { if (copiedModel !== model.modelId) e.currentTarget.style.background = 'rgba(0,242,254,0.08)'; }}
+                      >
+                        {copiedModel === model.modelId ? <Check size={12} /> : 'Use'}
+                      </button>
+                    </div>
                   </div>
 
-                  {/* Expanded Detail */}
+                  {/* Expanded Detail Panel */}
                   {isExpanded && (
                     <div style={{
                       padding: '20px 24px',
-                      background: 'rgba(79, 172, 254, 0.02)',
+                      background: 'rgba(0, 242, 254, 0.02)',
                       borderBottom: '1px solid var(--border-color)',
+                      borderLeft: '3px solid #00f2fe',
                     }}>
-                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }}>
                         {/* Left: Model Info */}
                         <div>
-                          <h4 style={{ fontSize: '14px', fontWeight: '700', color: 'var(--text-primary)', marginBottom: '8px' }}>
+                          <h4 style={{ fontSize: '13px', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '12px' }}>
                             Detail Model
                           </h4>
-                          <div style={{ fontSize: '13px', color: 'var(--text-secondary)', lineHeight: '1.8' }}>
-                            <div><strong>Model ID:</strong> <code style={{ background: 'rgba(0,0,0,0.2)', padding: '2px 6px', borderRadius: '4px' }}>{model.modelId}</code></div>
-                            <div><strong>Provider:</strong> {model.provider.name}</div>
-                            <div><strong>Context Window:</strong> {model.contextWindow.toLocaleString()} tokens</div>
-                            <div><strong>Input Price:</strong> {formatPrice(model.inputPricePer1K)} per 1K tokens</div>
-                            <div><strong>Output Price:</strong> {formatPrice(model.outputPricePer1K)} per 1K tokens</div>
+                          <div style={{ fontSize: '13px', color: 'var(--text-secondary)', lineHeight: '2' }}>
+                            <div><strong style={{ color: 'var(--text-primary)' }}>Model ID:</strong> <code style={{ background: 'rgba(0,0,0,0.3)', padding: '2px 8px', borderRadius: '4px', fontSize: '12px', fontFamily: 'monospace', color: '#00f2fe' }}>{model.modelId}</code></div>
+                            <div><strong style={{ color: 'var(--text-primary)' }}>Provider:</strong> {model.provider.name}</div>
+                            <div><strong style={{ color: 'var(--text-primary)' }}>Context:</strong> {model.contextWindow.toLocaleString()} tokens</div>
+                            <div><strong style={{ color: 'var(--text-primary)' }}>Input:</strong> {formatPrice(model.inputPricePer1K)} / 1K <span style={{ color: 'var(--text-muted)' }}>({formatPricePerM(model.inputPricePer1K)} / 1M)</span></div>
+                            <div><strong style={{ color: 'var(--text-primary)' }}>Output:</strong> {formatPrice(model.outputPricePer1K)} / 1K <span style={{ color: 'var(--text-muted)' }}>({formatPricePerM(model.outputPricePer1K)} / 1M)</span></div>
                           </div>
                         </div>
 
                         {/* Right: Usage Example */}
                         <div>
-                          <h4 style={{ fontSize: '14px', fontWeight: '700', color: 'var(--text-primary)', marginBottom: '8px' }}>
+                          <h4 style={{ fontSize: '13px', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '12px' }}>
                             Contoh Penggunaan
                           </h4>
                           <pre style={{
                             background: 'rgba(0,0,0,0.3)',
                             border: '1px solid var(--border-color)',
                             borderRadius: '8px',
-                            padding: '12px',
+                            padding: '14px',
                             fontSize: '11px',
                             fontFamily: 'monospace',
                             color: '#e2e8f0',
                             lineHeight: '1.5',
                             overflowX: 'auto',
                             whiteSpace: 'pre-wrap',
+                            marginBottom: '10px',
                           }}>
                             {`curl ${baseUrl}/chat/completions \\
   -H "Authorization: Bearer YOUR_API_KEY" \\
@@ -474,12 +545,12 @@ export default function AIRouterCatalog({ user, token }) {
                               copyToClipboard(`curl ${baseUrl}/chat/completions \\\n  -H "Authorization: Bearer YOUR_API_KEY" \\\n  -H "Content-Type: application/json" \\\n  -d '{"model":"${model.modelId}","messages":[{"role":"user","content":"Hello!"}]}'`);
                             }}
                             style={{
-                              marginTop: '8px',
                               display: 'flex', alignItems: 'center', gap: '4px',
-                              background: 'rgba(79, 172, 254, 0.1)',
-                              border: '1px solid rgba(79, 172, 254, 0.2)',
+                              background: 'rgba(0, 242, 254, 0.08)',
+                              border: '1px solid rgba(0, 242, 254, 0.2)',
                               borderRadius: '6px', padding: '4px 10px',
-                              color: '#4facfe', fontSize: '11px', fontWeight: '600', cursor: 'pointer',
+                              color: '#00f2fe', fontSize: '11px', fontWeight: '600', cursor: 'pointer',
+                              transition: 'all 0.2s ease',
                             }}
                           >
                             <Copy size={12} /> Copy Example
@@ -495,13 +566,15 @@ export default function AIRouterCatalog({ user, token }) {
         </div>
       </section>
 
-      {/* ═══ PRICING INFO ═══ */}
+      {/* ═══════════════════════════════════════
+         SECTION 4: PRICING TIERS
+         ═══════════════════════════════════════ */}
       <section style={{ padding: '60px 24px', maxWidth: '1000px', margin: '0 auto' }}>
-        <h2 style={{ fontSize: '28px', fontWeight: '800', color: 'var(--text-primary)', marginBottom: '8px', textAlign: 'center' }}>
+        <h2 style={{ fontSize: '28px', fontWeight: '800', color: 'var(--text-primary)', marginBottom: '8px', textAlign: 'center', fontFamily: 'var(--font-title)' }}>
           Pricing & Rate Limits
         </h2>
         <p style={{ fontSize: '14px', color: 'var(--text-muted)', textAlign: 'center', marginBottom: '32px' }}>
-          Bayar sesuai penggunaan. Harga per 1M tokens.
+          Bayar sesuai penggunaan. Pilih tier sesuai kebutuhan Anda.
         </p>
 
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '20px' }}>
@@ -516,24 +589,28 @@ export default function AIRouterCatalog({ user, token }) {
               borderRadius: '16px',
               padding: '28px',
               position: 'relative',
-              transition: 'all 0.3s',
-            }}>
+              transition: 'all 0.3s ease',
+            }}
+              onMouseEnter={(e) => { if (!plan.popular) e.currentTarget.style.borderColor = `${plan.color}40`; }}
+              onMouseLeave={(e) => { if (!plan.popular) e.currentTarget.style.borderColor = 'var(--border-color)'; }}
+            >
               {plan.popular && (
                 <div style={{
                   position: 'absolute', top: '-12px', left: '50%', transform: 'translateX(-50%)',
                   background: plan.color, color: 'white',
-                  padding: '4px 12px', borderRadius: '6px',
-                  fontSize: '11px', fontWeight: '700', textTransform: 'uppercase',
+                  padding: '4px 14px', borderRadius: '6px',
+                  fontSize: '11px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.5px',
+                  whiteSpace: 'nowrap',
                 }}>
                   Most Popular
                 </div>
               )}
-              <h3 style={{ fontSize: '18px', fontWeight: '700', color: plan.color, marginBottom: '4px' }}>{plan.tier}</h3>
-              <div style={{ fontSize: '32px', fontWeight: '800', color: 'var(--text-primary)', marginBottom: '4px' }}>{plan.price}</div>
+              <h3 style={{ fontSize: '16px', fontWeight: '700', color: plan.color, marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>{plan.tier}</h3>
+              <div style={{ fontSize: '32px', fontWeight: '800', color: 'var(--text-primary)', marginBottom: '4px', fontFamily: 'var(--font-title)' }}>{plan.price}</div>
               <div style={{ fontSize: '13px', color: 'var(--text-muted)', marginBottom: '16px' }}>{plan.desc}</div>
               <div style={{
                 padding: '8px 12px', borderRadius: '8px',
-                background: `${plan.color}10`, border: `1px solid ${plan.color}20`,
+                background: `${plan.color}08`, border: `1px solid ${plan.color}20`,
                 marginBottom: '16px', fontSize: '13px', fontWeight: '600',
                 color: plan.color, textAlign: 'center',
               }}>
@@ -541,8 +618,8 @@ export default function AIRouterCatalog({ user, token }) {
               </div>
               <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
                 {plan.features.map((f, j) => (
-                  <li key={j} style={{ fontSize: '13px', color: 'var(--text-secondary)', padding: '6px 0', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <Check size={14} style={{ color: '#22c55e', flexShrink: 0 }} />
+                  <li key={j} style={{ fontSize: '13px', color: 'var(--text-secondary)', padding: '5px 0', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <Check size={14} style={{ color: '#10b981', flexShrink: 0 }} />
                     {f}
                   </li>
                 ))}
@@ -552,20 +629,22 @@ export default function AIRouterCatalog({ user, token }) {
         </div>
       </section>
 
-      {/* ═══ QUICK START SECTION ═══ */}
+      {/* ═══════════════════════════════════════
+         SECTION 5: 3-STEP GUIDE
+         ═══════════════════════════════════════ */}
       <section style={{
         padding: '60px 24px',
-        maxWidth: '800px',
+        maxWidth: '700px',
         margin: '0 auto',
       }}>
-        <h2 style={{ fontSize: '28px', fontWeight: '800', color: 'var(--text-primary)', marginBottom: '8px', textAlign: 'center' }}>
+        <h2 style={{ fontSize: '28px', fontWeight: '800', color: 'var(--text-primary)', marginBottom: '8px', textAlign: 'center', fontFamily: 'var(--font-title)' }}>
           Mulai dalam 3 Langkah
         </h2>
         <p style={{ fontSize: '14px', color: 'var(--text-muted)', textAlign: 'center', marginBottom: '40px' }}>
           Anda bisa mulai menggunakan AI dalam hitungan menit
         </p>
 
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '0' }}>
           {[
             {
               step: 1,
@@ -580,7 +659,7 @@ export default function AIRouterCatalog({ user, token }) {
               title: 'Pilih Tool',
               desc: 'Gunakan API key di Cursor, Cline, Claude Code, atau tools lainnya.',
               action: 'Lihat Panduan',
-              href: '/ai-docs',
+              href: '/docs/ai',
               color: '#8b5cf6',
             },
             {
@@ -592,24 +671,47 @@ export default function AIRouterCatalog({ user, token }) {
               color: '#22c55e',
             },
           ].map((item, i) => (
-            <div key={i} style={{ display: 'flex', gap: '20px', alignItems: 'flex-start' }}>
+            <div key={i} style={{
+              display: 'flex', gap: '20px', alignItems: 'flex-start',
+              position: 'relative',
+              paddingBottom: i < 2 ? '32px' : '0',
+            }}>
+              {/* Step Circle */}
               <div style={{
-                width: '48px', height: '48px', borderRadius: '12px',
-                background: `${item.color}15`,
+                width: '48px', height: '48px', borderRadius: '50%',
+                background: `${item.color}12`,
+                border: `2px solid ${item.color}30`,
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
-                fontSize: '20px', fontWeight: '800', color: item.color,
-                flexShrink: 0,
+                fontSize: '18px', fontWeight: '800', color: item.color,
+                flexShrink: 0, zIndex: 1,
               }}>
                 {item.step}
               </div>
-              <div style={{ flex: 1 }}>
+
+              {/* Connecting Line */}
+              {i < 2 && (
+                <div style={{
+                  position: 'absolute',
+                  left: '23px', top: '48px',
+                  width: '2px',
+                  height: 'calc(100% - 48px)',
+                  background: `linear-gradient(180deg, ${item.color}30 0%, transparent 100%)`,
+                }} />
+              )}
+
+              {/* Content */}
+              <div style={{ flex: 1, paddingTop: '4px' }}>
                 <h4 style={{ fontSize: '16px', fontWeight: '700', color: 'var(--text-primary)', marginBottom: '4px' }}>{item.title}</h4>
                 <p style={{ fontSize: '14px', color: 'var(--text-secondary)', marginBottom: '8px', lineHeight: '1.5' }}>{item.desc}</p>
                 {item.action && (
                   <Link to={item.href} style={{
                     fontSize: '13px', fontWeight: '600', color: item.color,
                     textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '4px',
-                  }}>
+                    transition: 'gap 0.2s ease',
+                  }}
+                    onMouseEnter={(e) => e.currentTarget.style.gap = '8px'}
+                    onMouseLeave={(e) => e.currentTarget.style.gap = '4px'}
+                  >
                     {item.action} <ArrowRight size={14} />
                   </Link>
                 )}
@@ -619,14 +721,16 @@ export default function AIRouterCatalog({ user, token }) {
         </div>
       </section>
 
-      {/* ═══ FOOTER CTA ═══ */}
+      {/* ═══════════════════════════════════════
+         SECTION 6: FOOTER CTA
+         ═══════════════════════════════════════ */}
       <section style={{
         padding: '60px 24px',
         textAlign: 'center',
-        background: 'linear-gradient(180deg, transparent 0%, rgba(79, 172, 254, 0.05) 100%)',
+        background: 'linear-gradient(180deg, transparent 0%, rgba(0, 242, 254, 0.04) 100%)',
         borderTop: '1px solid var(--border-color)',
       }}>
-        <h2 style={{ fontSize: '32px', fontWeight: '800', color: 'var(--text-primary)', marginBottom: '12px' }}>
+        <h2 style={{ fontSize: '32px', fontWeight: '800', color: 'var(--text-primary)', marginBottom: '12px', fontFamily: 'var(--font-title)' }}>
           Siap Memulai?
         </h2>
         <p style={{ fontSize: '16px', color: 'var(--text-secondary)', marginBottom: '24px' }}>

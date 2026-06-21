@@ -8,6 +8,12 @@ const router = express.Router();
 
 const NINE_ROUTER_URL = process.env.AI_ROUTER_URL || 'http://localhost:20128';
 
+// Mask API key for logging (never log full keys)
+function maskKey(key) {
+  if (!key || key.length < 8) return '***';
+  return key.slice(0, 4) + '...' + key.slice(-4);
+}
+
 // Helper: record usage + deduct credits + emit real-time events
 async function recordUsage({ apiKey, endpoint, body, responseStatus, latencyMs, responseBody }) {
   try {
@@ -124,10 +130,10 @@ async function recordUsage({ apiKey, endpoint, body, responseStatus, latencyMs, 
     });
     eventBus.emitBalanceUpdate(keyData.userId, keyData.id, newBalance);
 
-    console.log(`[USAGE] ${apiKey.slice(0, 15)}... model=${modelId} tokens=${totalTokens} cost=Rp${Math.ceil(totalCost)}`);
+    console.log(`[USAGE] ${maskKey(apiKey)} model=${modelId} tokens=${totalTokens} cost=Rp${Math.ceil(totalCost)}`);
     return result;
   } catch (err) {
-    console.error('[USAGE] ⚠️ Record failed for key:', apiKey.slice(0,15), 'Error:', err.message, err.stack);
+    console.error('[USAGE] ⚠️ Record failed for key:', maskKey(apiKey), 'Error:', err.message);
   }
 }
 
@@ -222,7 +228,7 @@ router.post('/chat/completions', async (req, res) => {
         await recordUsage({ apiKey, endpoint: '/v1/chat/completions', body: req.body, responseStatus: response.status, latencyMs, responseBody: data });
       }
     }
-    console.log(`[PROXY] chat: ${apiKey.slice(0, 15)}... model=${req.body.model}`);
+    console.log(`[PROXY] chat: ${maskKey(apiKey)} model=${req.body.model}`);
   } catch (error) {
     console.error('[PROXY] chat error:', error.message);
     res.status(500).json({ error: { message: 'Proxy error: ' + error.message } });
@@ -379,7 +385,7 @@ router.post('/messages', async (req, res) => {
       });
     }
 
-    console.log(`[PROXY] messages: ${apiKey.slice(0, 15)}... model=${model} stream=${!!stream}`);
+    console.log(`[PROXY] messages: ${maskKey(apiKey)} model=${model} stream=${!!stream}`);
   } catch (error) {
     console.error('[PROXY] messages error:', error.message);
     res.status(500).json({ type: 'error', error: { type: 'api_error', message: 'Proxy error: ' + error.message } });

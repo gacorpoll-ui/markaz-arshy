@@ -1,14 +1,29 @@
 import express from 'express';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
+import rateLimit from 'express-rate-limit';
 import prisma from '../db.js';
 import { requireAuth } from '../middleware/auth.js';
 import { generateVerificationCode, sendVerificationEmail } from '../emailService.js';
 
 const router = express.Router();
 
-const JWT_SECRET  = process.env.JWT_SECRET || 'super-secret-key-follower-store-2026';
+// Rate limiting for auth endpoints
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 10, // 10 attempts per window
+  message: { error: 'Terlalu banyak percobaan. Silakan coba lagi dalam 15 menit.' },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+const JWT_SECRET  = process.env.JWT_SECRET;
 const JWT_EXPIRES = '7d';
+
+if (!JWT_SECRET) {
+  console.error('FATAL: JWT_SECRET environment variable is not set');
+  process.exit(1);
+}
 
 /** Helper: buat JWT + format user object */
 function makeToken(user) {
@@ -34,7 +49,7 @@ function makeToken(user) {
 /* ═══════════════════════════════════════
    REGISTER (email + password)
    ═══════════════════════════════════════ */
-router.post('/register', async (req, res) => {
+router.post('/register', authLimiter, async (req, res) => {
   try {
     const { name, email, password, whatsapp } = req.body;
 
@@ -141,7 +156,7 @@ router.post('/resend-verification', async (req, res) => {
 /* ═══════════════════════════════════════
    LOGIN (email + password)
    ═══════════════════════════════════════ */
-router.post('/login', async (req, res) => {
+router.post('/login', authLimiter, async (req, res) => {
   try {
     const { email, password } = req.body;
     if (!email || !password) return res.status(400).json({ error: 'Email and password are required.' });

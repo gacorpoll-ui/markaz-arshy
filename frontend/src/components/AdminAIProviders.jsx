@@ -612,7 +612,7 @@ function EditModelModal({ model, onClose, onSave }) {
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '16px' }}>
             <div>
               <label style={{ display: 'block', marginBottom: '6px', fontSize: '12px', fontWeight: '600', color: 'var(--text-secondary)' }}>
-                Harga Input / 1M Token ($)
+                Harga Input / 1K Token (Rp)
               </label>
               <input
                 type="number"
@@ -627,7 +627,7 @@ function EditModelModal({ model, onClose, onSave }) {
             </div>
             <div>
               <label style={{ display: 'block', marginBottom: '6px', fontSize: '12px', fontWeight: '600', color: 'var(--text-secondary)' }}>
-                Harga Output / 1M Token ($)
+                Harga Output / 1K Token (Rp)
               </label>
               <input
                 type="number"
@@ -990,7 +990,7 @@ function CreateModelModal({ providerId, providerName, onClose, onSave }) {
 
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '16px' }}>
             <div>
-              <label style={{ display: 'block', marginBottom: '6px', fontSize: '13px', fontWeight: '600' }}>Harga Input / 1M Token ($ USD)</label>
+              <label style={{ display: 'block', marginBottom: '6px', fontSize: '13px', fontWeight: '600' }}>Harga Input / 1K Token (Rp)</label>
               <input
                 type="number" step="0.000001" className="form-input"
                 value={inputPrice} onChange={(e) => setInputPrice(e.target.value)}
@@ -1002,7 +1002,7 @@ function CreateModelModal({ providerId, providerName, onClose, onSave }) {
               </span>
             </div>
             <div>
-              <label style={{ display: 'block', marginBottom: '6px', fontSize: '13px', fontWeight: '600' }}>Harga Output / 1M Token ($ USD)</label>
+              <label style={{ display: 'block', marginBottom: '6px', fontSize: '13px', fontWeight: '600' }}>Harga Output / 1K Token (Rp)</label>
               <input
                 type="number" step="0.000001" className="form-input"
                 value={outputPrice} onChange={(e) => setOutputPrice(e.target.value)}

@@ -9,7 +9,11 @@ export const requireAuth = async (req, res, next) => {
     }
 
     const token = authHeader.split(' ')[1];
-    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'super-secret-key-follower-store-2026');
+    if (!process.env.JWT_SECRET) {
+      console.error('FATAL: JWT_SECRET environment variable is not set');
+      return res.status(500).json({ error: 'Server configuration error.' });
+    }
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
     const user = await prisma.user.findUnique({
       where: { id: decoded.id },

@@ -1,8 +1,7 @@
 import { Router } from 'express';
-import { PrismaClient } from '@prisma/client';
+import prisma from '../db.js';
 import { requireAuth, requireAdmin } from '../middleware/auth.js';
 
-const prisma = new PrismaClient();
 const router = Router();
 
 // 1. Submit a new review (User)

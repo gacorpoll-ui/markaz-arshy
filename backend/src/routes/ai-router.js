@@ -89,7 +89,7 @@ router.post('/keys/create', requireAuth, async (req, res) => {
       const loginRes = await fetch(`${NINE_ROUTER_URL}/api/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: 'admin', password: 'Riri@150187' }),
+        body: JSON.stringify({ email: process.env.NINE_ROUTER_ADMIN_EMAIL || 'admin', password: process.env.NINE_ROUTER_ADMIN_PASSWORD }),
       });
       const setCookie = loginRes.headers.get('set-cookie');
       if (setCookie) {
@@ -660,6 +660,12 @@ router.get('/usage/logs', requireAuth, async (req, res) => {
    ═══════════════════════════════════════ */
 router.all('/validate-key', async (req, res) => {
   try {
+    // Authenticate: only 9router service should call this endpoint
+    const webhookSecret = req.headers['x-webhook-secret'];
+    if (!webhookSecret || webhookSecret !== process.env.AI_WEBHOOK_SECRET) {
+      return res.status(403).json({ valid: false, error: 'Unauthorized' });
+    }
+
     // Extract key from headers, body, or query params
     let apiKey = req.headers['x-api-key'] || req.headers['authorization'];
     if (apiKey && apiKey.startsWith('Bearer ')) {

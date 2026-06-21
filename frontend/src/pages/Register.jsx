@@ -39,8 +39,6 @@ export default function Register({ onLogin }) {
       });
 
       const data = await response.json();
-      console.log('Raw response:', response);
-      console.log('Parsed data:', data);
       if (!response.ok) {
         throw new Error(data.error || 'Registration failed.');
       }

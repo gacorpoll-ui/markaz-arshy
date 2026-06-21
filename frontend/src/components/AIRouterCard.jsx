@@ -16,11 +16,9 @@ export default function AIRouterCard({ model, provider }) {
     });
   };
 
-  // Format price per 1M tokens untuk display
-  const formatPrice = (pricePerK) => {
-    const pricePerM = pricePerK * 1000;
-    const pricePerMIDR = pricePerM * 15000;
-    return `Rp ${Math.ceil(pricePerMIDR).toLocaleString('id-ID')}`;
+  // Harga disimpan di DB sebagai Rp per 1K tokens
+  const formatPrice = (pricePer1K) => {
+    return `Rp ${Math.ceil(pricePer1K).toLocaleString('id-ID')} / 1K`;
   };
 
   // Get provider color
@@ -94,7 +92,7 @@ export default function AIRouterCard({ model, provider }) {
             {formatPrice(model.inputPricePer1K)}
           </div>
           <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
-            per 1 juta input token
+            input token
           </div>
         </div>
       </div>
@@ -138,7 +136,7 @@ export default function AIRouterCard({ model, provider }) {
             </span>
           </div>
           <div style={{ fontSize: '15px', fontWeight: '600', color: 'var(--text-primary)', whiteSpace: 'nowrap' }}>
-            {formatPrice(model.outputPricePer1K)}/1M
+            {formatPrice(model.outputPricePer1K)}
           </div>
         </div>
 

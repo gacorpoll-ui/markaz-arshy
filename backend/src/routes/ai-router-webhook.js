@@ -26,13 +26,15 @@ router.post('/webhook/usage', async (req, res) => {
 
     const WEBHOOK_SECRET = process.env.AI_WEBHOOK_SECRET;
 
-    // --- Webhook Signature Verification (optional but recommended) ---
-    // If 9router sends a signature, verify it here.
-    // For now, we'll assume a shared secret for simplicity.
-    // const signature = req.headers['x-9router-signature'];
-    // if (!signature || !verifySignature(req.rawBody, signature, WEBHOOK_SECRET)) {
-    //   return res.status(403).json({ error: 'Invalid webhook signature' });
-    // }
+    // --- Webhook Authentication ---
+    const authHeader = req.headers['x-webhook-secret'];
+    if (!WEBHOOK_SECRET) {
+      console.error('[WEBHOOK] AI_WEBHOOK_SECRET not configured');
+      return res.status(500).json({ error: 'Server configuration error' });
+    }
+    if (!authHeader || authHeader !== WEBHOOK_SECRET) {
+      return res.status(403).json({ error: 'Invalid webhook authentication' });
+    }
 
     if (!incomingApiKey || !requestId || !modelIdString || !inputTokens || !outputTokens) {
       return res.status(400).json({ error: 'Missing required webhook data' });
