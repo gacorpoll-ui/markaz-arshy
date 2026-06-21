@@ -53,7 +53,13 @@ sed -i "s|AI_ROUTER_URL=.*|AI_ROUTER_URL=\"http://localhost:20128\"|" .env
 
 # Add 9router key if not present
 if ! grep -q "AI_ROUTER_9KEY" .env; then
-    echo 'AI_ROUTER_9KEY="sk-576a1c43755b51a6-bnts4h-1428de35"' >> .env
+    echo 'AI_ROUTER_9KEY=""  # Fill with your 9router API key' >> .env
+fi
+
+# Add 9router admin credentials if not present
+if ! grep -q "NINE_ROUTER_ADMIN_EMAIL" .env; then
+    echo 'NINE_ROUTER_ADMIN_EMAIL=""  # Fill with 9router admin email' >> .env
+    echo 'NINE_ROUTER_ADMIN_PASSWORD=""  # Fill with 9router admin password' >> .env
 fi
 
 echo "✅ Environment configured"
@@ -86,7 +92,7 @@ Environment=PORT=20128
 Environment=NODE_ENV=production
 Environment=REQUIRE_API_KEY=false
 Environment=JWT_SECRET=change-me-in-production
-Environment=INITIAL_PASSWORD=Riri@150187
+Environment=INITIAL_PASSWORD=change-me-in-production
 
 [Install]
 WantedBy=multi-user.target

@@ -114,7 +114,7 @@ export async function sendPromoEmail(email, name, subject, htmlContent) {
 
   try {
     await transporter.sendMail({
-      from: process.env.SMTP_FROM || '"Markaz-Arshy" <gacorsedunia8@gmail.com>',
+      from: process.env.SMTP_FROM || '"Markaz-Arshy" <noreply@markaz-arshy.com>',
       to: email,
       subject: subject,
       html: htmlContent,

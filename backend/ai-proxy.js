@@ -16,7 +16,7 @@ import http from 'http';
 
 const PORT = process.env.PROXY_PORT || 3099;
 const NINE_ROUTER_URL = process.env.NINE_ROUTER_URL || 'http://localhost:20128';
-const NINE_ROUTER_KEY = process.env.AI_ROUTER_9KEY || 'sk-576a1c43755b51a6-bnts4h-1428de35';
+const NINE_ROUTER_KEY = process.env.AI_ROUTER_9KEY;
 
 // ═══════════════════════════════════════
 // MODEL MAPPING: Claude Code valid IDs → 9router model names

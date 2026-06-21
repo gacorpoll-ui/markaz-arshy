@@ -8,7 +8,7 @@ import eventBus from '../sse/EventBus.js';
 const router = express.Router();
 
 // 9router proxy config
-const NINE_ROUTER_KEY = process.env.AI_ROUTER_9KEY || 'sk-576a1c43755b51a6-bnts4h-1428de35';
+const NINE_ROUTER_KEY = process.env.AI_ROUTER_9KEY;
 const NINE_ROUTER_URL = process.env.AI_ROUTER_URL || 'http://localhost:20128';
 
 /* ═══════════════════════════════════════

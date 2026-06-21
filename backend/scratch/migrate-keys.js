@@ -11,7 +11,7 @@ console.log(`Found ${maKeys.length} ma-* keys to migrate`);
 const loginRes = await fetch(`${NINE_ROUTER_URL}/api/auth/login`, {
   method: 'POST',
   headers: { 'Content-Type': 'application/json' },
-  body: JSON.stringify({ email: 'admin', password: 'Riri@150187' }),
+  body: JSON.stringify({ email: process.env.NINE_ROUTER_ADMIN_EMAIL || 'admin', password: process.env.NINE_ROUTER_ADMIN_PASSWORD }),
 });
 const cookie = loginRes.headers.get('set-cookie').split(';')[0];
 

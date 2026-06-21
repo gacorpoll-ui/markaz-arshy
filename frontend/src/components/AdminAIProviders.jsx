@@ -19,7 +19,7 @@ export default function AdminAIProviders({ token }) {
   }, []);
 
   const handleSync9router = async () => {
-    const apiKeyPrompt = window.prompt("Masukkan API Key 9router Anda:", "sk-576a1c43755b51a6-bnts4h-1428de35");
+    const apiKeyPrompt = window.prompt("Masukkan API Key 9router Anda:");
     if (apiKeyPrompt === null) return; // Cancelled
     
     const routerUrlPrompt = window.prompt("Masukkan URL 9router (opsional):", "http://localhost:20128");
