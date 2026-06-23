@@ -630,7 +630,7 @@ export default function CLIToolCards({ apiKey }) {
           >
             {userApiKeys.map(k => (
               <option key={k.id || k.apiKey} value={k.apiKey}>
-                {k.keyName || k.name || 'API Key'} — {k.apiKey.substring(0, 25)}... (Saldo: Rp {(k.creditsBalance || 0).toLocaleString('id-ID')})
+                {k.keyName || k.name || 'API Key'} — {k.apiKey.substring(0, 25)}... (Saldo: Rp {(k.balance || 0).toLocaleString('id-ID')})
               </option>
             ))}
           </select>

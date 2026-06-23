@@ -21,8 +21,8 @@ async function callRajaitemAPI(endpoint, body = {}) {
   const formattedEndpoint = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
   const url = `${RAJAITEM_API_URL}${formattedEndpoint}`;
 
-  // Check if simulation is enabled
-  const isSimulation = process.env.RAJAITEM_SIMULATION === 'true' || process.env.NODE_ENV !== 'production';
+  // SECURITY: Simulation only via explicit flag, never by NODE_ENV
+  const isSimulation = process.env.RAJAITEM_SIMULATION === 'true';
 
   try {
     const response = await fetch(url, {

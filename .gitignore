@@ -3,6 +3,10 @@
 .env.*
 !.env.example
 
+# Backup directories
+*-backup/
+pre-audit-backup-*/
+
 # Database
 backend/prisma/dev.db
 

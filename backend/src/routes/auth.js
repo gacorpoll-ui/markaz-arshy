@@ -1,5 +1,6 @@
 import express from 'express';
 import bcrypt from 'bcryptjs';
+import crypto from 'crypto';
 import jwt from 'jsonwebtoken';
 import rateLimit from 'express-rate-limit';
 import prisma from '../db.js';
@@ -58,11 +59,17 @@ router.post('/register', authLimiter, async (req, res) => {
     }
 
     // Password complexity: min 8 chars, at least 1 letter and 1 number
-    if (password.length < 8) {
-      return res.status(400).json({ error: 'Password harus minimal 8 karakter.' });
+    if (password.length < 10) {
+      return res.status(400).json({ error: 'Password harus minimal 10 karakter.' });
     }
-    if (!/[a-zA-Z]/.test(password) || !/[0-9]/.test(password)) {
-      return res.status(400).json({ error: 'Password harus mengandung huruf dan angka.' });
+    if (!/[a-zA-Z]/.test(password)) {
+      return res.status(400).json({ error: 'Password harus mengandung minimal 1 huruf.' });
+    }
+    if (!/[0-9]/.test(password)) {
+      return res.status(400).json({ error: 'Password harus mengandung minimal 1 angka.' });
+    }
+    if (!/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password)) {
+      return res.status(400).json({ error: 'Password harus mengandung minimal 1 karakter spesial (!@#$%^&* dll).' });
     }
 
     const existing = await prisma.user.findUnique({ where: { email } });
@@ -107,7 +114,7 @@ router.post('/register', authLimiter, async (req, res) => {
 /* ═══════════════════════════════════════
    VERIFY EMAIL
    ═══════════════════════════════════════ */
-router.post('/verify-email', async (req, res) => {
+router.post('/verify-email', authLimiter, async (req, res) => {
   try {
     const { email, token } = req.body;
 
@@ -208,6 +215,15 @@ router.get('/google', (req, res) => {
     );
   }
 
+  // CSRF protection: generate random state and store in cookie
+  const state = crypto.randomBytes(32).toString('hex');
+  res.cookie('oauth_state', state, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'lax',
+    maxAge: 10 * 60 * 1000, // 10 minutes
+  });
+
   const params = new URLSearchParams({
     client_id:     clientId,
     redirect_uri:  redirectUri,
@@ -215,6 +231,7 @@ router.get('/google', (req, res) => {
     scope:         'openid email profile',
     access_type:   'offline',
     prompt:        'select_account',
+    state,
   });
 
   return res.redirect(`https://accounts.google.com/o/oauth2/v2/auth?${params.toString()}`);
@@ -225,11 +242,19 @@ router.get('/google', (req, res) => {
    ═══════════════════════════════════════ */
 router.get('/google/callback', async (req, res) => {
   const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
-  const { code, error } = req.query;
+  const { code, error, state } = req.query;
 
   if (error || !code) {
     return res.redirect(`${frontendUrl}/login?error=google_denied`);
   }
+
+  // CSRF protection: validate state parameter
+  const savedState = req.cookies?.oauth_state;
+  if (!state || !savedState || state !== savedState) {
+    return res.redirect(`${frontendUrl}/login?error=google_csrf_invalid`);
+  }
+  // Clear the state cookie
+  res.clearCookie('oauth_state');
 
   try {
     const clientId     = process.env.GOOGLE_CLIENT_ID;
@@ -296,6 +321,16 @@ router.get('/google/callback', async (req, res) => {
 
     // 4. Buat JWT dan redirect ke frontend
     const { token } = makeToken(user);
+
+    // Set JWT as HttpOnly cookie for backward compat + security
+    res.cookie('auth_token', token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+    });
+
+    // Also pass in URL for existing frontend (GoogleCallback.jsx reads from searchParams)
     return res.redirect(`${frontendUrl}/auth/callback?token=${token}`);
 
   } catch (err) {

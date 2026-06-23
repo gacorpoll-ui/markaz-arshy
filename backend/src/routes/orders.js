@@ -61,7 +61,7 @@ async function getRealtimeServiceRate(serviceId) {
         const service = services.find(s => String(s.service) === String(serviceId));
         if (!service) return 'NOT_FOUND';
 
-        return parseFloat(service.rate);
+        return Math.round(parseFloat(service.rate));
     } catch (error) {
         console.error("Lolipop Fetch Services Error:", error);
         return null;
@@ -185,7 +185,7 @@ router.post('/create', requireAuth, async (req, res) => {
             }
         }
 
-        orderAmount = (unitPrice / 1000) * qty;
+        orderAmount = Math.floor((unitPrice * qty) / 1000);
       } else {
         throw new Error('Invalid product type.');
       }
@@ -317,31 +317,7 @@ router.post('/create', requireAuth, async (req, res) => {
             providerOrderId = String(apiResponse.order);
             notes = `Order berhasil dikirim ke provider dengan ID: ${providerOrderId}.`;
           } else if (apiResponse && apiResponse.error) {
-            // Error dari Lolipop API (misal saldo habis atau target salah)
-            // Lakukan refund dan batalkan order
-            await tx.user.update({
-              where: { id: user.id },
-              data: { balance: user.balance + orderAmount } // Refund saldo
-            });
-            await tx.balanceTransaction.create({
-              data: {
-                userId: user.id,
-                type: 'REFUND',
-                amount: orderAmount,
-                balanceBefore: balanceAfter,
-                balanceAfter: user.balance + orderAmount,
-                description: `Refund otomatis: Gagal kirim order SMM ke provider. (${apiResponse.error})`,
-                referenceId: 'REF-' + Date.now(),
-              }
-            });
-
-            // Notify admin about API failure
-            await createAdminNotification(
-                'SYSTEM_ERROR',
-                `GAGAL mengirim order SMM #${orderAmount} ke provider untuk user ${user.name}. API Error: ${apiResponse.error}`,
-                '/admin/orders'
-            );
-
+            // Error dari Lolipop API — refund via shared service (outside transaction)
             throw new Error(`Gagal mengirim order ke provider: ${apiResponse.error}`);
           } else {
             // Fallback (simulasi) jika ada masalah lain dengan respons API
@@ -411,28 +387,38 @@ router.post('/create', requireAuth, async (req, res) => {
   }
 });
 
-// Get user orders history
+// Get user orders history (with pagination)
 router.get('/history', requireAuth, async (req, res) => {
   try {
-    const orders = await prisma.order.findMany({
-      where: { userId: req.user.id },
-      include: {
-        product: {
-          select: {
-            name: true,
-            slug: true,
+    const limit = Math.min(parseInt(req.query.limit) || 20, 100);
+    const offset = parseInt(req.query.offset) || 0;
+
+    const [orders, total] = await Promise.all([
+      prisma.order.findMany({
+        where: { userId: req.user.id },
+        include: {
+          product: {
+            select: {
+              name: true,
+              slug: true,
+            },
+          },
+          account: {
+            select: {
+              email: true,
+              password: true,
+              extraInfo: true,
+            },
           },
         },
-        account: {
-          select: {
-            email: true,
-            password: true,
-            extraInfo: true,
-          },
-        },
-      },
-      orderBy: { createdAt: 'desc' },
-    });
+        orderBy: { createdAt: 'desc' },
+        take: limit,
+        skip: offset,
+      }),
+      prisma.order.count({ where: { userId: req.user.id } }),
+    ]);
+
+    return res.json({ orders, total, limit, offset });
 
     return res.json({ orders });
   } catch (error) {

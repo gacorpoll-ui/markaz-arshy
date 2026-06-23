@@ -51,17 +51,19 @@ async function recordUsage({ apiKey, requestId, endpoint, body, responseStatus, 
     const keyData = await prisma.aIApiKey.findUnique({ where: { apiKey } });
     if (!keyData) return;
 
-    // Find or auto-create model (with smart pricing)
-    let aiModel = await prisma.aIModel.findUnique({ where: { modelId } });
+    // Use REQUESTED model for display/lookup (not 9router's resolved model)
+    // e.g. user requests "claude-opus-4-7" but 9router resolves to "code"
+    const requestedModel = body?.model || modelId;
+    let aiModel = await prisma.aIModel.findUnique({ where: { modelId: requestedModel } });
     if (!aiModel) {
-      console.warn(`[PROXY] Auto-registering unknown model: ${modelId}`);
+      console.warn(`[PROXY] Auto-registering unknown model: ${requestedModel}`);
       let providerSlug = 'other';
       let providerName = 'Other Providers';
-      if (modelId.startsWith('gpt') || modelId.startsWith('o1') || modelId.startsWith('o3')) {
+      if (requestedModel.startsWith('gpt') || requestedModel.startsWith('o1') || requestedModel.startsWith('o3')) {
         providerSlug = 'openai'; providerName = 'OpenAI';
-      } else if (modelId.includes('claude')) {
+      } else if (requestedModel.includes('claude')) {
         providerSlug = 'anthropic'; providerName = 'Anthropic';
-      } else if (modelId.includes('gemini')) {
+      } else if (requestedModel.includes('gemini')) {
         providerSlug = 'google-ai'; providerName = 'Google AI';
       }
 
@@ -70,11 +72,11 @@ async function recordUsage({ apiKey, requestId, endpoint, body, responseStatus, 
         update: {},
         create: { name: providerName, slug: providerSlug, description: 'Auto-created on usage', isActive: true },
       });
-      const pricing = getDefaultPricing(modelId);
+      const pricing = getDefaultPricing(requestedModel);
       aiModel = await prisma.aIModel.create({
         data: {
-          providerId: provider.id, name: modelId.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' '),
-          modelId, inputPricePer1K: pricing.input, outputPricePer1K: pricing.output, contextWindow: pricing.window, isActive: true,
+          providerId: provider.id, name: requestedModel.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' '),
+          modelId: requestedModel, inputPricePer1K: pricing.input, outputPricePer1K: pricing.output, contextWindow: pricing.window, isActive: true,
         },
       });
     }
@@ -121,7 +123,7 @@ async function recordUsage({ apiKey, requestId, endpoint, body, responseStatus, 
           inputTokens, outputTokens, totalTokens, inputCost, outputCost, totalCost,
           inputPricePer1K: aiModel.inputPricePer1K, outputPricePer1K: aiModel.outputPricePer1K,
           endpoint, statusCode: responseStatus, latencyMs,
-          metadata: JSON.stringify({ requestedModel: body?.model, actualModel: modelId }),
+          metadata: JSON.stringify({ requestedModel: body?.model, actualModel: modelId, resolvedBy9router: modelId !== body?.model }),
         },
       });
 

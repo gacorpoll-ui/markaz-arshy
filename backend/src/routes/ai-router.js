@@ -32,7 +32,6 @@ router.get('/providers', async (req, res) => {
         },
       },
     });
-
     res.json(providers);
   } catch (error) {
     console.error('Error fetching AI providers:', error);
@@ -47,25 +46,14 @@ router.get('/models', async (req, res) => {
   try {
     const { provider } = req.query;
     const where = { isActive: true };
-
     if (provider) {
-      const providerData = await prisma.aIProvider.findUnique({
-        where: { slug: provider },
-      });
-      if (providerData) {
-        where.providerId = providerData.id;
-      }
+      const providerData = await prisma.aIProvider.findUnique({ where: { slug: provider } });
+      if (providerData) where.providerId = providerData.id;
     }
-
     const models = await prisma.aIModel.findMany({
       where,
-      include: {
-        provider: {
-          select: { name: true, slug: true },
-        },
-      },
+      include: { provider: { select: { name: true, slug: true } } },
     });
-
     res.json(models);
   } catch (error) {
     console.error('Error fetching AI models:', error);
@@ -78,12 +66,12 @@ router.get('/models', async (req, res) => {
    ═══════════════════════════════════════ */
 router.post('/keys/create', requireAuth, async (req, res) => {
   try {
-    const { keyName, tier = 'BASIC', modelId, initialCredits = 0 } = req.body;
+    const { keyName, tier = 'BASIC', modelId } = req.body;
     const userId = req.user.id;
 
     if (!keyName) return res.status(400).json({ error: 'Key name is required' });
 
-    // ═══ Create key on 9router ═══
+    // Create key on 9router
     let skKey = null;
     try {
       const loginRes = await fetch(`${NINE_ROUTER_URL}/api/auth/login`, {
@@ -113,44 +101,32 @@ router.post('/keys/create', requireAuth, async (req, res) => {
       return res.status(500).json({ error: 'Failed to create API key on router' });
     }
 
-    // Deduct initial credits from user balance if needed
-    if (initialCredits > 0) {
-      const user = await prisma.user.findUnique({ where: { id: userId } });
-      if (user.balance < initialCredits) {
-        return res.status(400).json({ error: 'Insufficient balance' });
-      }
-      await prisma.user.update({
-        where: { id: userId },
-        data: { balance: { decrement: initialCredits } },
-      });
-      await prisma.balanceTransaction.create({
-        data: { userId, amount: -initialCredits, type: 'AI_TOPUP', description: `Top-up AI credits for "${keyName}"` },
-      });
-    }
-
-    // Store sk-* key directly in Markaz Arshy DB
+    // Store key — creditsBalance is DEPRECATED, all billing goes through User.balance
     const newKey = await prisma.aIApiKey.create({
       data: {
         userId,
         modelId: modelId || null,
         keyName,
-        apiKey: skKey, // sk-* key directly!
+        apiKey: skKey,
         nineRouterKey: skKey,
         tier,
         rateLimit: 300,
-        creditsBalance: initialCredits,
+        creditsBalance: 0, // DEPRECATED: kept for schema compatibility
         isActive: true,
       },
       include: { model: { select: { name: true, modelId: true } } },
     });
 
+    // Fetch user balance for response
+    const user = await prisma.user.findUnique({ where: { id: userId }, select: { balance: true } });
+
     res.status(201).json({
       id: newKey.id,
-      apiKey: newKey.apiKey, // This IS the sk-* key
+      apiKey: newKey.apiKey,
       keyName: newKey.keyName,
       tier: newKey.tier,
       rateLimit: newKey.rateLimit,
-      creditsBalance: newKey.creditsBalance,
+      balance: user.balance, // Unified wallet balance
       model: newKey.model,
       baseUrl: 'https://ai.markaz-arshy.com/v1',
     });
@@ -161,28 +137,33 @@ router.post('/keys/create', requireAuth, async (req, res) => {
 });
 
 /* ═══════════════════════════════════════
-   GET USER'S FULL API KEYS (unmasked, for CLI tool config generation)
+   GET USER'S FULL API KEYS (unmasked)
    ═══════════════════════════════════════ */
 router.get('/keys/mine', requireAuth, async (req, res) => {
   try {
     const userId = req.user.id;
-
-    const keys = await prisma.aIApiKey.findMany({
-      where: { userId, isActive: true },
-      select: {
-        id: true,
-        keyName: true,
-        apiKey: true,  // Full key — only returned for the user's own keys
-        tier: true,
-        creditsBalance: true,
-        model: {
-          select: { name: true, modelId: true },
+    const [keys, user] = await Promise.all([
+      prisma.aIApiKey.findMany({
+        where: { userId },
+        select: {
+          id: true,
+          keyName: true,
+          apiKey: true,
+          tier: true,
+          isActive: true,
+          monthlyQuota: true,
+          lastUsedAt: true,
+          createdAt: true,
+          model: { select: { name: true, modelId: true } },
         },
-      },
-      orderBy: { createdAt: 'desc' },
-    });
+        orderBy: { createdAt: 'desc' },
+      }),
+      prisma.user.findUnique({ where: { id: userId }, select: { balance: true } }),
+    ]);
 
-    res.json(keys);
+    // Attach unified balance to each key
+    const enriched = keys.map(k => ({ ...k, balance: user.balance }));
+    res.json(enriched);
   } catch (error) {
     console.error('Error fetching API keys:', error);
     res.status(500).json({ error: 'Failed to fetch API keys' });
@@ -195,19 +176,35 @@ router.get('/keys/mine', requireAuth, async (req, res) => {
 router.get('/keys', requireAuth, async (req, res) => {
   try {
     const userId = req.user.id;
-
-    const keys = await prisma.aIApiKey.findMany({
-      where: { userId },
-      include: {
-        model: {
-          select: { name: true, modelId: true },
+    const [keys, user] = await Promise.all([
+      prisma.aIApiKey.findMany({
+        where: { userId },
+        select: {
+          id: true,
+          keyName: true,
+          apiKey: true,
+          tier: true,
+          rateLimit: true,
+          monthlyQuota: true,
+          isActive: true,
+          expiresAt: true,
+          lastUsedAt: true,
+          createdAt: true,
+          model: { select: { name: true, modelId: true } },
         },
-      },
-      orderBy: { createdAt: 'desc' },
-    });
+        orderBy: { createdAt: 'desc' },
+      }),
+      prisma.user.findUnique({ where: { id: userId }, select: { balance: true } }),
+    ]);
 
-    // Return full sk-* key so user can copy it for use in Cursor/Claude Code
-    res.json(keys);
+    // Mask keys + attach unified balance
+    const masked = keys.map(k => ({
+      ...k,
+      apiKey: k.apiKey.slice(0, 8) + '...' + k.apiKey.slice(-4),
+      balance: user.balance,
+    }));
+
+    res.json(masked);
   } catch (error) {
     console.error('Error fetching API keys:', error);
     res.status(500).json({ error: 'Failed to fetch API keys' });
@@ -215,8 +212,7 @@ router.get('/keys', requireAuth, async (req, res) => {
 });
 
 /* ═══════════════════════════════════════
-   GLOBAL USAGE SUMMARY (all keys, optional filter)
-   GET /usage/summary?apiKeyId=&startDate=&endDate=
+   GLOBAL USAGE SUMMARY
    ═══════════════════════════════════════ */
 router.get('/usage/summary', requireAuth, async (req, res) => {
   try {
@@ -231,7 +227,7 @@ router.get('/usage/summary', requireAuth, async (req, res) => {
       if (endDate) where.createdAt.lte = new Date(endDate);
     }
 
-    const [agg, byModel, byDay] = await Promise.all([
+    const [agg, byModel, rawByDay] = await Promise.all([
       prisma.aIUsage.aggregate({
         where,
         _sum: { inputTokens: true, outputTokens: true, totalTokens: true, totalCost: true },
@@ -254,7 +250,9 @@ router.get('/usage/summary', requireAuth, async (req, res) => {
 
     // Enrich model data
     const modelIds = byModel.map(m => m.modelId);
-    const models = await prisma.aIModel.findMany({ where: { id: { in: modelIds } }, select: { id: true, name: true, modelId: true } });
+    const models = modelIds.length > 0
+      ? await prisma.aIModel.findMany({ where: { id: { in: modelIds } }, select: { id: true, name: true, modelId: true } })
+      : [];
     const modelMap = Object.fromEntries(models.map(m => [m.id, m]));
 
     const enrichedByModel = byModel.map(m => ({
@@ -264,10 +262,10 @@ router.get('/usage/summary', requireAuth, async (req, res) => {
       requestCount: m._count,
     }));
 
-    // Group by day
+    // Group by day (WIB timezone)
     const dailyMap = {};
-    for (const d of byDay) {
-      const day = d.createdAt.toISOString().slice(0, 10);
+    for (const d of rawByDay) {
+      const day = new Date(d.createdAt).toLocaleDateString('sv-SE', { timeZone: 'Asia/Jakarta' });
       if (!dailyMap[day]) dailyMap[day] = { date: day, tokens: 0, cost: 0, requests: 0 };
       dailyMap[day].tokens += d._sum.totalTokens || 0;
       dailyMap[day].cost += d._sum.totalCost || 0;
@@ -290,13 +288,14 @@ router.get('/usage/summary', requireAuth, async (req, res) => {
 });
 
 /* ═══════════════════════════════════════
-   USAGE LOGS (per-request detail)
-   GET /usage/logs?apiKeyId=&startDate=&endDate=&limit=50
+   USAGE LOGS (per-request detail, with pagination)
    ═══════════════════════════════════════ */
 router.get('/usage/logs', requireAuth, async (req, res) => {
   try {
     const userId = req.user.id;
-    const { apiKeyId, startDate, endDate, limit = '50' } = req.query;
+    const { apiKeyId, startDate, endDate, limit = '50', offset = '0' } = req.query;
+    const take = Math.min(parseInt(limit) || 50, 200);
+    const skip = parseInt(offset) || 0;
 
     const where = { userId };
     if (apiKeyId) where.apiKeyId = parseInt(apiKeyId);
@@ -306,42 +305,51 @@ router.get('/usage/logs', requireAuth, async (req, res) => {
       if (endDate) where.createdAt.lte = new Date(endDate);
     }
 
-    const logs = await prisma.aIUsage.findMany({
-      where,
-      include: {
-        model: { select: { name: true, modelId: true, inputPricePer1K: true, outputPricePer1K: true } },
-        apiKey: { select: { keyName: true, apiKey: true } },
-      },
-      orderBy: { createdAt: 'desc' },
-      take: parseInt(limit),
-    });
+    const [logs, total] = await Promise.all([
+      prisma.aIUsage.findMany({
+        where,
+        include: {
+          model: { select: { name: true, modelId: true } },
+          apiKey: { select: { keyName: true } },
+        },
+        orderBy: { createdAt: 'desc' },
+        take,
+        skip,
+      }),
+      prisma.aIUsage.count({ where }),
+    ]);
 
-    // Enrich with actual model from metadata + pricing breakdown
+    // Use snapshot pricing from the usage record itself
     const enriched = logs.map(l => {
       let meta = {};
       try { meta = JSON.parse(l.metadata || '{}'); } catch {}
 
-      // Cost breakdown: prices are now directly in Rp per 1K tokens
-      const inputPricePer1K = l.model?.inputPricePer1K || 150;
-      const outputPricePer1K = l.model?.outputPricePer1K || 450;
-      const calculatedInputCost = (l.inputTokens / 1000) * inputPricePer1K;
-      const calculatedOutputCost = (l.outputTokens / 1000) * outputPricePer1K;
+      const inputPricePer1K = l.inputPricePer1K || 150;  // snapshot or fallback
+      const outputPricePer1K = l.outputPricePer1K || 450;
 
       return {
-        ...l,
+        id: l.id,
+        createdAt: l.createdAt,
+        apiKey: l.apiKey,
+        model: l.model,
+        inputTokens: l.inputTokens,
+        outputTokens: l.outputTokens,
+        totalTokens: l.totalTokens,
+        totalCost: l.totalCost,
+        statusCode: l.statusCode,
+        latencyMs: l.latencyMs,
         actualModel: meta.actualModel || l.model?.modelId || 'unknown',
         requestedModel: meta.requestedModel || l.model?.modelId || 'unknown',
         pricing: {
-          inputPricePer1K: Math.round(inputPricePer1K),
-          outputPricePer1K: Math.round(outputPricePer1K),
-          calculatedInputCost: Math.round(calculatedInputCost),
-          calculatedOutputCost: Math.round(calculatedOutputCost),
-          formula: `${l.inputTokens} input ÷ 1000 × Rp${Math.round(inputPricePer1K)} + ${l.outputTokens} output ÷ 1000 × Rp${Math.round(outputPricePer1K)}`,
+          inputPricePer1K,
+          outputPricePer1K,
+          calculatedInputCost: l.inputCost,
+          calculatedOutputCost: l.outputCost,
         },
       };
     });
 
-    res.json(enriched);
+    res.json({ logs: enriched, total, limit: take, offset: skip });
   } catch (error) {
     console.error('Error fetching usage logs:', error);
     res.status(500).json({ error: 'Failed to fetch usage logs' });
@@ -357,14 +365,8 @@ router.put('/keys/:id', requireAuth, async (req, res) => {
     const { keyName, isActive } = req.body;
     const userId = req.user.id;
 
-    // Verify ownership
-    const existingKey = await prisma.aIApiKey.findFirst({
-      where: { id: parseInt(id), userId },
-    });
-
-    if (!existingKey) {
-      return res.status(404).json({ error: 'API key not found' });
-    }
+    const existingKey = await prisma.aIApiKey.findFirst({ where: { id: parseInt(id), userId } });
+    if (!existingKey) return res.status(404).json({ error: 'API key not found' });
 
     const updatedKey = await prisma.aIApiKey.update({
       where: { id: parseInt(id) },
@@ -373,7 +375,6 @@ router.put('/keys/:id', requireAuth, async (req, res) => {
         ...(typeof isActive === 'boolean' && { isActive }),
       },
     });
-
     res.json(updatedKey);
   } catch (error) {
     console.error('Error updating API key:', error);
@@ -389,20 +390,10 @@ router.delete('/keys/:id', requireAuth, async (req, res) => {
     const { id } = req.params;
     const userId = req.user.id;
 
-    // Verify ownership
-    const existingKey = await prisma.aIApiKey.findFirst({
-      where: { id: parseInt(id), userId },
-    });
+    const existingKey = await prisma.aIApiKey.findFirst({ where: { id: parseInt(id), userId } });
+    if (!existingKey) return res.status(404).json({ error: 'API key not found' });
 
-    if (!existingKey) {
-      return res.status(404).json({ error: 'API key not found' });
-    }
-
-    await prisma.aIApiKey.update({
-      where: { id: parseInt(id) },
-      data: { isActive: false },
-    });
-
+    await prisma.aIApiKey.update({ where: { id: parseInt(id) }, data: { isActive: false } });
     res.json({ message: 'API key deleted successfully' });
   } catch (error) {
     console.error('Error deleting API key:', error);
@@ -411,86 +402,7 @@ router.delete('/keys/:id', requireAuth, async (req, res) => {
 });
 
 /* ═══════════════════════════════════════
-   TOP-UP API KEY CREDITS
-   ═══════════════════════════════════════ */
-router.post('/credits/top-up', requireAuth, async (req, res) => {
-  try {
-    const { apiKeyId, amount } = req.body;
-    const userId = req.user.id;
-
-    if (!amount || amount <= 0) {
-      return res.status(400).json({ error: 'Invalid amount' });
-    }
-
-    // Verify API key ownership
-    const apiKeyData = await prisma.aIApiKey.findFirst({
-      where: { id: apiKeyId, userId },
-    });
-
-    if (!apiKeyData) {
-      return res.status(404).json({ error: 'API key not found' });
-    }
-
-    // Atomic transaction: check balance + deduct + credit in one operation
-    const result = await prisma.$transaction(async (tx) => {
-      // Check user balance with lock
-      const user = await tx.user.findUnique({ where: { id: userId } });
-      if (user.balance < amount) {
-        throw new Error('INSUFFICIENT_BALANCE');
-      }
-
-      // Deduct from user balance
-      const updatedUser = await tx.user.update({
-        where: { id: userId },
-        data: { balance: { decrement: amount } },
-      });
-
-      // Add to API key credits
-      const updatedKey = await tx.aIApiKey.update({
-        where: { id: apiKeyId },
-        data: { creditsBalance: { increment: amount } },
-      });
-
-      // Create transactions
-      await tx.balanceTransaction.create({
-        data: {
-          userId,
-          amount: -amount,
-          type: 'AI_TOPUP',
-          description: `Top-up AI credits for "${apiKeyData.keyName}"`,
-        },
-      });
-
-      await tx.aITransaction.create({
-        data: {
-          userId,
-          apiKeyId,
-          amount,
-          type: 'TOP_UP',
-          description: `Top-up from main balance`,
-          balanceBefore: apiKeyData.creditsBalance,
-          balanceAfter: updatedKey.creditsBalance,
-        },
-      });
-
-      return { newBalance: updatedKey.creditsBalance };
-    });
-
-    res.json({
-      message: 'Credits topped up successfully',
-      newBalance: result.newBalance,
-    });
-  } catch (error) {
-    console.error('Error topping up credits:', error);
-    if (error.message === 'INSUFFICIENT_BALANCE') {
-      return res.status(400).json({ error: 'Insufficient balance' });
-    }
-    res.status(500).json({ error: 'Failed to top up credits' });
-  }
-});
-
-/* ═══════════════════════════════════════
-   GET CREDITS HISTORY
+   GET CREDITS/USAGE HISTORY
    ═══════════════════════════════════════ */
 router.get('/credits/history', requireAuth, async (req, res) => {
   try {
@@ -498,168 +410,18 @@ router.get('/credits/history', requireAuth, async (req, res) => {
     const userId = req.user.id;
 
     const where = { userId };
-    if (apiKeyId) {
-      where.apiKeyId = parseInt(apiKeyId);
-    }
+    if (apiKeyId) where.apiKeyId = parseInt(apiKeyId);
 
     const transactions = await prisma.aITransaction.findMany({
       where,
-      include: {
-        apiKey: {
-          select: { keyName: true },
-        },
-      },
+      include: { apiKey: { select: { keyName: true } } },
       orderBy: { createdAt: 'desc' },
       take: 100,
     });
-
     res.json(transactions);
   } catch (error) {
     console.error('Error fetching credits history:', error);
     res.status(500).json({ error: 'Failed to fetch credits history' });
-  }
-});
-
-/* ═══════════════════════════════════════
-   GET USAGE SUMMARY
-   ═══════════════════════════════════════ */
-router.get('/usage/summary', requireAuth, async (req, res) => {
-  try {
-    const { apiKeyId, startDate, endDate } = req.query;
-    const userId = req.user.id;
-
-    if (!apiKeyId) {
-      return res.status(400).json({ error: 'apiKeyId is required' });
-    }
-
-    // Verify key ownership
-    const key = await prisma.aIApiKey.findFirst({
-      where: { id: parseInt(apiKeyId), userId },
-    });
-
-    if (!key) {
-      return res.status(404).json({ error: 'API key not found' });
-    }
-
-    const where = {
-      apiKeyId: parseInt(apiKeyId),
-      userId,
-      ...(startDate && endDate && {
-        createdAt: {
-          gte: new Date(startDate),
-          lte: new Date(endDate),
-        },
-      }),
-    };
-
-    // Calculate sum of tokens and costs
-    const aggregate = await prisma.aIUsage.aggregate({
-      where,
-      _sum: {
-        totalTokens: true,
-        totalCost: true,
-      },
-      _count: {
-        id: true,
-      },
-    });
-
-    // Get breakdown by model
-    const usages = await prisma.aIUsage.findMany({
-      where,
-      include: {
-        model: {
-          select: { name: true, modelId: true },
-        },
-      },
-    });
-
-    // Group by model
-    const breakdown = {};
-    usages.forEach((usage) => {
-      const modelName = usage.model.name;
-      if (!breakdown[modelName]) {
-        breakdown[modelName] = { requests: 0, tokens: 0, cost: 0 };
-      }
-      breakdown[modelName].requests += 1;
-      breakdown[modelName].tokens += usage.totalTokens;
-      breakdown[modelName].cost += usage.totalCost;
-    });
-
-    // Generate chart data (group by day)
-    const chartDataMap = {};
-    usages.forEach((usage) => {
-      const dateStr = usage.createdAt.toISOString().split('T')[0];
-      if (!chartDataMap[dateStr]) {
-        chartDataMap[dateStr] = { date: dateStr, requests: 0, cost: 0, tokens: 0 };
-      }
-      chartDataMap[dateStr].requests += 1;
-      chartDataMap[dateStr].cost += usage.totalCost;
-      chartDataMap[dateStr].tokens += usage.totalTokens;
-    });
-
-    const chartData = Object.values(chartDataMap).sort((a, b) => a.date.localeCompare(b.date));
-
-    res.json({
-      totalRequests: aggregate._count.id || 0,
-      totalTokens: aggregate._sum.totalTokens || 0,
-      totalCost: aggregate._sum.totalCost || 0,
-      breakdown,
-      chartData,
-    });
-  } catch (error) {
-    console.error('Error fetching usage summary:', error);
-    res.status(500).json({ error: 'Failed to fetch usage summary' });
-  }
-});
-
-/* ═══════════════════════════════════════
-   GET USAGE LOGS
-   ═══════════════════════════════════════ */
-router.get('/usage/logs', requireAuth, async (req, res) => {
-  try {
-    const { apiKeyId, startDate, endDate } = req.query;
-    const userId = req.user.id;
-
-    if (!apiKeyId) {
-      return res.status(400).json({ error: 'apiKeyId is required' });
-    }
-
-    // Verify key ownership
-    const key = await prisma.aIApiKey.findFirst({
-      where: { id: parseInt(apiKeyId), userId },
-    });
-
-    if (!key) {
-      return res.status(404).json({ error: 'API key not found' });
-    }
-
-    const where = {
-      apiKeyId: parseInt(apiKeyId),
-      userId,
-      ...(startDate && endDate && {
-        createdAt: {
-          gte: new Date(startDate),
-          lte: new Date(endDate),
-        },
-      }),
-    };
-
-    const logs = await prisma.aIUsage.findMany({
-      where,
-      include: {
-        model: {
-          select: { name: true, modelId: true },
-        },
-      },
-      orderBy: { createdAt: 'desc' },
-      take: 100,
-    });
-
-    res.json(logs);
-  } catch (error) {
-    console.error('Error fetching usage logs:', error);
-    res.status(500).json({ error: 'Failed to fetch usage logs' });
   }
 });
 
@@ -670,55 +432,70 @@ router.all('/validate-key', async (req, res) => {
   try {
     // Authenticate: only 9router service should call this endpoint
     const webhookSecret = req.headers['x-webhook-secret'];
-    if (!webhookSecret || webhookSecret !== process.env.AI_WEBHOOK_SECRET) {
+    const expectedSecret = process.env.AI_WEBHOOK_SECRET;
+    if (!webhookSecret || !expectedSecret) {
+      return res.status(403).json({ valid: false, error: 'Unauthorized' });
+    }
+    const secretBuf = Buffer.from(webhookSecret);
+    const expectedBuf = Buffer.from(expectedSecret);
+    if (secretBuf.length !== expectedBuf.length || !crypto.timingSafeEqual(secretBuf, expectedBuf)) {
       return res.status(403).json({ valid: false, error: 'Unauthorized' });
     }
 
     // Extract key from headers, body, or query params
     let apiKey = req.headers['x-api-key'] || req.headers['authorization'];
-    if (apiKey && apiKey.startsWith('Bearer ')) {
-      apiKey = apiKey.slice(7);
-    }
-    if (!apiKey && req.body) {
-      apiKey = req.body.apiKey || req.body.key || req.body.token;
-    }
-    if (!apiKey) {
-      apiKey = req.query.apiKey || req.query.key || req.query.token;
-    }
+    if (apiKey && apiKey.startsWith('Bearer ')) apiKey = apiKey.slice(7);
+    if (!apiKey && req.body) apiKey = req.body.apiKey || req.body.key || req.body.token;
+    if (!apiKey) apiKey = req.query.apiKey || req.query.key || req.query.token;
 
-    if (!apiKey) {
-      return res.status(400).json({ valid: false, error: 'API key is required' });
-    }
+    if (!apiKey) return res.status(400).json({ valid: false, error: 'API key is required' });
 
-    // Find the API Key in database
     const apiKeyData = await prisma.aIApiKey.findUnique({
       where: { apiKey },
-      include: {
-        model: true,
-      },
+      include: { model: true },
     });
 
-    if (!apiKeyData) {
-      return res.status(401).json({ valid: false, error: 'Invalid API key' });
+    if (!apiKeyData) return res.status(401).json({ valid: false, error: 'Invalid API key' });
+    if (!apiKeyData.isActive) return res.status(403).json({ valid: false, error: 'API key is inactive' });
+
+    // Check expiry
+    if (apiKeyData.expiresAt && new Date(apiKeyData.expiresAt) < new Date()) {
+      return res.status(403).json({ valid: false, error: 'API key has expired' });
     }
 
-    if (!apiKeyData.isActive) {
-      return res.status(403).json({ valid: false, error: 'API key is inactive' });
+    // UNIFIED WALLET: Check User.balance
+    const user = await prisma.user.findUnique({ where: { id: apiKeyData.userId } });
+    if (!user) return res.status(401).json({ valid: false, error: 'User not found' });
+    if (user.balance < -50000) {
+      return res.status(402).json({ valid: false, error: 'Insufficient balance' });
     }
 
-    if (apiKeyData.creditsBalance <= 0) {
-      return res.status(402).json({ valid: false, error: 'Insufficient credits' });
+    // Check monthly quota
+    let monthlyTokensUsed = 0;
+    let monthlyQuotaRemaining = null;
+    if (apiKeyData.monthlyQuota) {
+      const monthStart = new Date();
+      monthStart.setDate(1);
+      monthStart.setHours(0, 0, 0, 0);
+      const monthlyUsage = await prisma.aIUsage.aggregate({
+        where: { apiKeyId: apiKeyData.id, createdAt: { gte: monthStart } },
+        _sum: { totalTokens: true },
+      });
+      monthlyTokensUsed = monthlyUsage._sum.totalTokens || 0;
+      monthlyQuotaRemaining = Math.max(0, apiKeyData.monthlyQuota - monthlyTokensUsed);
     }
 
-    // Return the response for 9router
     res.json({
       valid: true,
       keyName: apiKeyData.keyName,
       tier: apiKeyData.tier,
       rateLimit: apiKeyData.rateLimit,
-      creditsBalance: apiKeyData.creditsBalance,
+      balance: user.balance,
       userId: apiKeyData.userId,
-      allowedModel: apiKeyData.model ? apiKeyData.model.modelId : null
+      allowedModel: apiKeyData.model ? apiKeyData.model.modelId : null,
+      monthlyQuota: apiKeyData.monthlyQuota,
+      monthlyTokensUsed,
+      monthlyQuotaRemaining,
     });
   } catch (error) {
     console.error('Error validating API key:', error);
@@ -728,7 +505,6 @@ router.all('/validate-key', async (req, res) => {
 
 /* ═══════════════════════════════════════
    SSE STREAM — Real-time usage events
-   GET /events/stream?token=<jwt>
    ═══════════════════════════════════════ */
 router.get('/events/stream', async (req, res) => {
   // Auth: Accept token from query param (EventSource can't set headers)
@@ -741,9 +517,7 @@ router.get('/events/stream', async (req, res) => {
 
   let userId;
   try {
-    if (!process.env.JWT_SECRET) {
-      return res.status(500).json({ error: 'Server configuration error' });
-    }
+    if (!process.env.JWT_SECRET) return res.status(500).json({ error: 'Server configuration error' });
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     const user = await prisma.user.findUnique({ where: { id: decoded.id } });
     if (!user) return res.status(401).json({ error: 'User not found' });
@@ -756,13 +530,11 @@ router.get('/events/stream', async (req, res) => {
   res.setHeader('Content-Type', 'text/event-stream');
   res.setHeader('Cache-Control', 'no-cache');
   res.setHeader('Connection', 'keep-alive');
-  res.setHeader('X-Accel-Buffering', 'no'); // Disable nginx buffering
+  res.setHeader('X-Accel-Buffering', 'no');
   res.flushHeaders();
 
-  // Send initial keepalive
   res.write(':ok\n\n');
 
-  // Subscribe to EventBus
   const onUsage = (event) => {
     if (event.userId !== userId) return;
     try {
@@ -786,7 +558,7 @@ router.get('/events/stream', async (req, res) => {
     try {
       res.write(`event: balance\ndata: ${JSON.stringify({
         keyId: event.keyId,
-        newBalance: event.newBalance,
+        balance: event.newBalance,
       })}\n\n`);
     } catch {}
   };
@@ -794,12 +566,10 @@ router.get('/events/stream', async (req, res) => {
   eventBus.on('usage:recorded', onUsage);
   eventBus.on('balance:updated', onBalance);
 
-  // Keepalive ping every 30 seconds
   const keepalive = setInterval(() => {
     try { res.write(':ping\n\n'); } catch {}
   }, 30000);
 
-  // Cleanup on disconnect
   req.on('close', () => {
     clearInterval(keepalive);
     eventBus.off('usage:recorded', onUsage);

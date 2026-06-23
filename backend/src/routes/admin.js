@@ -233,8 +233,8 @@ router.post('/products', async (req, res) => {
         name,
         slug,
         description,
-        priceUser: parseFloat(priceUser),
-        priceReseller: parseFloat(priceReseller),
+        priceUser: Math.round(parseFloat(priceUser)),
+        priceReseller: Math.round(parseFloat(priceReseller)),
         type,
         providerServiceId: providerServiceId || null,
         minOrder: minOrder ? parseInt(minOrder) : 1,
@@ -276,8 +276,8 @@ router.put('/products/:id', async (req, res) => {
         name,
         slug,
         description,
-        priceUser: priceUser ? parseFloat(priceUser) : undefined,
-        priceReseller: priceReseller ? parseFloat(priceReseller) : undefined,
+        priceUser: priceUser ? Math.round(parseFloat(priceUser)) : undefined,
+        priceReseller: priceReseller ? Math.round(parseFloat(priceReseller)) : undefined,
         isActive,
         providerServiceId,
         minOrder: minOrder ? parseInt(minOrder) : undefined,
@@ -371,18 +371,26 @@ router.post('/products/:productId/accounts/bulk', async (req, res) => {
   }
 });
 
-// 7. Get all system orders
+// 7. Get all system orders (with pagination)
 router.get('/orders', async (req, res) => {
   try {
-    const orders = await prisma.order.findMany({
-      include: {
-        user: { select: { id: true, name: true, email: true } },
-        product: { select: { name: true, type: true } },
-        account: { select: { email: true } }
-      },
-      orderBy: { createdAt: 'desc' }
-    });
-    return res.json({ orders });
+    const limit = Math.min(parseInt(req.query.limit) || 20, 100);
+    const offset = parseInt(req.query.offset) || 0;
+
+    const [orders, total] = await Promise.all([
+      prisma.order.findMany({
+        include: {
+          user: { select: { id: true, name: true, email: true } },
+          product: { select: { name: true, type: true } },
+          account: { select: { email: true } }
+        },
+        orderBy: { createdAt: 'desc' },
+        take: limit,
+        skip: offset,
+      }),
+      prisma.order.count(),
+    ]);
+    return res.json({ orders, total, limit, offset });
   } catch (error) {
     console.error('Fetch admin orders error:', error);
     return res.status(500).json({ error: 'Failed to fetch orders.' });
@@ -413,9 +421,9 @@ router.post('/users/:id/balance', async (req, res) => {
       let balanceAfter = user.balance;
 
       if (action === 'ADD') {
-        balanceAfter += parseFloat(amount);
+        balanceAfter += Math.round(parseFloat(amount));
       } else {
-        balanceAfter -= parseFloat(amount);
+        balanceAfter -= Math.round(parseFloat(amount));
         if (balanceAfter < 0) {
           throw new Error('User balance cannot go below 0.');
         }
@@ -430,7 +438,7 @@ router.post('/users/:id/balance', async (req, res) => {
         data: {
           userId,
           type: action === 'ADD' ? 'DEPOSIT' : 'DEDUCTION',
-          amount: parseFloat(amount),
+          amount: Math.round(parseFloat(amount)),
           balanceBefore,
           balanceAfter,
           description: description || `Penyesuaian saldo manual oleh admin: ${action === 'ADD' ? 'Penambahan' : 'Pengurangan'}`,
@@ -455,22 +463,30 @@ router.post('/users/:id/balance', async (req, res) => {
   }
 });
 
-// 9. Manage Users (Membership Control)
+// 9. Manage Users (Membership Control) — with pagination
 router.get('/users', async (req, res) => {
   try {
-    const users = await prisma.user.findMany({
-      select: {
-        id: true,
-        name: true,
-        email: true,
-        role: true,
-        balance: true,
-        isVerified: true,
-        createdAt: true
-      },
-      orderBy: { createdAt: 'desc' }
-    });
-    return res.json({ users });
+    const limit = Math.min(parseInt(req.query.limit) || 20, 100);
+    const offset = parseInt(req.query.offset) || 0;
+
+    const [users, total] = await Promise.all([
+      prisma.user.findMany({
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          role: true,
+          balance: true,
+          isVerified: true,
+          createdAt: true
+        },
+        orderBy: { createdAt: 'desc' },
+        take: limit,
+        skip: offset,
+      }),
+      prisma.user.count(),
+    ]);
+    return res.json({ users, total, limit, offset });
   } catch (error) {
     console.error('Fetch admin users error:', error);
     return res.status(500).json({ error: 'Failed to fetch users.' });

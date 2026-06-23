@@ -81,7 +81,7 @@ router.post('/request', requireAuth, upload.single('paymentProof'), async (req, 
     const deposit = await prisma.deposit.create({
       data: {
         userId: req.user.id,
-        amount: parseFloat(amount),
+        amount: Math.round(parseFloat(amount)),
         paymentMethod: pMethod.name,
         paymentMethodId: pMethod.id,
         paymentProof: proofPath,

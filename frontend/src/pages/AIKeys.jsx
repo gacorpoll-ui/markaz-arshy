@@ -6,7 +6,7 @@ import { useAISSE } from '../hooks/useAISSE';
 /**
  * AI Keys Dashboard — Simple & Professional
  */
-export default function AIKeys({ user, token }) {
+export default function AIKeys({ user, token, onUpdateUser }) {
   const aiRouterUrl = import.meta.env.VITE_AI_ROUTER_PUBLIC_URL || 'https://ai.markaz-arshy.com/v1';
   const [apiKeys, setApiKeys] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -19,14 +19,12 @@ export default function AIKeys({ user, token }) {
     fetchKeys();
   }, [user]);
 
-  // Real-time: update credits balance via SSE
+  // Real-time: update balance via SSE
   const handleBalance = useCallback((balanceUpdate) => {
-    setApiKeys(prev => prev.map(k =>
-      k.id === balanceUpdate.keyId
-        ? { ...k, creditsBalance: balanceUpdate.newBalance }
-        : k
-    ));
-  }, []);
+    if (onUpdateUser && user) {
+      onUpdateUser({ ...user, balance: balanceUpdate.balance });
+    }
+  }, [onUpdateUser, user]);
 
   useAISSE({ token, onBalance: handleBalance });
 
@@ -39,7 +37,8 @@ export default function AIKeys({ user, token }) {
 
   const fetchKeys = async () => {
     try {
-      const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/ai-router/keys`, {
+      // Use /keys/mine to get FULL unmasked keys — mask only for display
+      const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/ai-router/keys/mine`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       setApiKeys(await res.json());
@@ -48,6 +47,12 @@ export default function AIKeys({ user, token }) {
     } finally {
       setLoading(false);
     }
+  };
+
+  // Mask key for display only — full key stays in state for copy
+  const maskKey = (key) => {
+    if (!key || key.length < 12) return '***';
+    return key.slice(0, 8) + '...' + key.slice(-4);
   };
 
   const handleDelete = async (id) => {
@@ -160,15 +165,16 @@ export default function AIKeys({ user, token }) {
                   <td style={{ padding: '16px 20px' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                       <code style={{ fontSize: '12px', color: 'var(--text-secondary)', background: 'rgba(0,0,0,0.2)', padding: '4px 8px', borderRadius: '4px', fontFamily: 'monospace' }}>
-                        {k.apiKey.slice(0, 20)}...
+                        {maskKey(k.apiKey)}
                       </code>
                       <button onClick={() => copyKey(k.apiKey)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-primary)', padding: '2px' }} title="Copy full key"><Copy size={14} /></button>
                     </div>
                   </td>
                   <td style={{ padding: '16px 20px', textAlign: 'right' }}>
-                    <span style={{ fontWeight: '600', color: k.creditsBalance > 0 ? 'var(--color-success)' : 'var(--text-muted)' }}>
-                      Rp {Math.ceil(k.creditsBalance).toLocaleString('id-ID')}
+                    <span style={{ fontWeight: '600', color: 'var(--color-success)' }}>
+                      Rp {Math.ceil(user?.balance || 0).toLocaleString('id-ID')}
                     </span>
+                    <div style={{ fontSize: '10px', color: 'var(--text-muted)' }}>Saldo Wallet</div>
                   </td>
                   <td style={{ padding: '16px 20px', textAlign: 'center' }}>
                     <span style={{

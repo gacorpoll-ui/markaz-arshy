@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { Key, TrendingUp, DollarSign, Zap, MoreVertical, Eye, EyeOff, Copy, Settings, Trash2 } from 'lucide-react';
 
 /**
  * AIKeyCard - Card component untuk menampilkan API key milik user
  * Digunakan di /dashboard/ai-keys page
  */
-export default function AIKeyCard({ apiKey, onTopUp, onDelete, onToggleActive }) {
+export default function AIKeyCard({ apiKey, onDelete, onToggleActive, userBalance }) {
   const [showFullKey, setShowFullKey] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
   const navigate = useNavigate();
@@ -233,7 +233,7 @@ export default function AIKeyCard({ apiKey, onTopUp, onDelete, onToggleActive })
             </span>
           </div>
           <div style={{ fontSize: '18px', fontWeight: '700', color: 'var(--text-primary)' }}>
-            {formatBalance(apiKey.creditsBalance)}
+            {formatBalance(userBalance || 0)}
           </div>
         </div>
 
@@ -283,13 +283,13 @@ export default function AIKeyCard({ apiKey, onTopUp, onDelete, onToggleActive })
         >
           View Usage
         </button>
-        <button
-          onClick={() => onTopUp(apiKey)}
+        <Link
+          to="/deposit"
           className="btn btn-primary"
-          style={{ flex: 1, padding: '10px', fontSize: '14px' }}
+          style={{ flex: 1, padding: '10px', fontSize: '14px', textAlign: 'center', textDecoration: 'none' }}
         >
-          Top Up Credits
-        </button>
+          Top Up Saldo
+        </Link>
       </div>
     </div>
   );

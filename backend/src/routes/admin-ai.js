@@ -135,8 +135,8 @@ router.post('/ai-models', requireAuth, requireAdmin, async (req, res) => {
         providerId: parseInt(providerId),
         name,
         modelId,
-        inputPricePer1K: parseFloat(inputPricePer1K),
-        outputPricePer1K: parseFloat(outputPricePer1K),
+        inputPricePer1K: Math.round(parseFloat(inputPricePer1K)),
+        outputPricePer1K: Math.round(parseFloat(outputPricePer1K)),
         contextWindow: parseInt(contextWindow),
         isActive: isActive !== undefined ? isActive : true,
       },
@@ -183,8 +183,8 @@ router.put('/ai-models/:id', requireAuth, requireAdmin, async (req, res) => {
       data: {
         ...(name !== undefined && { name: name.trim() }),
         ...(modelId !== undefined && { modelId: modelId.trim() }),
-        ...(inputPricePer1K !== undefined && { inputPricePer1K: parseFloat(inputPricePer1K) }),
-        ...(outputPricePer1K !== undefined && { outputPricePer1K: parseFloat(outputPricePer1K) }),
+        ...(inputPricePer1K !== undefined && { inputPricePer1K: Math.round(parseFloat(inputPricePer1K)) }),
+        ...(outputPricePer1K !== undefined && { outputPricePer1K: Math.round(parseFloat(outputPricePer1K)) }),
         ...(contextWindow !== undefined && { contextWindow: parseInt(contextWindow) }),
         ...(typeof isActive === 'boolean' && { isActive }),
       },
@@ -249,11 +249,9 @@ router.get('/ai-stats', requireAuth, requireAdmin, async (req, res) => {
    ═══════════════════════════════════════ */
 router.post('/ai-sync-9router', requireAuth, requireAdmin, async (req, res) => {
   try {
-    const { routerUrl, apiKey } = req.body;
-
-    // Resolve URL and API Key (defaulting to env values if not passed in body)
-    const targetUrl = routerUrl || process.env.AI_ROUTER_URL || 'http://localhost:20128';
-    const targetKey = apiKey || process.env.AI_ROUTER_KEY;
+    // SECURITY: Only use env-configured URL to prevent SSRF
+    const targetUrl = process.env.AI_ROUTER_URL || 'http://localhost:20128';
+    const targetKey = process.env.AI_ROUTER_KEY;
 
     if (!targetKey) {
       return res.status(400).json({ error: '9router API Key is required for sync' });
