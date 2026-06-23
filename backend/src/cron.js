@@ -2,6 +2,8 @@ import fetch from 'node-fetch';
 import prisma from './db.js';
 import { createNotification } from './utils/notificationService.js';
 import { checkRajaitemOrderStatus } from './utils/rajaitemService.js';
+import { refundOrder } from './utils/refundService.js';
+import { initAgentScheduler } from '../../agent-work/agent-marketing/scheduler.js';
 
 const LOLIPOP_API_URL = process.env.LOLIPOP_API_URL || "https://lollipop-smm.com/api/v2";
 const LOLIPOP_API_KEY = process.env.LOLIPOP_API_KEY;
@@ -49,26 +51,13 @@ export async function checkOrderStatusCron() {
             } else if (lpStatus === 'CANCELED' || lpStatus === 'REFUNDED') {
                finalStatus = 'FAILED';
                notes = `Order dibatalkan/refund oleh server (Start: ${data.start_count}). Saldo telah dikembalikan.`;
-               
-               // REFUND SALDO
-               await prisma.$transaction(async (tx) => {
-                  const user = await tx.user.findUnique({ where: { id: order.userId } });
-                  await tx.user.update({
-                    where: { id: order.userId },
-                    data: { balance: user.balance + order.amount }
-                  });
-                  await tx.balanceTransaction.create({
-                    data: {
-                      userId: order.userId,
-                      type: 'REFUND',
-                      amount: order.amount,
-                      balanceBefore: user.balance,
-                      balanceAfter: user.balance + order.amount,
-                      description: `Refund otomatis order #${order.id} (Dibatalkan oleh Provider)`,
-                      referenceId: String(order.id)
-                    }
-                  });
-               });
+
+               // REFUND SALDO via shared service
+               try {
+                 await refundOrder(order.id, 'Dibatalkan oleh Provider SMM');
+               } catch (refundErr) {
+                 console.error(`[CRON] Refund failed for order #${order.id}:`, refundErr.message);
+               }
             } else if (lpStatus === 'PARTIAL') {
                finalStatus = 'COMPLETED';
                notes = `Selesai parsial. Remains: ${data.remains}`;
@@ -171,34 +160,11 @@ export async function checkOrderStatusCron() {
             } else if (status === 'failed' || status === 'cancel' || status === 'batal' || status === 'canceled' || status === 'error') {
               console.log(`[CRON] Premium Order #${order.id} failed on Provider. Initiating refund...`);
 
-              await prisma.$transaction(async (tx) => {
-                const user = await tx.user.findUnique({ where: { id: order.userId } });
-                await tx.user.update({
-                  where: { id: order.userId },
-                  data: { balance: user.balance + order.amount }
-                });
-
-                await tx.balanceTransaction.create({
-                  data: {
-                    userId: order.userId,
-                    type: 'REFUND',
-                    amount: order.amount,
-                    balanceBefore: user.balance,
-                    balanceAfter: user.balance + order.amount,
-                    description: `Refund otomatis order #${order.id} (Dibatalkan oleh Provider)`,
-                    referenceId: String(order.id)
-                  }
-                });
-
-                await tx.order.update({
-                  where: { id: order.id },
-                  data: {
-                    status: 'FAILED',
-                    notes: `Order gagal/dibatalkan oleh Provider. Alasan: ${response.data.keterangan || 'Dibatalkan oleh provider'}`,
-                    providerStatus: status
-                  }
-                });
-              });
+              try {
+                await refundOrder(order.id, `Provider gagal: ${response.data.keterangan || 'Dibatalkan oleh provider'}`);
+              } catch (refundErr) {
+                console.error(`[CRON] Refund failed for premium order #${order.id}:`, refundErr.message);
+              }
 
               await createNotification(
                 order.userId,
@@ -248,9 +214,9 @@ export async function syncCatalogCron() {
         });
       }
 
-      const basePricePer1000 = parseFloat(service.rate);
-      const priceUser = basePricePer1000 + (basePricePer1000 * 0.2); 
-      const priceReseller = basePricePer1000 + (basePricePer1000 * 0.1);
+      const basePricePer1000 = Math.round(parseFloat(service.rate));
+      const priceUser = Math.round(basePricePer1000 * 1.2);
+      const priceReseller = Math.round(basePricePer1000 * 1.1);
 
       const productData = {
         categoryId: category.id,
@@ -293,7 +259,14 @@ export async function syncCatalogCron() {
 export function initCrons() {
    // Cek Status Order: Setiap 5 menit (300000 ms)
    setInterval(checkOrderStatusCron, 300000);
-   
+
    // Cek Katalog Sinkron: Setiap 12 Jam (43200000 ms)
    setInterval(syncCatalogCron, 43200000);
+
+   // Agent Scheduler — wrapped in try/catch so existing crons still work
+   try {
+     initAgentScheduler().catch(err => console.error('[CRON] Agent scheduler init failed:', err.message));
+   } catch (err) {
+     console.error('[CRON] Agent scheduler init failed:', err.message);
+   }
 }

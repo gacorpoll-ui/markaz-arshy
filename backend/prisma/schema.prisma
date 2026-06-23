@@ -18,7 +18,7 @@ model User {
   verificationToken   String?              @unique
   googleId            String?              @unique
   authProvider        String               @default("local") // local, google
-  balance             Float                @default(0)
+  balance             Int                  @default(0)
   createdAt           DateTime             @default(now())
   updatedAt           DateTime             @updatedAt
   orders              Order[]
@@ -51,8 +51,8 @@ model Product {
   name              String
   slug              String    @unique
   description       String?
-  priceUser         Float
-  priceReseller     Float
+  priceUser         Int
+  priceReseller     Int
   type              String    // SMM, PREMIUM
   providerServiceId String?   
   minOrder          Int       @default(1)
@@ -108,7 +108,7 @@ model Order {
   quantity        Int?      
   accountId       Int?      
   account         Account?  @relation(fields: [accountId], references: [id])
-  amount          Float
+  amount          Int
   status          String    @default("PENDING") 
   providerOrderId String?   
   providerStatus  String?   
@@ -123,10 +123,10 @@ model BalanceTransaction {
   id            Int      @id @default(autoincrement())
   userId        Int
   user          User     @relation(fields: [userId], references: [id])
-  type          String   
-  amount        Float
-  balanceBefore Float
-  balanceAfter  Float
+  type          String
+  amount        Int
+  balanceBefore Int
+  balanceAfter  Int
   description   String
   referenceId   String?  
   createdAt     DateTime @default(now())
@@ -149,7 +149,7 @@ model Deposit {
   id                Int            @id @default(autoincrement())
   userId            Int
   user              User           @relation("UserDeposits", fields: [userId], references: [id])
-  amount            Float
+  amount            Int
   paymentMethod     String         
   paymentMethodId   Int?           
   paymentMethodRef  PaymentMethod? @relation(fields: [paymentMethodId], references: [id])
@@ -228,8 +228,8 @@ model AIModel {
   provider            AIProvider  @relation(fields: [providerId], references: [id])
   name                String      // "GPT-4o", "Claude 3.5 Sonnet"
   modelId             String      @unique // "gpt-4o", "claude-3-5-sonnet"
-  inputPricePer1K     Float       // Harga input per 1K tokens (Rp)
-  outputPricePer1K    Float       // Harga output per 1K tokens (Rp)
+  inputPricePer1K     Int       // Harga input per 1K tokens (Rp)
+  outputPricePer1K    Int       // Harga output per 1K tokens (Rp)
   contextWindow       Int         // Max tokens (e.g. 128000)
   isActive            Boolean     @default(true)
   apiKeys             AIApiKey[]
@@ -250,7 +250,7 @@ model AIApiKey {
   tier            String          // "BASIC" | "PRO" | "ENTERPRISE"
   rateLimit       Int             // Requests per minute
   monthlyQuota    Int?            // Max tokens per month (null = unlimited)
-  creditsBalance  Float           @default(0) // Prepaid credits
+  creditsBalance  Int           @default(0) // Prepaid credits
   isActive        Boolean         @default(true)
   expiresAt       DateTime?       // Null = no expiration
   lastUsedAt      DateTime?
@@ -261,26 +261,28 @@ model AIApiKey {
 }
 
 model AIUsage {
-  id            Int       @id @default(autoincrement())
-  apiKeyId      Int
-  apiKey        AIApiKey  @relation(fields: [apiKeyId], references: [id])
-  userId        Int
-  user          User      @relation(fields: [userId], references: [id])
-  modelId       Int
-  model         AIModel   @relation(fields: [modelId], references: [id])
-  requestId     String    @unique // From 9router webhook
-  inputTokens   Int
-  outputTokens  Int
-  totalTokens   Int
-  inputCost     Float     // Calculated cost
-  outputCost    Float
-  totalCost     Float
-  endpoint      String    // "/v1/chat/completions"
-  statusCode    Int       // 200, 429, 500
-  latencyMs     Int       // Response time in ms
-  errorMessage  String?
-  metadata      String?   // JSON: {model, temperature, etc}
-  createdAt     DateTime  @default(now())
+  id              Int       @id @default(autoincrement())
+  apiKeyId        Int
+  apiKey          AIApiKey  @relation(fields: [apiKeyId], references: [id])
+  userId          Int
+  user            User      @relation(fields: [userId], references: [id])
+  modelId         Int
+  model           AIModel   @relation(fields: [modelId], references: [id])
+  requestId       String    @unique // From 9router webhook
+  inputTokens     Int
+  outputTokens    Int
+  totalTokens     Int
+  inputCost       Int       // Calculated cost
+  outputCost      Int
+  totalCost       Int
+  inputPricePer1K Int       // Snapshot: harga input per 1K saat request
+  outputPricePer1K Int      // Snapshot: harga output per 1K saat request
+  endpoint        String    // "/v1/chat/completions"
+  statusCode      Int       // 200, 429, 500
+  latencyMs       Int       // Response time in ms
+  errorMessage    String?
+  metadata        String?   // JSON: {model, temperature, etc}
+  createdAt       DateTime  @default(now())
 }
 
 model AITransaction {
@@ -289,11 +291,131 @@ model AITransaction {
   user            User      @relation(fields: [userId], references: [id])
   apiKeyId        Int?
   apiKey          AIApiKey? @relation(fields: [apiKeyId], references: [id])
-  amount          Float     // +100 (top-up) or -0.05 (usage)
+  amount          Int       // +100 (top-up) or -50 (usage)
   type            String    // "TOP_UP" | "USAGE" | "REFUND"
   description     String
-  balanceBefore   Float
-  balanceAfter    Float
+  balanceBefore   Int
+  balanceAfter    Int
   relatedUsageId  Int?
   createdAt       DateTime  @default(now())
+}
+
+// ═══════════════════════════════════════════════════════════
+// AI AGENT WORKERS — Revenue Automation System
+// ═══════════════════════════════════════════════════════════
+
+model AgentTask {
+  id              Int       @id @default(autoincrement())
+  agentType       String    // "seo", "social_media", "email", "whatsapp", "competitor", "pricing", "analytics", "reseller", "retention", "upsell", "content_writer", "review_request"
+  taskName        String
+  status          String    @default("PENDING") // PENDING, RUNNING, COMPLETED, FAILED
+  input           String?   // JSON input parameters
+  output          String?   // JSON output/result
+  reportPath      String?
+  startedAt       DateTime?
+  completedAt     DateTime?
+  durationMs      Int?
+  llmTokensUsed   Int       @default(0)
+  llmCost         Int       @default(0) // In Rp
+  errorMessage    String?
+  triggeredBy     String    @default("cron") // "cron", "admin", "cli"
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  reports         AgentReport[]
+
+  @@index([agentType])
+  @@index([status])
+}
+
+model AgentSchedule {
+  id              Int       @id @default(autoincrement())
+  agentType       String    @unique
+  agentName       String
+  cronExpression  String    // "0 9 * * *" format (UTC)
+  isActive        Boolean   @default(true)
+  lastRunAt       DateTime?
+  nextRunAt       DateTime?
+  config          String?   // JSON: agent-specific configuration
+  description     String?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+}
+
+model AgentReport {
+  id              Int       @id @default(autoincrement())
+  agentTaskId     Int
+  agentTask       AgentTask @relation(fields: [agentTaskId], references: [id])
+  reportType      String    // "daily", "weekly", "campaign", "revenue_impact"
+  title           String
+  summary         String    // Markdown summary
+  metrics         String?   // JSON: { revenue_impact, orders_generated, users_reached }
+  periodStart     DateTime?
+  periodEnd       DateTime?
+  createdAt       DateTime  @default(now())
+
+  @@index([reportType])
+}
+
+model SocialPost {
+  id              Int       @id @default(autoincrement())
+  platform        String    // "instagram", "tiktok", "twitter", "facebook"
+  content         String
+  mediaUrl        String?
+  status          String    @default("DRAFT") // DRAFT, QUEUED, PUBLISHED, FAILED
+  scheduledAt     DateTime?
+  publishedAt     DateTime?
+  postId          String?   // External post ID
+  engagementData  String?   // JSON: { likes, comments, shares }
+  promoCode       String?   // For revenue attribution
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  @@index([platform, status])
+}
+
+model ContentItem {
+  id              Int       @id @default(autoincrement())
+  contentType     String    // "blog_post", "product_desc", "faq", "tutorial", "landing_page"
+  title           String
+  slug            String?   @unique
+  body            String    // Markdown or HTML
+  metaTitle       String?   // SEO meta title
+  metaDescription String?   // SEO meta description
+  keywords        String?   // Comma-separated SEO keywords
+  status          String    @default("DRAFT") // DRAFT, REVIEW, PUBLISHED, ARCHIVED
+  publishedAt     DateTime?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  @@index([contentType, status])
+}
+
+model AgentConfig {
+  id              Int       @id @default(autoincrement())
+  agentType       String    @unique // "global", "seo", "email", etc.
+  baseUrl         String    @default("https://api.openai.com/v1")
+  apiKey          String?
+  model           String    @default("gpt-4o-mini")
+  maxTokens       Int       @default(4096)
+  temperature     Float     @default(0.7)
+  isActive        Boolean   @default(true)
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+}
+
+model RevenueMetric {
+  id              Int       @id @default(autoincrement())
+  date            DateTime  @unique
+  totalRevenue    Int       @default(0)
+  orderCount      Int       @default(0)
+  newUsers        Int       @default(0)
+  activeResellers Int       @default(0)
+  depositTotal    Int       @default(0)
+  agentRevenue    String?   // JSON: { agent_type: revenue_attributed }
+  conversionRate  Float?
+  notes           String?
+  createdAt       DateTime  @default(now())
+
+  @@index([date])
 }
