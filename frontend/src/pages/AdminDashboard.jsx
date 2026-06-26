@@ -59,10 +59,16 @@ export default function AdminDashboard({ user, token }) {
       setSyncing(true);
       const H = { 'Authorization': `Bearer ${token}` };
 
-      // Helper: fetch + validasi response.ok -> parse JSON atau null
+      // Helper: fetch + validasi response.ok + auto-logout on 401
       const fetchJson = async (url, opts = {}) => {
         try {
           const res = await fetch(url, opts);
+          if (res.status === 401) {
+            localStorage.removeItem('user');
+            localStorage.removeItem('token');
+            navigate('/login');
+            return null;
+          }
           const data = await res.json();
           return res.ok ? data : null;
         } catch {
