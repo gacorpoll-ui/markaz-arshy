@@ -10,17 +10,17 @@ export default function AdminManualBalance({ handleManualBalance }) {
     const handleSubmit = async (e) => {
         e.preventDefault();
         setSuccessMessage('');
-        const success = await handleManualBalance(userId, amount, action);
-        if (success) {
-            setSuccessMessage(`Berhasil memperbarui saldo User #${userId} sebesar Rp ${parseFloat(amount).toLocaleString('id-ID')} (${action === 'ADD' ? 'Penambahan' : 'Pengurangan'}).`);
+        const ok = await handleManualBalance(userId, amount, action);
+        if (ok) {
+            setSuccessMessage(`Berhasil memperbarui saldo User #${userId} sebesar Rp ${parseFloat(amount).toLocaleString('id-ID')} (${action === 'ADD' ? '+' : '-'}).`);
             setUserId(''); setAmount(''); setAction('ADD');
         }
     };
 
     return (
-        <div className="glass-card" style={{ maxWidth: '560px' }}>
+        <div className="adm-card" style={{ maxWidth: 500 }}>
             <div className="adm-card-header">Sesuaikan Saldo Pengguna</div>
-            <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+            <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
                 <div className="form-group" style={{ marginBottom: 0 }}>
                     <label className="form-label">User ID</label>
                     <input type="number" className="form-input" placeholder="Contoh: 3" value={userId} onChange={e => setUserId(e.target.value)} required />
@@ -34,16 +34,10 @@ export default function AdminManualBalance({ handleManualBalance }) {
                 </div>
                 <div className="form-group" style={{ marginBottom: 0 }}>
                     <label className="form-label">Nominal (Rp)</label>
-                    <input type="number" className="form-input" placeholder="Contoh: 50000" value={amount} onChange={e => setAmount(e.target.value)} required />
+                    <input type="number" className="form-input" placeholder="50000" value={amount} onChange={e => setAmount(e.target.value)} required />
                 </div>
-                {successMessage && (
-                    <div style={{ padding: '12px 14px', background: 'rgba(16,185,129,0.1)', border: '1px solid rgba(16,185,129,0.2)', borderRadius: 'var(--radius-sm)', fontSize: '13px', color: '#047857', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                        <CheckCircle size={16} /> {successMessage}
-                    </div>
-                )}
-                <button type="submit" className="btn btn-primary" style={{ padding: '12px' }}>
-                    <ArrowUpRight size={16} /> Eksekusi
-                </button>
+                {successMessage && <div className="adm-alert adm-alert-success"><CheckCircle size={16} /> {successMessage}</div>}
+                <button type="submit" className="btn btn-primary" style={{ padding: 12 }}><ArrowUpRight size={16} /> Eksekusi</button>
             </form>
         </div>
     );
