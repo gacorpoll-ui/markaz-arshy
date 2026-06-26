@@ -29,12 +29,12 @@ router.get('/products', async (req, res) => {
             },
             orderBy: { createdAt: 'desc' }
         });
-        
+
         const productsWithStock = products.map(p => ({
             ...p,
             stockCount: p.accounts.length
         }));
-        
+
         res.json({ products: productsWithStock });
     } catch (error) {
         console.error(error);
