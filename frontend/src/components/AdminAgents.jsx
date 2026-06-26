@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import {
-  Bot, Play, Pause, RefreshCw, FileText, BarChart3,
+  Bot, Play, RefreshCw, FileText, BarChart3,
   Target, Zap, Clock, CheckCircle, XCircle, TrendingUp,
   Users, DollarSign, Activity, ChevronDown, ChevronUp,
-  Settings, Key, Globe, Cpu, Save, TestTube,
+  Settings, Key, Globe, Cpu, Save, TestTube, Plus, Trash2,
 } from 'lucide-react';
 
 const API = import.meta.env.VITE_API_BASE_URL;
@@ -23,9 +23,15 @@ const AGENT_NAMES = {
   upsell: 'Upsell', content_writer: 'Content Writer', review_request: 'Review Request',
 };
 
-const STATUS_COLORS = {
-  PENDING: '#f59e0b', RUNNING: '#3b82f6', COMPLETED: '#10b981', FAILED: '#ef4444',
-};
+const STATUS_COLORS = { PENDING: '#f59e0b', RUNNING: '#3b82f6', COMPLETED: '#10b981', FAILED: '#ef4444' };
+const TABS = [
+  { key: 'dashboard', label: 'Dashboard', icon: BarChart3 },
+  { key: 'agents', label: 'Agents', icon: Bot },
+  { key: 'schedules', label: 'Schedules', icon: Clock },
+  { key: 'reports', label: 'Reports', icon: FileText },
+  { key: 'content', label: 'Content', icon: FileText },
+  { key: 'apiconfig', label: 'API Config', icon: Key },
+];
 
 export default function AdminAgents({ token }) {
   const [tab, setTab] = useState('dashboard');
@@ -34,12 +40,9 @@ export default function AdminAgents({ token }) {
   const [schedules, setSchedules] = useState([]);
   const [reports, setReports] = useState([]);
   const [content, setContent] = useState([]);
-  const [socialPosts, setSocialPosts] = useState([]);
   const [kpi, setKpi] = useState(null);
   const [loading, setLoading] = useState(true);
   const [runningAgent, setRunningAgent] = useState(null);
-
-  // API Config states
   const [configs, setConfigs] = useState([]);
   const [editingConfig, setEditingConfig] = useState(null);
   const [configForm, setConfigForm] = useState({ baseUrl: '', apiKey: '', model: '', maxTokens: 4096, temperature: 0.7 });
@@ -47,84 +50,45 @@ export default function AdminAgents({ token }) {
   const [testingApi, setTestingApi] = useState(false);
   const [savingConfig, setSavingConfig] = useState(false);
 
-  const headers = { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' };
+  const headers = { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' };
 
   useEffect(() => { fetchAll(); }, []);
 
   const fetchAll = async () => {
     setLoading(true);
     try {
-      const [statsR, tasksR, schedR, repR, contentR, socialR, kpiR, confR] = await Promise.all([
+      const [statsR, tasksR, schedR, repR, contentR, kpiR, confR] = await Promise.all([
         fetch(`${API}/api/admin/agents/stats`, { headers }),
         fetch(`${API}/api/admin/agents?limit=30`, { headers }),
         fetch(`${API}/api/admin/agents/schedules`, { headers }),
         fetch(`${API}/api/admin/agents/reports?limit=10`, { headers }),
         fetch(`${API}/api/admin/agents/content?limit=10`, { headers }),
-        fetch(`${API}/api/admin/agents/social?limit=10`, { headers }),
         fetch(`${API}/api/admin/agents/kpi`, { headers }),
         fetch(`${API}/api/admin/agents/configs`, { headers }),
       ]);
-
-      const [sD, tD, scD, rD, cD, soD, kD, coD] = await Promise.all([
+      const [sD, tD, scD, rD, cD, kD, coD] = await Promise.all([
         statsR.json(), tasksR.json(), schedR.json(), repR.json(),
-        contentR.json(), socialR.json(), kpiR.json(), confR.json(),
+        contentR.json(), kpiR.json(), confR.json(),
       ]);
-
-      setStats(sD);
-      setTasks(tD.tasks || []);
-      setSchedules(scD.schedules || []);
-      setReports(rD.reports || []);
-      setContent(cD.items || []);
-      setSocialPosts(soD.posts || []);
-      setKpi(kD.kpi);
+      setStats(sD); setTasks(tD.tasks || []); setSchedules(scD.schedules || []);
+      setReports(rD.reports || []); setContent(cD.items || []); setKpi(kD.kpi);
       setConfigs(coD.configs || []);
-    } catch (err) {
-      console.error('Failed to fetch agent data:', err);
-    }
+    } catch (err) { console.error(err); }
     setLoading(false);
   };
 
   const runAgent = async (agentType) => {
     setRunningAgent(agentType);
-    try {
-      await fetch(`${API}/api/admin/agents/run/${agentType}`, { method: 'POST', headers });
-      setTimeout(fetchAll, 2000);
-    } catch (err) { console.error(err); }
+    try { await fetch(`${API}/api/admin/agents/run/${agentType}`, { method: 'POST', headers }); setTimeout(fetchAll, 2000); } catch {}
     setRunningAgent(null);
   };
 
-  const updateSchedule = async (id, data) => {
-    await fetch(`${API}/api/admin/agents/schedules/${id}`, {
-      method: 'PUT', headers, body: JSON.stringify(data),
-    });
-    fetchAll();
-  };
-
-  const updateContent = async (id, data) => {
-    await fetch(`${API}/api/admin/agents/content/${id}`, {
-      method: 'PUT', headers, body: JSON.stringify(data),
-    });
-    fetchAll();
-  };
-
-  /* ── API Config Functions ── */
-  const fetchConfigs = async () => {
-    try {
-      const res = await fetch(`${API}/api/admin/agents/configs`, { headers });
-      const data = await res.json();
-      setConfigs(data.configs || []);
-    } catch (err) { console.error('Failed to fetch configs:', err); }
-  };
+  const updateSchedule = async (id, data) => { await fetch(`${API}/api/admin/agents/schedules/${id}`, { method: 'PUT', headers, body: JSON.stringify(data) }); fetchAll(); };
+  const updateContent = async (id, data) => { await fetch(`${API}/api/admin/agents/content/${id}`, { method: 'PUT', headers, body: JSON.stringify(data) }); fetchAll(); };
 
   const openEditConfig = (config) => {
     setEditingConfig(config);
-    setConfigForm({
-      baseUrl: config.baseUrl || '',
-      apiKey: '', // Don't pre-fill masked key
-      model: config.model || '',
-      maxTokens: config.maxTokens || 4096,
-      temperature: config.temperature ?? 0.7,
-    });
+    setConfigForm({ baseUrl: config.baseUrl || '', apiKey: '', model: config.model || '', maxTokens: config.maxTokens || 4096, temperature: config.temperature ?? 0.7 });
     setTestResult(null);
   };
 
@@ -135,438 +99,332 @@ export default function AdminAgents({ token }) {
   };
 
   const saveConfig = async () => {
-    if (!editingConfig?.agentType) return;
+    if (!editingConfig?.agentType || !editingConfig.agentType.trim()) { alert('Pilih agent type terlebih dahulu.'); return; }
     setSavingConfig(true);
     try {
       const body = { ...configForm };
-      // Don't send empty apiKey (it means "keep existing")
       if (!body.apiKey) delete body.apiKey;
-      const res = await fetch(`${API}/api/admin/agents/configs/${editingConfig.agentType}`, {
-        method: 'PUT', headers, body: JSON.stringify(body),
-      });
+      const res = await fetch(`${API}/api/admin/agents/configs/${editingConfig.agentType}`, { method: 'PUT', headers, body: JSON.stringify(body) });
       const data = await res.json();
-      if (res.ok) {
-        setEditingConfig(null);
-        fetchConfigs();
-      } else {
-        alert(data.error || 'Failed to save');
-      }
+      if (res.ok) { setEditingConfig(null); fetchConfigs(); }
+      else alert(data.error || 'Gagal menyimpan');
     } catch (err) { alert('Error: ' + err.message); }
     setSavingConfig(false);
   };
 
+  const fetchConfigs = async () => {
+    try { const res = await fetch(`${API}/api/admin/agents/configs`, { headers }); const d = await res.json(); setConfigs(d.configs || []); } catch {}
+  };
+
   const testApi = async () => {
-    setTestingApi(true);
-    setTestResult(null);
-    try {
-      const res = await fetch(`${API}/api/admin/agents/configs/test`, {
-        method: 'POST', headers, body: JSON.stringify(configForm),
-      });
-      const data = await res.json();
-      setTestResult(data);
-    } catch (err) { setTestResult({ success: false, error: err.message }); }
+    if (!configForm.baseUrl || !configForm.apiKey || !configForm.model) { alert('Isi Base URL, API Key, dan Model terlebih dahulu.'); return; }
+    setTestingApi(true); setTestResult(null);
+    try { const res = await fetch(`${API}/api/admin/agents/configs/test`, { method: 'POST', headers, body: JSON.stringify(configForm) }); setTestResult(await res.json()); }
+    catch (err) { setTestResult({ success: false, error: err.message }); }
     setTestingApi(false);
   };
 
-  const deleteConfig = async (agentType) => {
-    if (!confirm(`Delete config for "${agentType}"?`)) return;
-    await fetch(`${API}/api/admin/agents/configs/${agentType}`, { method: 'DELETE', headers });
-    fetchConfigs();
-  };
+  const deleteConfig = async (agentType) => { if (!confirm(`Hapus config untuk "${agentType}"?`)) return; await fetch(`${API}/api/admin/agents/configs/${agentType}`, { method: 'DELETE', headers }); fetchConfigs(); };
 
-  /* ── Progress Bar ── */
   const ProgressBar = ({ value, max = 100, color = 'var(--accent-primary)' }) => (
-    <div style={{ width: '100%', height: '8px', background: 'var(--bg-page)', borderRadius: '999px', overflow: 'hidden' }}>
-      <div style={{ width: `${Math.min((value / max) * 100, 100)}%`, height: '100%', background: color, borderRadius: '999px', transition: 'width 0.8s ease' }} />
-    </div>
+    <div className="adm-dist-bar"><div className="adm-dist-fill" style={{ width: `${Math.min((value / max) * 100, 100)}%`, background: color }} /></div>
   );
 
-  /* ── Stat Card ── */
-  const StatCard = ({ icon: Icon, label, value, sub, color = 'var(--accent-primary)' }) => (
-    <div style={{ background: 'var(--bg-page)', border: '1px solid var(--border-default)', borderRadius: '12px', padding: '20px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--text-secondary)', fontSize: '12px', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-        <Icon size={14} style={{ color }} />
-        {label}
-      </div>
-      <div style={{ fontSize: '24px', fontWeight: '800', color: 'var(--text-primary)' }}>{value}</div>
-      {sub && <div style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>{sub}</div>}
-    </div>
-  );
-
-  /* ── Agent Card ── */
-  const AgentCard = ({ agentType, schedule }) => {
-    const taskForAgent = tasks.find(t => t.agentType === agentType);
-    const isRunning = runningAgent === agentType;
-
-    return (
-      <div style={{ background: 'var(--bg-page)', border: '1px solid var(--border-default)', borderRadius: '12px', padding: '16px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <span style={{ fontSize: '24px' }}>{AGENT_ICONS[agentType] || '🤖'}</span>
-            <div>
-              <div style={{ fontSize: '14px', fontWeight: '700', color: 'var(--text-primary)' }}>{AGENT_NAMES[agentType]}</div>
-              <div style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>
-                {schedule?.cronExpression || 'No schedule'} | {schedule?.isActive ? '🟢 Active' : '🔴 Inactive'}
-              </div>
-            </div>
-          </div>
-          <button
-            onClick={() => runAgent(agentType)}
-            disabled={isRunning}
-            style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '6px 12px', borderRadius: '8px', border: '1px solid var(--border-default)', background: isRunning ? 'rgba(59,130,246,0.1)' : 'var(--accent-primary-light)', color: isRunning ? '#3b82f6' : 'var(--color-primary)', fontSize: '12px', fontWeight: '600', cursor: isRunning ? 'wait' : 'pointer' }}
-          >
-            {isRunning ? <RefreshCw size={12} className="spin" /> : <Play size={12} />}
-            {isRunning ? 'Running...' : 'Run Now'}
-          </button>
-        </div>
-        {taskForAgent && (
-          <div style={{ fontSize: '11px', color: 'var(--text-secondary)', display: 'flex', gap: '12px' }}>
-            <span>Last: {taskForAgent.completedAt ? new Date(taskForAgent.completedAt).toLocaleString('id-ID') : 'Never'}</span>
-            <span style={{ color: STATUS_COLORS[taskForAgent.status] || 'inherit' }}>{taskForAgent.status}</span>
-          </div>
-        )}
-      </div>
-    );
-  };
-
-  /* ── Tabs ── */
-  const TABS = [
-    { key: 'dashboard', label: 'Dashboard', icon: BarChart3 },
-    { key: 'agents', label: 'Agents', icon: Bot },
-    { key: 'schedules', label: 'Schedules', icon: Clock },
-    { key: 'reports', label: 'Reports', icon: FileText },
-    { key: 'content', label: 'Content', icon: FileText },
-    { key: 'apiconfig', label: 'API Config', icon: Key },
-  ];
-
-  if (loading) return <div style={{ padding: '40px', textAlign: 'center', color: 'var(--text-secondary)' }}>Loading agents...</div>;
+  if (loading) return <div className="adm-loading"><RefreshCw size={28} className="spin" /> Loading agents...</div>;
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
       {/* Header */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+      <div className="adm-page-header">
         <div>
-          <h2 style={{ fontSize: '20px', fontWeight: '800', color: 'var(--text-primary)', margin: 0, display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <Bot size={22} style={{ color: 'var(--color-primary)' }} /> AI Agent Workers
-          </h2>
-          <p style={{ fontSize: '13px', color: 'var(--text-secondary)', margin: '4px 0 0' }}>12 otomatisasi agent untuk mencapai Rp 1 Miliar</p>
+          <div className="adm-page-title" style={{ display: 'flex', alignItems: 'center', gap: 10 }}><Bot size={22} style={{ color: 'var(--accent-primary)' }} /> AI Agent Workers</div>
+          <div className="adm-page-sub">12 otomatisasi agent untuk mencapai Rp 1 Miliar</div>
         </div>
-        <button onClick={fetchAll} style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '8px 16px', borderRadius: '8px', border: '1px solid var(--border-default)', background: 'var(--bg-page)', color: 'var(--text-secondary)', fontSize: '12px', fontWeight: '600', cursor: 'pointer' }}>
-          <RefreshCw size={14} /> Refresh
-        </button>
+        <button onClick={fetchAll} className="btn btn-secondary" style={{ padding: '8px 16px', fontSize: '12px' }}><RefreshCw size={14} className={loading ? 'spin' : ''} /> Refresh</button>
       </div>
 
-      {/* Tab Bar */}
-      <div style={{ display: 'flex', gap: '4px', background: 'var(--bg-page)', borderRadius: '10px', padding: '4px', border: '1px solid var(--border-default)' }}>
+      {/* Tabs */}
+      <div className="adm-tabs">
         {TABS.map(({ key, label, icon: Icon }) => (
-          <button key={key} onClick={() => setTab(key)} style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', padding: '8px', borderRadius: '8px', border: 'none', background: tab === key ? 'var(--accent-primary-light)' : 'transparent', color: tab === key ? 'var(--color-primary)' : 'var(--text-secondary)', fontSize: '12px', fontWeight: '600', cursor: 'pointer', transition: 'all 0.15s' }}>
-            <Icon size={14} />
-            {label}
+          <button key={key} className={`adm-tab ${tab === key ? 'active' : ''}`} onClick={() => setTab(key)}>
+            <Icon size={14} /> {label}
           </button>
         ))}
       </div>
 
-      {/* ═══ DASHBOARD TAB ═══ */}
+      {/* ═══ DASHBOARD ═══ */}
       {tab === 'dashboard' && (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-          {/* Revenue Progress */}
-          <div style={{ background: 'var(--bg-page)', border: '1px solid var(--border-default)', borderRadius: '12px', padding: '24px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
-              <span style={{ fontSize: '14px', fontWeight: '700', color: 'var(--text-primary)' }}>Progress ke Rp 1 Miliar</span>
-              <span style={{ fontSize: '20px', fontWeight: '800', color: 'var(--color-primary)' }}>{kpi?.targetProgress || '0'}%</span>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+          <div className="adm-card-nest">
+            <div className="adm-card-header-row">
+              <span style={{ fontSize: 14, fontWeight: 700 }}>Progress ke Rp 1 Miliar</span>
+              <span className="adm-stat-value" style={{ fontSize: 20 }}>{kpi?.targetProgress || '0'}%</span>
             </div>
             <ProgressBar value={parseFloat(kpi?.targetProgress || 0)} />
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '8px', fontSize: '12px', color: 'var(--text-secondary)' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 8, fontSize: 12, color: 'var(--text-secondary)' }}>
               <span>Rp {(kpi?.totalRevenue || 0).toLocaleString('id-ID')}</span>
               <span>Target: Rp 1.000.000.000</span>
             </div>
           </div>
 
-          {/* Stats Grid */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '12px' }}>
-            <StatCard icon={Activity} label="Total Agent Runs" value={stats?.overview?.totalRuns || 0} sub={`${stats?.overview?.runsToday || 0} hari ini`} />
-            <StatCard icon={CheckCircle} label="Success Rate" value={stats?.overview?.successRate || '0%'} color="#10b981" />
-            <StatCard icon={DollarSign} label="Total Revenue" value={`Rp ${(kpi?.totalRevenue || 0).toLocaleString('id-ID')}`} sub={`${kpi?.totalOrders || 0} orders`} />
-            <StatCard icon={Target} label="Avg Order Value" value={`Rp ${(kpi?.avgOrderValue || 0).toLocaleString('id-ID')}`} />
-            <StatCard icon={Zap} label="LLM Tokens Used" value={(stats?.overview?.totalTokensUsed || 0).toLocaleString()} sub={`Cost: Rp ${(stats?.overview?.totalLLMCost || 0).toLocaleString('id-ID')}`} />
-            <StatCard icon={Users} label="Remaining to Target" value={`Rp ${(kpi?.remainingToTarget || 0).toLocaleString('id-ID')}`} color="#f59e0b" />
-          </div>
-
-          {/* Recent Tasks */}
-          <div style={{ background: 'var(--bg-page)', border: '1px solid var(--border-default)', borderRadius: '12px', padding: '20px' }}>
-            <h3 style={{ fontSize: '14px', fontWeight: '700', color: 'var(--text-primary)', margin: '0 0 12px' }}>Recent Agent Runs</h3>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-              {tasks.slice(0, 10).map(task => (
-                <div key={task.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 12px', borderRadius: '8px', background: 'var(--bg-page)', fontSize: '12px' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <span>{AGENT_ICONS[task.agentType] || '🤖'}</span>
-                    <span style={{ fontWeight: '600', color: 'var(--text-primary)' }}>{AGENT_NAMES[task.agentType] || task.agentType}</span>
-                    <span style={{ color: 'var(--text-secondary)' }}>{task.taskName}</span>
-                  </div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                    <span style={{ color: STATUS_COLORS[task.status] || 'var(--text-secondary)', fontWeight: '600' }}>{task.status}</span>
-                    <span style={{ color: 'var(--text-secondary)' }}>{task.createdAt ? new Date(task.createdAt).toLocaleString('id-ID') : ''}</span>
-                  </div>
+          <div className="adm-stat-grid">
+            {[
+              { icon: Activity, label: 'Total Runs', value: (stats?.overview?.totalRuns || 0).toLocaleString(), sub: `${stats?.overview?.runsToday || 0} hari ini` },
+              { icon: CheckCircle, label: 'Success Rate', value: stats?.overview?.successRate || '0%', color: '#10b981' },
+              { icon: DollarSign, label: 'Revenue', value: `Rp ${(kpi?.totalRevenue || 0).toLocaleString('id-ID')}`, sub: `${kpi?.totalOrders || 0} orders`, color: '#10b981' },
+              { icon: Target, label: 'Rata-rata Order', value: `Rp ${(kpi?.avgOrderValue || 0).toLocaleString('id-ID')}` },
+              { icon: Zap, label: 'LLM Tokens', value: (stats?.overview?.totalTokensUsed || 0).toLocaleString(), sub: `Rp ${(stats?.overview?.totalLLMCost || 0).toLocaleString('id-ID')}` },
+              { icon: Users, label: 'Sisa Target', value: `Rp ${(kpi?.remainingToTarget || 0).toLocaleString('id-ID')}`, color: '#f59e0b' },
+            ].map((s, i) => (
+              <div key={i} className="adm-stat-card">
+                <div className="adm-stat-card-top">
+                  <div className="adm-stat-icon" style={{ background: `${s.color || 'var(--accent-primary)'}10`, color: s.color || 'var(--accent-primary)' }}><s.icon size={22} /></div>
+                  <TrendingUp size={14} className="arrow" style={{ color: s.color || 'var(--accent-primary)' }} />
                 </div>
-              ))}
-              {tasks.length === 0 && <div style={{ textAlign: 'center', padding: '20px', color: 'var(--text-secondary)', fontSize: '13px' }}>No agent runs yet. Trigger an agent to get started!</div>}
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* ═══ AGENTS TAB ═══ */}
-      {tab === 'agents' && (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '12px' }}>
-          {Object.keys(AGENT_NAMES).map(type => (
-            <AgentCard key={type} agentType={type} schedule={schedules.find(s => s.agentType === type)} />
-          ))}
-        </div>
-      )}
-
-      {/* ═══ SCHEDULES TAB ═══ */}
-      {tab === 'schedules' && (
-        <div style={{ background: 'var(--bg-page)', border: '1px solid var(--border-default)', borderRadius: '12px', padding: '20px' }}>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-            <div style={{ display: 'grid', gridTemplateColumns: '40px 1fr 160px 80px 160px', gap: '12px', padding: '8px 12px', fontSize: '11px', fontWeight: '700', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-              <span></span><span>Agent</span><span>Cron (UTC)</span><span>Status</span><span>Last Run</span>
-            </div>
-            {schedules.map(s => (
-              <div key={s.id} style={{ display: 'grid', gridTemplateColumns: '40px 1fr 160px 80px 160px', gap: '12px', alignItems: 'center', padding: '10px 12px', borderRadius: '8px', background: 'var(--bg-page)', fontSize: '13px' }}>
-                <span style={{ fontSize: '18px' }}>{AGENT_ICONS[s.agentType] || '🤖'}</span>
-                <span style={{ fontWeight: '600', color: 'var(--text-primary)' }}>{AGENT_NAMES[s.agentType] || s.agentType}</span>
-                <code style={{ fontSize: '12px', color: 'var(--color-primary)', background: 'rgba(59, 130, 246,0.06)', padding: '2px 8px', borderRadius: '4px' }}>{s.cronExpression}</code>
-                <button onClick={() => updateSchedule(s.id, { isActive: !s.isActive })} style={{ padding: '4px 8px', borderRadius: '6px', border: 'none', background: s.isActive ? 'rgba(16,185,129,0.1)' : 'rgba(239,68,68,0.1)', color: s.isActive ? '#10b981' : '#ef4444', fontSize: '11px', fontWeight: '600', cursor: 'pointer' }}>
-                  {s.isActive ? 'ON' : 'OFF'}
-                </button>
-                <span style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>{s.lastRunAt ? new Date(s.lastRunAt).toLocaleString('id-ID') : 'Never'}</span>
+                <div className="adm-stat-label">{s.label}</div>
+                <div className="adm-stat-value" style={{ color: s.color || 'inherit' }}>{s.value}</div>
+                {s.sub && <div className="adm-stat-sub">{s.sub}</div>}
               </div>
             ))}
           </div>
+
+          <div className="adm-card-nest">
+            <div className="adm-card-header-row"><span style={{ fontSize: 14, fontWeight: 700 }}>Recent Agent Runs</span></div>
+            <table className="adm-table">
+              <thead><tr><th>Agent</th><th>Task</th><th>Status</th><th>Waktu</th></tr></thead>
+              <tbody>
+                {tasks.slice(0, 10).map(task => (
+                  <tr key={task.id}>
+                    <td className="td-name"><span style={{ marginRight: 6 }}>{AGENT_ICONS[task.agentType] || '🤖'}</span>{AGENT_NAMES[task.agentType] || task.agentType}</td>
+                    <td>{task.taskName}</td>
+                    <td><span className="adm-badge" style={{ background: `${STATUS_COLORS[task.status]}15`, color: STATUS_COLORS[task.status] }}>{task.status}</span></td>
+                    <td>{task.createdAt ? new Date(task.createdAt).toLocaleString('id-ID') : '-'}</td>
+                  </tr>
+                ))}
+                {tasks.length === 0 && <tr><td colSpan={4} className="adm-empty">No agent runs yet.</td></tr>}
+              </tbody>
+            </table>
+          </div>
         </div>
       )}
 
-      {/* ═══ REPORTS TAB ═══ */}
+      {/* ═══ AGENTS ═══ */}
+      {tab === 'agents' && (
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: 12 }}>
+          {Object.keys(AGENT_NAMES).map(type => {
+            const task = tasks.find(t => t.agentType === type);
+            const isRunning = runningAgent === type;
+            return (
+              <div key={type} className="adm-card-nest" style={{ padding: 16 }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                    <span style={{ fontSize: 22 }}>{AGENT_ICONS[type] || '🤖'}</span>
+                    <div>
+                      <div className="td-name">{AGENT_NAMES[type]}</div>
+                      <div style={{ fontSize: 11, color: 'var(--text-secondary)' }}>
+                        {schedules.find(s => s.agentType === type)?.cronExpression || 'No schedule'} | {schedules.find(s => s.agentType === type)?.isActive ? '🟢 Active' : '🔴 Inactive'}
+                      </div>
+                    </div>
+                  </div>
+                  <button onClick={() => runAgent(type)} disabled={isRunning}
+                    className="btn btn-secondary" style={{ padding: '6px 12px', fontSize: 12 }}>
+                    {isRunning ? <><RefreshCw size={12} className="spin" /> Running</> : <><Play size={12} /> Run</>}
+                  </button>
+                </div>
+                {task && <div style={{ fontSize: 11, color: 'var(--text-secondary)', marginTop: 8, display: 'flex', gap: 12 }}>
+                  <span>Last: {task.completedAt ? new Date(task.completedAt).toLocaleString() : 'Never'}</span>
+                  <span style={{ color: STATUS_COLORS[task.status] }}>{task.status}</span>
+                </div>}
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {/* ═══ SCHEDULES ═══ */}
+      {tab === 'schedules' && (
+        <div className="adm-card-nest" style={{ padding: 20 }}>
+          <table className="adm-table">
+            <thead><tr><th></th><th>Agent</th><th>Cron (UTC)</th><th>Status</th><th>Last Run</th></tr></thead>
+            <tbody>
+              {schedules.map(s => (
+                <tr key={s.id}>
+                  <td style={{ fontSize: 18 }}>{AGENT_ICONS[s.agentType] || '🤖'}</td>
+                  <td className="td-name">{AGENT_NAMES[s.agentType] || s.agentType}</td>
+                  <td><code style={{ fontSize: 12, color: 'var(--accent-primary)', background: 'rgba(59,130,246,0.06)', padding: '2px 8px', borderRadius: 4 }}>{s.cronExpression}</code></td>
+                  <td><button onClick={() => updateSchedule(s.id, { isActive: !s.isActive })} className={`adm-badge ${s.isActive ? 'adm-badge-success' : 'adm-badge-danger'}`} style={{ border: 'none', cursor: 'pointer' }}>{s.isActive ? 'ON' : 'OFF'}</button></td>
+                  <td>{s.lastRunAt ? new Date(s.lastRunAt).toLocaleString() : 'Never'}</td>
+                </tr>
+              ))}
+              {schedules.length === 0 && <tr><td colSpan={5} className="adm-empty">No schedules yet.</td></tr>}
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      {/* ═══ REPORTS ═══ */}
       {tab === 'reports' && (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
           {reports.map(r => (
-            <div key={r.id} style={{ background: 'var(--bg-page)', border: '1px solid var(--border-default)', borderRadius: '12px', padding: '16px' }}>
+            <div key={r.id} className="adm-card-nest" style={{ padding: 16 }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start' }}>
                 <div>
-                  <div style={{ fontSize: '14px', fontWeight: '700', color: 'var(--text-primary)' }}>{r.title}</div>
-                  <div style={{ fontSize: '12px', color: 'var(--text-secondary)', marginTop: '4px' }}>
-                    {AGENT_ICONS[r.agentTask?.agentType] || '🤖'} {AGENT_NAMES[r.agentTask?.agentType] || r.agentTask?.agentType} | {r.reportType} | {new Date(r.createdAt).toLocaleString('id-ID')}
+                  <div className="td-name">{r.title}</div>
+                  <div style={{ fontSize: 12, color: 'var(--text-secondary)', marginTop: 4 }}>
+                    {AGENT_ICONS[r.agentTask?.agentType] || '🤖'} {AGENT_NAMES[r.agentTask?.agentType] || r.agentTask?.agentType} | {r.reportType} | {new Date(r.createdAt).toLocaleString()}
                   </div>
                 </div>
               </div>
-              <div style={{ marginTop: '10px', padding: '12px', background: 'var(--bg-page)', borderRadius: '8px', fontSize: '13px', color: 'var(--text-secondary)', whiteSpace: 'pre-wrap', maxHeight: '200px', overflow: 'auto' }}>
+              <div style={{ marginTop: 8, padding: 12, background: 'var(--bg-page)', borderRadius: 8, fontSize: 13, color: 'var(--text-secondary)', whiteSpace: 'pre-wrap', maxHeight: 200, overflow: 'auto' }}>
                 {r.summary?.slice(0, 500)}
               </div>
             </div>
           ))}
-          {reports.length === 0 && <div style={{ textAlign: 'center', padding: '40px', color: 'var(--text-secondary)' }}>No reports generated yet.</div>}
+          {reports.length === 0 && <div className="adm-empty">No reports generated yet.</div>}
         </div>
       )}
 
-      {/* ═══ CONTENT TAB ═══ */}
+      {/* ═══ CONTENT ═══ */}
       {tab === 'content' && (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
           {content.map(c => (
-            <div key={c.id} style={{ background: 'var(--bg-page)', border: '1px solid var(--border-default)', borderRadius: '12px', padding: '16px' }}>
+            <div key={c.id} className="adm-card-nest" style={{ padding: 16 }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <div>
-                  <div style={{ fontSize: '14px', fontWeight: '700', color: 'var(--text-primary)' }}>{c.title}</div>
-                  <div style={{ fontSize: '12px', color: 'var(--text-secondary)', marginTop: '2px' }}>
-                    {c.contentType} | {new Date(c.createdAt).toLocaleString('id-ID')}
-                  </div>
+                  <div className="td-name">{c.title}</div>
+                  <div style={{ fontSize: 12, color: 'var(--text-secondary)', marginTop: 2 }}>{c.contentType} | {new Date(c.createdAt).toLocaleString()}</div>
                 </div>
-                <div style={{ display: 'flex', gap: '6px' }}>
-                  {c.status !== 'PUBLISHED' && (
-                    <button onClick={() => updateContent(c.id, { status: 'PUBLISHED' })} style={{ padding: '4px 10px', borderRadius: '6px', border: 'none', background: 'rgba(16,185,129,0.1)', color: '#10b981', fontSize: '11px', fontWeight: '600', cursor: 'pointer' }}>Publish</button>
-                  )}
-                  {c.status !== 'ARCHIVED' && (
-                    <button onClick={() => updateContent(c.id, { status: 'ARCHIVED' })} style={{ padding: '4px 10px', borderRadius: '6px', border: 'none', background: 'rgba(239,68,68,0.1)', color: '#ef4444', fontSize: '11px', fontWeight: '600', cursor: 'pointer' }}>Archive</button>
-                  )}
+                <div style={{ display: 'flex', gap: 6 }}>
+                  {c.status !== 'PUBLISHED' && <button onClick={() => updateContent(c.id, { status: 'PUBLISHED' })} className="adm-badge adm-badge-success" style={{ border: 'none', cursor: 'pointer' }}>Publish</button>}
+                  {c.status !== 'ARCHIVED' && <button onClick={() => updateContent(c.id, { status: 'ARCHIVED' })} className="adm-badge adm-badge-danger" style={{ border: 'none', cursor: 'pointer' }}>Archive</button>}
                 </div>
               </div>
-              <div style={{ marginTop: '8px', padding: '10px', background: 'var(--bg-page)', borderRadius: '8px', fontSize: '12px', color: 'var(--text-secondary)', whiteSpace: 'pre-wrap', maxHeight: '120px', overflow: 'auto' }}>
+              <div style={{ marginTop: 6, padding: 10, background: 'var(--bg-page)', borderRadius: 8, fontSize: 12, color: 'var(--text-secondary)', whiteSpace: 'pre-wrap', maxHeight: 120, overflow: 'auto' }}>
                 {c.body?.slice(0, 300)}
               </div>
-              <div style={{ marginTop: '6px', display: 'flex', gap: '8px' }}>
-                <span style={{ padding: '2px 8px', borderRadius: '4px', background: c.status === 'PUBLISHED' ? 'rgba(16,185,129,0.1)' : c.status === 'DRAFT' ? 'rgba(245,158,11,0.1)' : 'rgba(239,68,68,0.1)', color: c.status === 'PUBLISHED' ? '#10b981' : c.status === 'DRAFT' ? '#f59e0b' : '#ef4444', fontSize: '11px', fontWeight: '600' }}>{c.status}</span>
-                {c.metaTitle && <span style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>SEO: {c.metaTitle}</span>}
+              <div style={{ marginTop: 6, display: 'flex', gap: 8 }}>
+                <span className={`adm-badge ${c.status === 'PUBLISHED' ? 'adm-badge-success' : c.status === 'DRAFT' ? 'adm-badge-pending' : 'adm-badge-danger'}`}>{c.status}</span>
+                {c.metaTitle && <span style={{ fontSize: 11, color: 'var(--text-secondary)' }}>SEO: {c.metaTitle}</span>}
               </div>
             </div>
           ))}
-          {content.length === 0 && <div style={{ textAlign: 'center', padding: '40px', color: 'var(--text-secondary)' }}>No content items yet. Run the SEO or Content Writer agent to generate content.</div>}
+          {content.length === 0 && <div className="adm-empty">No content yet.</div>}
         </div>
       )}
 
-      {/* ═══ API CONFIG TAB ═══ */}
+      {/* ═══ API CONFIG ═══ */}
       {tab === 'apiconfig' && (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-          {/* Header */}
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+          <div className="adm-page-header">
             <div>
-              <h3 style={{ fontSize: '16px', fontWeight: '700', color: 'var(--text-primary)', margin: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <Settings size={18} style={{ color: 'var(--color-primary)' }} /> LLM API Configuration
-              </h3>
-              <p style={{ fontSize: '12px', color: 'var(--text-secondary)', margin: '4px 0 0' }}>
-                Atur Base URL, API Key, dan Model untuk semua agent. Config "global" dipakai jika agent tidak punya config sendiri.
-              </p>
+              <div className="adm-page-title" style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 18 }}>
+                <Settings size={18} style={{ color: 'var(--accent-primary)' }} /> LLM API Configuration
+              </div>
+              <div className="adm-page-sub">Atur Base URL, API Key, dan Model untuk semua agent</div>
             </div>
-            <button onClick={openNewConfig} style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '8px 16px', borderRadius: '8px', border: 'none', background: 'var(--color-primary)', color: '#000', fontSize: '12px', fontWeight: '700', cursor: 'pointer' }}>
-              + Add Config
+            <button onClick={openNewConfig} className="btn btn-primary" style={{ padding: '8px 16px', fontSize: 12 }}>
+              <Plus size={14} /> Add Config
             </button>
           </div>
 
-          {/* Config List */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+          {configs.length === 0 && <div className="adm-empty">No API configs yet. Click "Add Config" to create one.</div>}
+          <div className="adm-form-grid-3" style={{ marginBottom: 0 }}>
             {configs.map(c => (
-              <div key={c.agentType} style={{ background: 'var(--bg-page)', border: '1px solid var(--border-default)', borderRadius: '12px', padding: '16px' }}>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                    <div style={{ width: '36px', height: '36px', borderRadius: '8px', background: c.isActive ? 'rgba(16,185,129,0.15)' : 'rgba(239,68,68,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                      <Cpu size={16} style={{ color: c.isActive ? '#10b981' : '#ef4444' }} />
-                    </div>
-                    <div>
-                      <div style={{ fontSize: '14px', fontWeight: '700', color: 'var(--text-primary)', textTransform: 'uppercase' }}>
-                        {c.agentType === 'global' ? '🌍 Global (Default)' : AGENT_ICONS[c.agentType] + ' ' + (AGENT_NAMES[c.agentType] || c.agentType)}
-                      </div>
-                      <div style={{ fontSize: '11px', color: 'var(--text-secondary)', display: 'flex', gap: '12px', marginTop: '2px' }}>
-                        <span><Globe size={10} style={{ marginRight: '3px' }} />{c.baseUrl}</span>
-                        <span><Cpu size={10} style={{ marginRight: '3px' }} />{c.model}</span>
-                        <span><Key size={10} style={{ marginRight: '3px' }} />{c.apiKey || 'No key'}</span>
-                      </div>
+              <div key={c.agentType} className="adm-card" style={{ padding: 16 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                  <div style={{ width: 36, height: 36, borderRadius: 8, background: c.isActive ? 'rgba(16,185,129,0.15)' : 'rgba(239,68,68,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <Cpu size={16} style={{ color: c.isActive ? '#10b981' : '#ef4444' }} />
+                  </div>
+                  <div style={{ flex: 1 }}>
+                    <div className="td-name" style={{ textTransform: 'uppercase' }}>{c.agentType === 'global' ? '🌍 Global (Default)' : `${AGENT_ICONS[c.agentType] || ''} ${AGENT_NAMES[c.agentType] || c.agentType}`}</div>
+                    <div style={{ fontSize: 11, color: 'var(--text-secondary)', marginTop: 2 }}>
+                      <Globe size={10} style={{ marginRight: 2 }} />{c.baseUrl}
                     </div>
                   </div>
-                  <div style={{ display: 'flex', gap: '6px' }}>
-                    <button onClick={() => openEditConfig(c)} style={{ padding: '6px 12px', borderRadius: '6px', border: '1px solid var(--border-default)', background: 'var(--bg-page)', color: 'var(--text-secondary)', fontSize: '11px', fontWeight: '600', cursor: 'pointer' }}>Edit</button>
-                    {c.agentType !== 'global' && (
-                      <button onClick={() => deleteConfig(c.agentType)} style={{ padding: '6px 12px', borderRadius: '6px', border: 'none', background: 'rgba(239,68,68,0.1)', color: '#ef4444', fontSize: '11px', fontWeight: '600', cursor: 'pointer' }}>Delete</button>
-                    )}
-                  </div>
+                </div>
+                <div style={{ display: 'flex', gap: 6, marginTop: 10 }}>
+                  <button onClick={() => openEditConfig(c)} className="btn btn-secondary" style={{ padding: '5px 10px', fontSize: 11, flex: 1 }}><Settings size={12} /> Edit</button>
+                  {c.agentType !== 'global' && <button onClick={() => deleteConfig(c.agentType)} className="btn btn-danger" style={{ padding: '5px 10px', fontSize: 11 }}><Trash2 size={12} /> Delete</button>}
                 </div>
               </div>
             ))}
-            {configs.length === 0 && <div style={{ textAlign: 'center', padding: '40px', color: 'var(--text-secondary)' }}>No API configs yet. Click "Add Config" to create one.</div>}
           </div>
 
-          {/* Edit / New Config Form */}
           {editingConfig && (
-            <div style={{ background: 'var(--bg-page)', border: '1px solid var(--color-primary)', borderRadius: '12px', padding: '24px' }}>
-              <h4 style={{ fontSize: '14px', fontWeight: '700', color: 'var(--text-primary)', margin: '0 0 16px' }}>
+            <div className="adm-card" style={{ border: '2px solid var(--accent-primary)' }}>
+              <div className="adm-card-header-sm" style={{ fontSize: 14, fontWeight: 700 }}>
                 {editingConfig.isNew ? 'Add New Config' : `Edit: ${editingConfig.agentType.toUpperCase()}`}
-              </h4>
-
-              {/* Agent Type (only for new) */}
-              {editingConfig.isNew && (
-                <div style={{ marginBottom: '12px' }}>
-                  <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', color: 'var(--text-secondary)', marginBottom: '4px' }}>Agent Type</label>
-                  <select
-                    value={editingConfig.agentType || ''}
-                    onChange={e => setEditingConfig({ ...editingConfig, agentType: e.target.value })}
-                    style={{ width: '100%', padding: '8px 12px', borderRadius: '8px', border: '1px solid var(--border-default)', background: 'var(--bg-page)', color: 'var(--text-primary)', fontSize: '13px' }}
-                  >
-                    <option value="">-- Select Agent Type --</option>
-                    <option value="global">🌍 Global (Default)</option>
-                    {Object.entries(AGENT_NAMES).map(([k, v]) => <option key={k} value={k}>{AGENT_ICONS[k]} {v}</option>)}
-                  </select>
+              </div>
+              <div className="adm-form-grid-3" style={{ marginBottom: 0 }}>
+                {editingConfig.isNew && (
+                  <div className="adm-form-full form-group" style={{ marginBottom: 0 }}>
+                    <label className="form-label">Agent Type</label>
+                    <select value={editingConfig.agentType || ''} onChange={e => setEditingConfig({ ...editingConfig, agentType: e.target.value })}
+                      className="form-input">
+                      <option value="">-- Select Agent --</option>
+                      <option value="global">🌍 Global (Default)</option>
+                      {Object.entries(AGENT_NAMES).map(([k, v]) => <option key={k} value={k}>{AGENT_ICONS[k]} {v}</option>)}
+                    </select>
+                  </div>
+                )}
+                <div className="adm-form-full form-group" style={{ marginBottom: 0 }}>
+                  <label className="form-label">Base URL</label>
+                  <input type="text" className="form-input" style={{ fontFamily: 'monospace' }}
+                    value={configForm.baseUrl} onChange={e => setConfigForm({ ...configForm, baseUrl: e.target.value })}
+                    placeholder="https://api.openai.com/v1" />
                 </div>
-              )}
-
-              {/* Base URL */}
-              <div style={{ marginBottom: '12px' }}>
-                <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', color: 'var(--text-secondary)', marginBottom: '4px' }}>Base URL</label>
-                <input
-                  type="text"
-                  value={configForm.baseUrl}
-                  onChange={e => setConfigForm({ ...configForm, baseUrl: e.target.value })}
-                  placeholder="https://api.openai.com/v1"
-                  style={{ width: '100%', padding: '8px 12px', borderRadius: '8px', border: '1px solid var(--border-default)', background: 'var(--bg-page)', color: 'var(--text-primary)', fontSize: '13px', fontFamily: 'monospace' }}
-                />
-              </div>
-
-              {/* API Key */}
-              <div style={{ marginBottom: '12px' }}>
-                <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', color: 'var(--text-secondary)', marginBottom: '4px' }}>
-                  API Key {editingConfig.isNew ? '' : '(leave empty to keep existing)'}
-                </label>
-                <input
-                  type="password"
-                  value={configForm.apiKey}
-                  onChange={e => setConfigForm({ ...configForm, apiKey: e.target.value })}
-                  placeholder={editingConfig.isNew ? 'sk-...' : '•••••••• (leave empty to keep)'}
-                  style={{ width: '100%', padding: '8px 12px', borderRadius: '8px', border: '1px solid var(--border-default)', background: 'var(--bg-page)', color: 'var(--text-primary)', fontSize: '13px', fontFamily: 'monospace' }}
-                />
-              </div>
-
-              {/* Model */}
-              <div style={{ marginBottom: '12px' }}>
-                <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', color: 'var(--text-secondary)', marginBottom: '4px' }}>Model</label>
-                <input
-                  type="text"
-                  value={configForm.model}
-                  onChange={e => setConfigForm({ ...configForm, model: e.target.value })}
-                  placeholder="claude-sonnet-4-6 / gpt-4o-mini"
-                  style={{ width: '100%', padding: '8px 12px', borderRadius: '8px', border: '1px solid var(--border-default)', background: 'var(--bg-page)', color: 'var(--text-primary)', fontSize: '13px', fontFamily: 'monospace' }}
-                />
-              </div>
-
-              {/* Max Tokens + Temperature */}
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '16px' }}>
-                <div>
-                  <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', color: 'var(--text-secondary)', marginBottom: '4px' }}>Max Tokens</label>
-                  <input
-                    type="number"
-                    value={configForm.maxTokens}
-                    onChange={e => setConfigForm({ ...configForm, maxTokens: parseInt(e.target.value) || 4096 })}
-                    style={{ width: '100%', padding: '8px 12px', borderRadius: '8px', border: '1px solid var(--border-default)', background: 'var(--bg-page)', color: 'var(--text-primary)', fontSize: '13px' }}
-                  />
+                <div className="form-group" style={{ marginBottom: 0 }}>
+                  <label className="form-label">API Key {!editingConfig.isNew && '(kosongkan untuk tetap)'}</label>
+                  <input type="password" className="form-input" style={{ fontFamily: 'monospace' }}
+                    value={configForm.apiKey} onChange={e => setConfigForm({ ...configForm, apiKey: e.target.value })}
+                    placeholder={editingConfig.isNew ? 'sk-...' : '••••••••'} />
                 </div>
-                <div>
-                  <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', color: 'var(--text-secondary)', marginBottom: '4px' }}>Temperature</label>
-                  <input
-                    type="number"
-                    step="0.1"
-                    min="0"
-                    max="2"
-                    value={configForm.temperature}
-                    onChange={e => setConfigForm({ ...configForm, temperature: parseFloat(e.target.value) || 0.7 })}
-                    style={{ width: '100%', padding: '8px 12px', borderRadius: '8px', border: '1px solid var(--border-default)', background: 'var(--bg-page)', color: 'var(--text-primary)', fontSize: '13px' }}
-                  />
+                <div className="form-group" style={{ marginBottom: 0 }}>
+                  <label className="form-label">Model</label>
+                  <input type="text" className="form-input" style={{ fontFamily: 'monospace' }}
+                    value={configForm.model} onChange={e => setConfigForm({ ...configForm, model: e.target.value })}
+                    placeholder="gpt-4o-mini" />
+                </div>
+                <div className="form-group" style={{ marginBottom: 0 }}>
+                  <label className="form-label">Max Tokens</label>
+                  <input type="number" className="form-input"
+                    value={configForm.maxTokens} onChange={e => setConfigForm({ ...configForm, maxTokens: parseInt(e.target.value) || 4096 })} />
+                </div>
+                <div className="form-group" style={{ marginBottom: 0 }}>
+                  <label className="form-label">Temperature</label>
+                  <input type="number" step="0.1" min="0" max="2" className="form-input"
+                    value={configForm.temperature} onChange={e => setConfigForm({ ...configForm, temperature: parseFloat(e.target.value) || 0.7 })} />
                 </div>
               </div>
 
-              {/* Test Result */}
               {testResult && (
-                <div style={{ marginBottom: '12px', padding: '10px', borderRadius: '8px', background: testResult.success ? 'rgba(16,185,129,0.1)' : 'rgba(239,68,68,0.1)', fontSize: '12px', color: testResult.success ? '#10b981' : '#ef4444' }}>
-                  {testResult.success ? `✅ Connected! Model: ${testResult.model}, Response: "${testResult.response}"` : `❌ Failed: ${testResult.error}`}
+                <div className={`adm-alert ${testResult.success ? 'adm-alert-success' : ''}`} style={{ marginBottom: 12, background: testResult.success ? 'rgba(16,185,129,0.1)' : 'rgba(239,68,68,0.1)', color: testResult.success ? '#10b981' : '#ef4444', border: 'none' }}>
+                  {testResult.success ? `✅ Connected! Model: ${testResult.model}` : `❌ ${testResult.error}`}
                 </div>
               )}
 
-              {/* Buttons */}
-              <div style={{ display: 'flex', gap: '8px' }}>
-                <button onClick={saveConfig} disabled={savingConfig} style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '8px 20px', borderRadius: '8px', border: 'none', background: 'var(--color-primary)', color: '#000', fontSize: '12px', fontWeight: '700', cursor: savingConfig ? 'wait' : 'pointer' }}>
+              <div style={{ display: 'flex', gap: 8 }}>
+                <button onClick={saveConfig} disabled={savingConfig} className="btn btn-primary" style={{ padding: '8px 20px' }}>
                   <Save size={14} /> {savingConfig ? 'Saving...' : 'Save'}
                 </button>
-                <button onClick={testApi} disabled={testingApi || !configForm.baseUrl || !configForm.apiKey || !configForm.model} style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '8px 20px', borderRadius: '8px', border: '1px solid var(--border-default)', background: 'var(--bg-page)', color: 'var(--text-secondary)', fontSize: '12px', fontWeight: '600', cursor: testingApi ? 'wait' : 'pointer' }}>
-                  <TestTube size={14} /> {testingApi ? 'Testing...' : 'Test Connection'}
+                <button onClick={testApi} disabled={testingApi || !configForm.baseUrl || !configForm.apiKey || !configForm.model} className="btn btn-secondary" style={{ padding: '8px 20px' }}>
+                  <TestTube size={14} /> {testingApi ? 'Testing...' : 'Test'}
                 </button>
-                <button onClick={() => setEditingConfig(null)} style={{ padding: '8px 20px', borderRadius: '8px', border: '1px solid var(--border-default)', background: 'transparent', color: 'var(--text-secondary)', fontSize: '12px', fontWeight: '600', cursor: 'pointer' }}>Cancel</button>
+                <button onClick={() => setEditingConfig(null)} className="btn btn-secondary" style={{ padding: '8px 20px' }}>
+                  Cancel
+                </button>
               </div>
             </div>
           )}
 
-          {/* Info Box */}
           {!editingConfig && (
-            <div style={{ background: 'rgba(59, 130, 246,0.03)', border: '1px solid var(--accent-primary-light)', borderRadius: '12px', padding: '16px' }}>
-              <h4 style={{ fontSize: '13px', fontWeight: '700', color: 'var(--color-primary)', margin: '0 0 8px' }}>Cara Kerja</h4>
-              <ul style={{ fontSize: '12px', color: 'var(--text-secondary)', margin: 0, paddingLeft: '16px', lineHeight: '1.8' }}>
+            <div className="adm-card" style={{ background: 'rgba(59,130,246,0.02)', border: '1px solid var(--accent-primary-light)' }}>
+              <div className="adm-card-header-sm" style={{ color: 'var(--accent-primary)' }}>💡 Cara Kerja</div>
+              <ul style={{ fontSize: 12, color: 'var(--text-secondary)', margin: 0, paddingLeft: 16, lineHeight: 1.8 }}>
                 <li><strong>Global config</strong> dipakai sebagai default untuk semua agent.</li>
-                <li><strong>Agent-specific config</strong> override global config untuk agent tertentu.</li>
-                <li>API Key hanya ditampilkan dalam bentuk mask (••••••••xxxx) untuk keamanan.</li>
-                <li>Perubahan berlaku pada agent run berikutnya (tidak perlu restart server).</li>
+                <li><strong>Agent-specific config</strong> override global config.</li>
+                <li>API Key disimpan aman (tidak ditampilkan penuh).</li>
+                <li>Perubahan berlaku pada agent run berikutnya.</li>
               </ul>
             </div>
           )}

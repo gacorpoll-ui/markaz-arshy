@@ -44,8 +44,17 @@ function DetailSkeleton() {
   );
 }
 
-/* ── Utility ── */
+/* ── Utility + Copy button ── */
 const formatRupiah = (n) => `Rp ${Math.round(n || 0).toLocaleString('id-ID')}`;
+function CopyBtn({ text }) {
+  const [copied, setCopied] = useState(false);
+  return (
+    <button onClick={() => { navigator.clipboard.writeText(text); setCopied(true); setTimeout(() => setCopied(false), 1500); }}
+      style={{ background:'none', border:'none', cursor:'pointer', color:'var(--accent-primary)', verticalAlign:'middle', padding:'2px 4px', fontSize:'12px' }}>
+      {copied ? '✓' : <Copy size={12} />}
+    </button>
+  );
+}
 
 export default function ProductDetailPage({ user, token }) {
   const { slug } = useParams();
@@ -243,15 +252,15 @@ export default function ProductDetailPage({ user, token }) {
             {/* Badge + Rating */}
             <div className="pd-info-top">
               <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
-                <span className={`badge ${badgeClass}`} style={{ fontSize: '11px', padding: '4px 12px' }}>{product.category.name}</span>
+                <span className={`badge ${badgeClass}`}>{product.category.name}</span>
                 {product.type === 'PREMIUM' && !isVpsRdp && (
                   product.providerStatus === 'Gangguan' || isOutOfStock ? (
-                    <span className="badge badge-danger" style={{ fontSize: '10px' }}>🚫 Stok Habis</span>
+                    <span className="badge badge-danger">🚫 Stok Habis</span>
                   ) : (
-                    <span className="badge badge-success" style={{ fontSize: '10px' }}>🟢 Tersedia</span>
+                    <span className="badge badge-success">🟢 Tersedia</span>
                   )
                 )}
-                {isVpsRdp && <span className="badge badge-success" style={{ fontSize: '10px' }}>♾️ Unlimited</span>}
+                {isVpsRdp && <span className="badge badge-success">♾️ Unlimited</span>}
               </div>
               {reviews.length > 0 && (
                 <div className="pd-avg-rating">
@@ -281,7 +290,7 @@ export default function ProductDetailPage({ user, token }) {
                 </>
               )}
               <div className="pd-stat-item">
-                <Zap size={14} style={{ color: 'var(--accent-primary)' }} />
+                <Zap size={14} />
                 <span>Proses Otomatis</span>
               </div>
               {product.type === 'PREMIUM' && !isVpsRdp && (
@@ -429,18 +438,15 @@ export default function ProductDetailPage({ user, token }) {
                 <div className="pd-success-icon"><CheckCircle2 size={48} /></div>
                 <h3>Pesanan Berhasil!</h3>
                 <p style={{ color: 'var(--text-secondary)', marginBottom: '4px' }}>Pesanan #{orderSuccess.order?.id} sedang diproses.</p>
-                <div style={{
-                  background: 'var(--bg-page)', borderRadius: '12px', padding: '14px',
-                  margin: '16px 0', textAlign: 'left', fontSize: '13px', lineHeight: '1.8'
-                }}>
+                <div className="pd-success-detail">
                   <div><strong>Produk:</strong> {product.name}</div>
                   <div><strong>Total:</strong> {formatRupiah(orderSuccess.order?.amount)}</div>
                   <div><strong>Status:</strong> {orderSuccess.order?.status === 'COMPLETED' ? '✅ Selesai' : '⏳ Diproses'}</div>
                   {orderSuccess.accountDetails && (
-                    <div style={{ marginTop: '10px', padding: '10px', background: 'var(--accent-primary-light)', borderRadius: '8px', border: '1px solid rgba(59,130,246,0.15)' }}>
+                    <div className="pd-success-cred">
                       <div style={{ fontWeight: '700', marginBottom: '6px', fontSize: '12px', color: 'var(--text-muted)' }}>📋 Kredensial Akun:</div>
-                      <div>Email: <strong>{orderSuccess.accountDetails.email}</strong> <button onClick={() => { navigator.clipboard.writeText(orderSuccess.accountDetails.email); }} style={{ background:'none', border:'none', cursor:'pointer', color:'var(--accent-primary)', verticalAlign:'middle' }}><Copy size={12} /></button></div>
-                      <div>Password: <strong>{orderSuccess.accountDetails.password}</strong> <button onClick={() => { navigator.clipboard.writeText(orderSuccess.accountDetails.password); }} style={{ background:'none', border:'none', cursor:'pointer', color:'var(--accent-primary)', verticalAlign:'middle' }}><Copy size={12} /></button></div>
+                      <div>Email: <strong>{orderSuccess.accountDetails.email}</strong> <CopyBtn text={orderSuccess.accountDetails.email} /></div>
+                      <div>Password: <strong>{orderSuccess.accountDetails.password}</strong> <CopyBtn text={orderSuccess.accountDetails.password} /></div>
                       {orderSuccess.accountDetails.extraInfo && <div style={{ marginTop:'4px', fontSize:'11px', color:'var(--text-muted)' }}>{orderSuccess.accountDetails.extraInfo}</div>}
                     </div>
                   )}
@@ -456,31 +462,25 @@ export default function ProductDetailPage({ user, token }) {
             ) : (
               <>
                 {/* Price block */}
-                <div className="pd-price-block" style={{
-                  borderRadius: '20px',
-                  background: 'linear-gradient(135deg, rgba(59,130,246,0.06) 0%, rgba(225,48,108,0.06) 100%)',
-                  border: '1px solid var(--accent-primary-light)', padding: '22px', marginBottom: '20px'
-                }}>
+                <div className="pd-price-block">
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                     <div>
-                      <span className="pd-price-label" style={{ fontSize: '11px', textTransform: 'uppercase', letterSpacing: '1px', fontWeight: '700', color: 'var(--text-muted)' }}>
+                      <span className="pd-price-label">
                         {durationOptions.length > 0 ? `Harga — ${selectedDuration}` : 'Harga Layanan'}
                       </span>
-                      <div className="pd-price-main" style={{ fontSize: '32px', fontWeight: '900', fontFamily: 'var(--font-display)', background: 'linear-gradient(90deg, var(--color-primary), #e1306c)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', marginTop: '4px' }}>
+                      <div className="pd-price-display">
                         {formatRupiah(orderTotal)}
-                        {product.type === 'SMM' && <span style={{ fontSize: '16px', fontWeight: '600', WebkitTextFillColor: 'var(--text-secondary)' }}> / 1k</span>}
+                        {product.type === 'SMM' && <span className="pd-price-unit-text"> / 1k</span>}
                       </div>
                     </div>
                     <div style={{ textAlign: 'right' }}>
                       {user?.role === 'RESELLER' && (
-                        <span style={{ display: 'inline-block', background: 'rgba(225,48,108,0.15)', color: '#e1306c', border: '1px solid rgba(225,48,108,0.3)', borderRadius: '20px', padding: '4px 10px', fontSize: '11px', fontWeight: '700' }}>
-                          🏷️ Harga Reseller
-                        </span>
+                        <span className="badge badge-smm">🏷️ Reseller</span>
                       )}
                     </div>
                   </div>
                   {durationOptions.length > 0 && orderTotal !== getBasePrice() && (
-                    <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '6px' }}>
+                    <div className="pd-price-sub">
                       Harga dasar: {formatRupiah(getBasePrice())}
                     </div>
                   )}
