@@ -53,7 +53,7 @@ export default function AdminUsers({ token }) {
     <div className="animate-fade-in">
       <div style={{ marginBottom: '30px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div>
-            <h2 style={{ fontFamily: 'var(--font-title)', fontSize: '32px', fontWeight: '800' }}>Manajemen User</h2>
+            <h2 style={{ fontFamily: 'var(--font-display)', fontSize: '32px', fontWeight: '800' }}>Manajemen User</h2>
             <p style={{ color: 'var(--text-secondary)' }}>Kelola tingkatan membership pembeli (Member & Reseller).</p>
         </div>
         <button onClick={fetchUsers} className="btn btn-secondary"><RefreshCw size={16} /> Segarkan</button>
@@ -62,7 +62,7 @@ export default function AdminUsers({ token }) {
       <div className="glass-card" style={{ padding: '0', overflow: 'hidden' }}>
         <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
           <thead>
-            <tr style={{ background: 'rgba(255,255,255,0.03)', borderBottom: '1px solid var(--border-color)' }}>
+            <tr style={{ background: 'var(--bg-page)', borderBottom: '1px solid var(--border-default)' }}>
               <th style={{ padding: '15px 20px', fontSize: '13px', color: 'var(--text-muted)' }}>USER</th>
               <th style={{ padding: '15px 20px', fontSize: '13px', color: 'var(--text-muted)' }}>ROLE</th>
               <th style={{ padding: '15px 20px', fontSize: '13px', color: 'var(--text-muted)' }}>SALDO</th>
@@ -72,7 +72,7 @@ export default function AdminUsers({ token }) {
           </thead>
           <tbody>
             {users.map(u => (
-              <tr key={u.id} style={{ borderBottom: '1px solid var(--border-color)', transition: 'background 0.2s' }}>
+              <tr key={u.id} style={{ borderBottom: '1px solid var(--border-default)', transition: 'background 0.2s' }}>
                 <td style={{ padding: '15px 20px' }}>
                   <div style={{ fontWeight: '700', fontSize: '15px' }}>{u.name}</div>
                   <div style={{ fontSize: '12px', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '4px' }}>
@@ -85,13 +85,13 @@ export default function AdminUsers({ token }) {
                   </span>
                 </td>
                 <td style={{ padding: '15px 20px' }}>
-                  <div style={{ fontSize: '14px', fontWeight: '600', color: 'var(--color-primary)', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                  <div style={{ fontSize: '14px', fontWeight: '600', color: 'var(--accent-primary)', display: 'flex', alignItems: 'center', gap: '4px' }}>
                     <Wallet size={14} /> Rp {u.balance.toLocaleString('id-ID')}
                   </div>
                 </td>
                 <td style={{ padding: '15px 20px' }}>
                   {u.isVerified ? (
-                    <span style={{ fontSize: '12px', color: 'var(--color-success)', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                    <span style={{ fontSize: '12px', color: 'var(--accent-success)', display: 'flex', alignItems: 'center', gap: '4px' }}>
                       <UserCheck size={14} /> Terverifikasi
                     </span>
                   ) : (

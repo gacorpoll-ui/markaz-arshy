@@ -1,0 +1,66 @@
+- generic [ref=e2]:
+  - navigation [ref=e3]:
+    - link "Google 정보" [ref=e4] [cursor=pointer]:
+      - /url: https://about.google/?fg=1&utm_source=google-KR&utm_medium=referral&utm_campaign=hp-header
+    - link "스토어" [ref=e5] [cursor=pointer]:
+      - /url: https://store.google.com/KR?utm_source=hp_header&utm_medium=google_ooo&utm_campaign=GS100042&hl=ko-KR
+    - generic [ref=e7]:
+      - generic [ref=e8]:
+        - link "Gmail" [ref=e10] [cursor=pointer]:
+          - /url: https://mail.google.com/mail/&ogbl
+        - link "이미지 검색" [ref=e12] [cursor=pointer]:
+          - /url: https://www.google.com/imghp?hl=ko&ogbl
+          - text: 이미지
+      - button "Google 앱" [ref=e15] [cursor=pointer]:
+        - img [ref=e16]
+      - link "로그인" [ref=e20] [cursor=pointer]:
+        - /url: https://accounts.google.com/ServiceLogin?hl=ko&passive=true&continue=https://www.google.com/&ec=futura_exp_og_so_72776762_e
+  - generic [ref=e22]:
+    - 'link "2026년 월드컵: 긴 패스의 기술" [ref=e23] [cursor=pointer]':
+      - /url: /search?sca_esv=6afbdd065017325d&q=2026+FIFA+%EC%9B%94%EB%93%9C%EC%BB%B5&oi=ddle&noiga=1&ct=460196083&hl=ko&stick=H4sIAAAAAAAC_-NgVuLQz9U3MDYoNJ_AwriIVdjIwMhMwc3TzVHhzewpryfPebN7KwCgf4y7JQAAAA&sa=X&ved=0ahUKEwiT_e6ViJqVAxUW1TQHHZvRKWsQPQgG
+      - 'img "2026년 월드컵: 긴 패스의 기술" [ref=e25]'
+    - button "공유" [ref=e27]:
+      - generic "공유" [ref=e28] [cursor=pointer]:
+        - img [ref=e32]
+  - search [ref=e35]:
+    - generic [ref=e37]:
+      - generic [ref=e39]:
+        - button "파일 및 도구 추가" [ref=e42] [cursor=pointer]:
+          - img [ref=e44]
+        - combobox "검색" [active] [ref=e47]
+        - generic [ref=e48]:
+          - generic [ref=e49]:
+            - button "입력 도구" [ref=e50] [cursor=pointer]:
+              - img [ref=e52]
+            - button "음성 검색" [ref=e54] [cursor=pointer]:
+              - img [ref=e55]
+            - button "이미지로 검색" [ref=e57] [cursor=pointer]:
+              - img [ref=e58]
+          - link "AI 모드" [ref=e60] [cursor=pointer]:
+            - generic [ref=e62]:
+              - img [ref=e64]
+              - generic [ref=e71]: AI 모드
+      - generic [ref=e73]:
+        - button "Google 검색" [ref=e74] [cursor=pointer]
+        - button "I’m Feeling Lucky" [ref=e75] [cursor=pointer]
+  - generic [ref=e78]:
+    - text: "Google 지원 언어:"
+    - link "English" [ref=e79] [cursor=pointer]:
+      - /url: https://www.google.com/setprefs?sig=0_w_RncF0C-q23TMn2vyoRTQs_Hho%3D&hl=en&source=homepage&sa=X&ved=0ahUKEwiT_e6ViJqVAxUW1TQHHZvRKWsQ2ZgBCDs
+  - contentinfo [ref=e81]:
+    - generic [ref=e82]: 대한민국
+    - generic [ref=e83]:
+      - generic [ref=e84]:
+        - link "광고" [ref=e85] [cursor=pointer]:
+          - /url: https://www.google.com/intl/ko_kr/ads/?subid=ww-ww-et-g-awa-a-g_hpafoot1_1!o2&utm_source=google.com&utm_medium=referral&utm_campaign=google_hpafooter&fg=1
+        - link "비즈니스" [ref=e86] [cursor=pointer]:
+          - /url: https://www.google.com/services/?subid=ww-ww-et-g-awa-a-g_hpbfoot1_1!o2&utm_source=google.com&utm_medium=referral&utm_campaign=google_hpbfooter&fg=1
+        - link "검색의 원리" [ref=e87] [cursor=pointer]:
+          - /url: https://google.com/search/howsearchworks/?fg=1
+      - generic [ref=e88]:
+        - link "개인정보처리방침" [ref=e89] [cursor=pointer]:
+          - /url: https://policies.google.com/privacy?hl=ko&fg=1
+        - link "약관" [ref=e90] [cursor=pointer]:
+          - /url: https://policies.google.com/terms?hl=ko&fg=1
+        - button "설정" [ref=e94] [cursor=pointer]:
+          - generic [ref=e95]: 설정

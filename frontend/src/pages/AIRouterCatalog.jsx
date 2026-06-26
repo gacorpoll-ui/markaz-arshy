@@ -133,8 +133,8 @@ export default function AIRouterCatalog({ user, token }) {
       <section style={{
         padding: '80px 24px 60px',
         textAlign: 'center',
-        background: 'linear-gradient(180deg, rgba(79, 172, 254, 0.08) 0%, transparent 100%)',
-        borderBottom: '1px solid var(--border-color)',
+        background: 'linear-gradient(180deg, var(--accent-primary-light) 0%, transparent 100%)',
+        borderBottom: '1px solid var(--border-default)',
       }}>
         <div style={{ maxWidth: '800px', margin: '0 auto' }}>
           {/* Badge */}
@@ -144,12 +144,12 @@ export default function AIRouterCatalog({ user, token }) {
             gap: '8px',
             padding: '8px 16px',
             borderRadius: '9999px',
-            background: 'rgba(0, 242, 254, 0.08)',
-            border: '1px solid rgba(0, 242, 254, 0.2)',
+            background: 'var(--accent-primary-light)',
+            border: '1px solid rgba(59, 130, 246, 0.15)',
             marginBottom: '24px',
           }}>
-            <Zap size={14} style={{ color: '#00f2fe' }} />
-            <span style={{ fontSize: '13px', fontWeight: '600', color: '#00f2fe', letterSpacing: '0.3px' }}>
+            <Zap size={14} style={{ color: 'var(--accent-primary)' }} />
+            <span style={{ fontSize: '13px', fontWeight: '600', color: 'var(--accent-primary)', letterSpacing: '0.3px' }}>
               AI Gateway — OpenAI Compatible
             </span>
           </div>
@@ -160,7 +160,7 @@ export default function AIRouterCatalog({ user, token }) {
             fontWeight: '800',
             lineHeight: '1.1',
             marginBottom: '20px',
-            fontFamily: 'var(--font-title)',
+            fontFamily: 'var(--font-display)',
           }}>
             <span style={{ background: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
               Semua Model AI
@@ -183,8 +183,8 @@ export default function AIRouterCatalog({ user, token }) {
 
           {/* Quick Start Code Block */}
           <div style={{
-            background: 'rgba(0, 0, 0, 0.4)',
-            border: '1px solid var(--border-color)',
+            background: 'var(--bg-muted)',
+            border: '1px solid var(--border-default)',
             borderRadius: '12px',
             padding: '20px',
             maxWidth: '580px',
@@ -199,10 +199,10 @@ export default function AIRouterCatalog({ user, token }) {
                 onClick={() => copyToClipboard(`curl ${baseUrl}/chat/completions \\\n  -H "Authorization: Bearer YOUR_API_KEY" \\\n  -H "Content-Type: application/json" \\\n  -d '{"model":"gpt-4o-mini","messages":[{"role":"user","content":"Hello!"}]}'`)}
                 style={{
                   display: 'flex', alignItems: 'center', gap: '4px',
-                  background: copied ? 'rgba(16, 185, 129, 0.15)' : 'rgba(0, 242, 254, 0.08)',
-                  border: '1px solid ' + (copied ? 'rgba(16, 185, 129, 0.3)' : 'rgba(0, 242, 254, 0.2)'),
+                  background: copied ? 'rgba(16, 185, 129, 0.15)' : 'var(--accent-primary-light)',
+                  border: '1px solid ' + (copied ? 'rgba(16, 185, 129, 0.3)' : 'rgba(59, 130, 246, 0.15)'),
                   borderRadius: '6px', padding: '4px 10px',
-                  color: copied ? '#10b981' : '#00f2fe',
+                  color: copied ? '#10b981' : 'var(--accent-primary)',
                   fontSize: '11px', fontWeight: '600', cursor: 'pointer',
                   transition: 'all 0.2s ease',
                 }}
@@ -212,7 +212,7 @@ export default function AIRouterCatalog({ user, token }) {
             </div>
             <pre style={{
               margin: 0, fontSize: '12px', fontFamily: 'monospace',
-              color: '#e2e8f0', lineHeight: '1.6', whiteSpace: 'pre-wrap',
+              color: '#374151', lineHeight: '1.6', whiteSpace: 'pre-wrap',
             }}>
               {`curl ${baseUrl}/chat/completions \\
   -H "Authorization: Bearer YOUR_API_KEY" \\
@@ -271,7 +271,7 @@ export default function AIRouterCatalog({ user, token }) {
          ═══════════════════════════════════════ */}
       <section style={{
         padding: '40px 24px',
-        borderBottom: '1px solid var(--border-color)',
+        borderBottom: '1px solid var(--border-default)',
       }}>
         <div className="ai-features-grid" style={{
           maxWidth: '1000px',
@@ -287,12 +287,12 @@ export default function AIRouterCatalog({ user, token }) {
               textAlign: 'center',
               padding: '20px 12px',
               borderRadius: '12px',
-              background: 'rgba(255,255,255,0.02)',
-              border: '1px solid var(--border-color)',
+              background: 'var(--bg-page)',
+              border: '1px solid var(--border-default)',
               transition: 'all 0.2s ease',
             }}
               onMouseEnter={(e) => { e.currentTarget.style.borderColor = `${feat.color}30`; e.currentTarget.style.background = `${feat.color}05`; }}
-              onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'var(--border-color)'; e.currentTarget.style.background = 'rgba(255,255,255,0.02)'; }}
+              onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'var(--border-default)'; e.currentTarget.style.background = 'var(--bg-page)'; }}
             >
               <div style={{
                 width: '40px', height: '40px', borderRadius: '10px',
@@ -330,9 +330,9 @@ export default function AIRouterCatalog({ user, token }) {
               onClick={() => setSelectedProvider('all')}
               style={{
                 padding: '6px 14px', borderRadius: '8px', fontSize: '12px', fontWeight: '600', cursor: 'pointer',
-                background: selectedProvider === 'all' ? 'var(--color-primary)' : 'rgba(255,255,255,0.05)',
+                background: selectedProvider === 'all' ? 'var(--accent-primary)' : 'var(--bg-page)',
                 color: selectedProvider === 'all' ? '#070913' : 'var(--text-secondary)',
-                border: selectedProvider === 'all' ? 'none' : '1px solid var(--border-color)',
+                border: selectedProvider === 'all' ? 'none' : '1px solid var(--border-default)',
                 transition: 'all 0.2s ease',
               }}
             >
@@ -344,9 +344,9 @@ export default function AIRouterCatalog({ user, token }) {
                 onClick={() => setSelectedProvider(p.slug)}
                 style={{
                   padding: '6px 14px', borderRadius: '8px', fontSize: '12px', fontWeight: '600', cursor: 'pointer',
-                  background: selectedProvider === p.slug ? getProviderColor(p.slug) : 'rgba(255,255,255,0.05)',
+                  background: selectedProvider === p.slug ? getProviderColor(p.slug) : 'var(--bg-page)',
                   color: selectedProvider === p.slug ? 'white' : 'var(--text-secondary)',
-                  border: selectedProvider === p.slug ? 'none' : '1px solid var(--border-color)',
+                  border: selectedProvider === p.slug ? 'none' : '1px solid var(--border-default)',
                   transition: 'all 0.2s ease',
                 }}
               >
@@ -358,15 +358,15 @@ export default function AIRouterCatalog({ user, token }) {
 
         {/* Table Wrapper */}
         <div className="ai-table-wrapper" style={{
-          background: 'var(--glass-bg)',
-          border: '1px solid var(--border-color)',
+          background: 'var(--bg-surface)',
+          border: '1px solid var(--border-default)',
           borderRadius: '16px',
         }}>
           {/* Table Header */}
           <div className="ai-table-header" style={{
             padding: '14px 24px',
-            background: 'rgba(255,255,255,0.02)',
-            borderBottom: '1px solid var(--border-color)',
+            background: 'var(--bg-page)',
+            borderBottom: '1px solid var(--border-default)',
             fontSize: '10px',
             fontWeight: '700',
             color: 'var(--text-muted)',
@@ -402,15 +402,15 @@ export default function AIRouterCatalog({ user, token }) {
                     onClick={() => setExpandedModel(isExpanded ? null : model.id)}
                     style={{
                       padding: '16px 24px',
-                      borderBottom: '1px solid var(--border-color)',
+                      borderBottom: '1px solid var(--border-default)',
                       cursor: 'pointer',
                       transition: 'all 0.15s ease',
                       background: isExpanded
-                        ? 'rgba(0, 242, 254, 0.03)'
+                        ? 'var(--accent-primary-light)'
                         : 'transparent',
-                      borderLeft: isExpanded ? '3px solid #00f2fe' : '3px solid transparent',
+                      borderLeft: isExpanded ? '3px solid var(--accent-primary)' : '3px solid transparent',
                     }}
-                    onMouseEnter={(e) => { if (!isExpanded) e.currentTarget.style.background = 'rgba(255,255,255,0.02)'; }}
+                    onMouseEnter={(e) => { if (!isExpanded) e.currentTarget.style.background = 'var(--bg-page)'; }}
                     onMouseLeave={(e) => { if (!isExpanded) e.currentTarget.style.background = 'transparent'; }}
                   >
                     {/* Model Name + Provider Dot */}
@@ -448,7 +448,7 @@ export default function AIRouterCatalog({ user, token }) {
                     <div style={{ textAlign: 'right', display: 'flex', alignItems: 'center', justifyContent: 'flex-end' }}>
                       <span style={{
                         fontSize: '12px', fontWeight: '600', color: 'var(--text-secondary)',
-                        background: 'rgba(255,255,255,0.04)', padding: '2px 8px', borderRadius: '4px',
+                        background: 'var(--bg-page)', padding: '2px 8px', borderRadius: '4px',
                       }}>
                         {(model.contextWindow / 1000).toFixed(0)}K
                       </span>
@@ -492,12 +492,12 @@ export default function AIRouterCatalog({ user, token }) {
                         style={{
                           padding: '4px 10px', borderRadius: '6px', fontSize: '11px', fontWeight: '600',
                           cursor: 'pointer', border: 'none',
-                          background: copiedModel === model.modelId ? 'rgba(16,185,129,0.15)' : 'rgba(0,242,254,0.08)',
-                          color: copiedModel === model.modelId ? '#10b981' : '#00f2fe',
+                          background: copiedModel === model.modelId ? 'rgba(16,185,129,0.15)' : 'var(--accent-primary-light)',
+                          color: copiedModel === model.modelId ? '#10b981' : 'var(--accent-primary)',
                           transition: 'all 0.2s ease',
                         }}
-                        onMouseEnter={(e) => { if (copiedModel !== model.modelId) e.currentTarget.style.background = 'rgba(0,242,254,0.15)'; }}
-                        onMouseLeave={(e) => { if (copiedModel !== model.modelId) e.currentTarget.style.background = 'rgba(0,242,254,0.08)'; }}
+                        onMouseEnter={(e) => { if (copiedModel !== model.modelId) e.currentTarget.style.background = 'var(--accent-primary-light)'; }}
+                        onMouseLeave={(e) => { if (copiedModel !== model.modelId) e.currentTarget.style.background = 'var(--accent-primary-light)'; }}
                       >
                         {copiedModel === model.modelId ? <Check size={12} /> : 'Use'}
                       </button>
@@ -508,9 +508,9 @@ export default function AIRouterCatalog({ user, token }) {
                   {isExpanded && (
                     <div style={{
                       padding: '20px 24px',
-                      background: 'rgba(0, 242, 254, 0.02)',
-                      borderBottom: '1px solid var(--border-color)',
-                      borderLeft: '3px solid #00f2fe',
+                      background: 'var(--accent-primary-light)',
+                      borderBottom: '1px solid var(--border-default)',
+                      borderLeft: '3px solid var(--accent-primary)',
                     }}>
                       <div className="ai-detail-grid">
                         {/* Left: Model Info */}
@@ -519,7 +519,7 @@ export default function AIRouterCatalog({ user, token }) {
                             Detail Model
                           </h4>
                           <div style={{ fontSize: '13px', color: 'var(--text-secondary)', lineHeight: '2' }}>
-                            <div><strong style={{ color: 'var(--text-primary)' }}>Model ID:</strong> <code style={{ background: 'rgba(0,0,0,0.3)', padding: '2px 8px', borderRadius: '4px', fontSize: '12px', fontFamily: 'monospace', color: '#00f2fe' }}>{model.modelId}</code></div>
+                            <div><strong style={{ color: 'var(--text-primary)' }}>Model ID:</strong> <code style={{ background: 'var(--bg-muted)', padding: '2px 8px', borderRadius: '4px', fontSize: '12px', fontFamily: 'monospace', color: '#1D4ED8' }}>{model.modelId}</code></div>
                             <div><strong style={{ color: 'var(--text-primary)' }}>Provider:</strong> {model.provider.name}</div>
                             <div><strong style={{ color: 'var(--text-primary)' }}>Context:</strong> {model.contextWindow.toLocaleString()} tokens</div>
                             <div><strong style={{ color: 'var(--text-primary)' }}>Input:</strong> {formatPrice(model.inputPricePer1K)} / 1K <span style={{ color: 'var(--text-muted)' }}>({formatPricePerM(model.inputPricePer1K)} / 1M)</span></div>
@@ -533,13 +533,13 @@ export default function AIRouterCatalog({ user, token }) {
                             Contoh Penggunaan
                           </h4>
                           <pre style={{
-                            background: 'rgba(0,0,0,0.3)',
-                            border: '1px solid var(--border-color)',
+                            background: 'var(--bg-muted)',
+                            border: '1px solid var(--border-default)',
                             borderRadius: '8px',
                             padding: '14px',
                             fontSize: '11px',
                             fontFamily: 'monospace',
-                            color: '#e2e8f0',
+                            color: '#374151',
                             lineHeight: '1.5',
                             overflowX: 'auto',
                             whiteSpace: 'pre-wrap',
@@ -560,10 +560,10 @@ export default function AIRouterCatalog({ user, token }) {
                             }}
                             style={{
                               display: 'flex', alignItems: 'center', gap: '4px',
-                              background: 'rgba(0, 242, 254, 0.08)',
-                              border: '1px solid rgba(0, 242, 254, 0.2)',
+                              background: 'var(--accent-primary-light)',
+                              border: '1px solid rgba(59, 130, 246, 0.15)',
                               borderRadius: '6px', padding: '4px 10px',
-                              color: '#00f2fe', fontSize: '11px', fontWeight: '600', cursor: 'pointer',
+                              color: 'var(--accent-primary)', fontSize: '11px', fontWeight: '600', cursor: 'pointer',
                               transition: 'all 0.2s ease',
                             }}
                           >
@@ -598,15 +598,15 @@ export default function AIRouterCatalog({ user, token }) {
             { tier: 'ENTERPRISE', price: 'Custom', desc: 'kontak kami', rateLimit: '300 req/min', color: '#f59e0b', features: ['All models', 'Max rate limit', 'Dedicated support', 'Custom limits', 'SLA'] },
           ].map((plan, i) => (
             <div key={i} style={{
-              background: 'var(--glass-bg)',
-              border: plan.popular ? `2px solid ${plan.color}` : '1px solid var(--border-color)',
+              background: 'var(--bg-surface)',
+              border: plan.popular ? `2px solid ${plan.color}` : '1px solid var(--border-default)',
               borderRadius: '16px',
               padding: '28px',
               position: 'relative',
               transition: 'all 0.3s ease',
             }}
               onMouseEnter={(e) => { if (!plan.popular) e.currentTarget.style.borderColor = `${plan.color}40`; }}
-              onMouseLeave={(e) => { if (!plan.popular) e.currentTarget.style.borderColor = 'var(--border-color)'; }}
+              onMouseLeave={(e) => { if (!plan.popular) e.currentTarget.style.borderColor = 'var(--border-default)'; }}
             >
               {plan.popular && (
                 <div style={{
@@ -741,8 +741,8 @@ export default function AIRouterCatalog({ user, token }) {
       <section style={{
         padding: '60px 24px',
         textAlign: 'center',
-        background: 'linear-gradient(180deg, transparent 0%, rgba(0, 242, 254, 0.04) 100%)',
-        borderTop: '1px solid var(--border-color)',
+        background: 'linear-gradient(180deg, transparent 0%, var(--accent-primary-light) 100%)',
+        borderTop: '1px solid var(--border-default)',
       }}>
         <h2 style={{ fontSize: '32px', fontWeight: '800', color: 'var(--text-primary)', marginBottom: '12px', fontFamily: 'var(--font-title)' }}>
           Siap Memulai?

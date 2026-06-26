@@ -50,7 +50,7 @@ export default function AdminProductStock({
 
     return (
         <div className="glass-card">
-            <h3 style={{ fontSize: '20px', fontWeight: '700', marginBottom: '20px', borderBottom: '1px solid var(--border-color)', paddingBottom: '10px' }}>
+            <h3 style={{ fontSize: '20px', fontWeight: '700', marginBottom: '20px', borderBottom: '1px solid var(--border-default)', paddingBottom: '10px' }}>
                 Upload Akun Premium (Automatic Delivery)
             </h3>
 

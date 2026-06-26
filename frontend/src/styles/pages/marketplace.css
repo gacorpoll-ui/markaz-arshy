@@ -1,0 +1,200 @@
+
+/* ═══════════════════════════════════════════
+   MARKAZ-ARSHY — Marketplace Page Styles
+   ═══════════════════════════════════════════ */
+
+.marketplace-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 2rem;
+    padding: 2rem 0;
+}
+
+.marketplace-filter-bar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    margin-bottom: 2rem;
+    justify-content: center;
+}
+
+.marketplace-filter-bar input[type="text"],
+.marketplace-filter-bar select {
+    padding: 0.75rem 1rem;
+    border: 1px solid var(--color-gray-300);
+    border-radius: var(--border-radius-lg);
+    background-color: var(--color-background);
+    color: var(--color-text);
+    transition: all 0.2s ease-in-out;
+    flex: 1;
+    min-width: 180px;
+}
+
+.marketplace-filter-bar input[type="text"]:focus,
+.marketplace-filter-bar select:focus {
+    border-color: var(--color-primary-500);
+    box-shadow: 0 0 0 3px rgba(var(--color-primary-rgb), 0.2);
+    outline: none;
+}
+
+.marketplace-pagination {
+    display: flex;
+    justify-content: center;
+    margin-top: 3rem;
+    gap: 0.5rem;
+}
+
+.marketplace-pagination button {
+    padding: 0.75rem 1.25rem;
+    border-radius: var(--border-radius-lg);
+    font-weight: 600;
+    font-size: 1rem;
+    color: var(--color-text-secondary);
+    background-color: var(--color-gray-100);
+    border: 1px solid var(--color-gray-300);
+    cursor: pointer;
+    transition: all 0.2s ease-in-out;
+}
+
+.marketplace-pagination button:hover {
+    background-color: var(--color-gray-200);
+    color: var(--color-primary-600);
+}
+
+.marketplace-pagination button.active {
+    background: linear-gradient(to right, var(--color-purple-600), var(--color-indigo-600));
+    color: var(--color-white);
+    border-color: var(--color-purple-600);
+    box-shadow: var(--shadow-md);
+}
+
+/* Product Card Specific Styles for Jakmall */
+.product-card-jakmall {
+    background-color: var(--color-white);
+    border-radius: var(--border-radius-xl);
+    box-shadow: var(--shadow-lg);
+    overflow: hidden;
+    transition: all 0.3s ease-in-out;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+}
+
+.product-card-jakmall:hover {
+    transform: translateY(-5px);
+    box-shadow: var(--shadow-xl);
+}
+
+.product-card-jakmall-image-container {
+    position: relative;
+    height: 200px; /* Fixed height for consistency */
+    overflow: hidden;
+}
+
+.product-card-jakmall-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.4s ease-in-out;
+}
+
+.product-card-jakmall:hover .product-card-jakmall-image {
+    transform: scale(1.05);
+}
+
+.product-card-jakmall-badge {
+    position: absolute;
+    bottom: 10px;
+    left: 10px;
+    background-color: var(--color-purple-600);
+    color: var(--color-white);
+    padding: 0.3rem 0.6rem;
+    border-radius: var(--border-radius-full);
+    font-size: 0.75rem;
+    font-weight: 600;
+    box-shadow: var(--shadow-sm);
+}
+
+.product-card-jakmall-content {
+    padding: 1.25rem;
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1;
+}
+
+.product-card-jakmall-title {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--color-heading);
+    margin-bottom: 0.5rem;
+    line-height: 1.3;
+    transition: color 0.2s ease-in-out;
+}
+
+.product-card-jakmall:hover .product-card-jakmall-title {
+    color: var(--color-primary-500);
+}
+
+.product-card-jakmall-description {
+    font-size: 0.875rem;
+    color: var(--color-text-secondary);
+    margin-bottom: 1rem;
+    line-height: 1.5;
+    flex-grow: 1;
+    display: -webkit-box;
+    -webkit-line-clamp: 2; /* Limit to 2 lines */
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.product-card-jakmall-price-stock {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.product-card-jakmall-price {
+    font-size: 1.5rem;
+    font-weight: 800;
+    color: var(--color-primary-600);
+}
+
+.product-card-jakmall-stock {
+    font-size: 0.875rem;
+    color: var(--color-text-tertiary);
+    font-weight: 500;
+}
+
+.product-card-jakmall-category {
+    font-size: 0.75rem;
+    color: var(--color-text-tertiary);
+    margin-bottom: 0.5rem;
+}
+
+.product-card-jakmall-category span {
+    font-weight: 600;
+    color: var(--color-text-secondary);
+}
+
+.product-card-jakmall-button {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    background: linear-gradient(to right, var(--color-purple-600), var(--color-indigo-600));
+    color: var(--color-white);
+    font-weight: 700;
+    border: none;
+    border-radius: var(--border-radius-lg);
+    cursor: pointer;
+    transition: all 0.3s ease-in-out;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+}
+
+.product-card-jakmall-button:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-lg);
+    background: linear-gradient(to right, var(--color-purple-700), var(--color-indigo-700));
+}

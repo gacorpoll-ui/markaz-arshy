@@ -358,7 +358,7 @@ export default function AdminAIProviders({ token }) {
           <div style={{ overflowX: 'auto' }}>
             <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '14px' }}>
               <thead>
-                <tr style={{ borderBottom: '1px solid var(--border-color)' }}>
+                <tr style={{ borderBottom: '1px solid var(--border-default)' }}>
                   <th style={{ padding: '12px', textAlign: 'left', color: 'var(--text-muted)' }}>Nama Model</th>
                   <th style={{ padding: '12px', textAlign: 'left', color: 'var(--text-muted)' }}>ID Model</th>
                   <th style={{ padding: '12px', textAlign: 'right', color: 'var(--text-muted)' }}>Harga Input / 1M</th>
@@ -370,7 +370,7 @@ export default function AdminAIProviders({ token }) {
               </thead>
               <tbody>
                 {provider.models.map(model => (
-                  <tr key={model.id} style={{ borderBottom: '1px solid var(--border-color)' }}>
+                  <tr key={model.id} style={{ borderBottom: '1px solid var(--border-default)' }}>
                     <td style={{ padding: '12px', color: 'var(--text-primary)' }}>{model.name}</td>
                     <td style={{ padding: '12px', color: 'var(--text-secondary)', fontFamily: 'monospace', fontSize: '12px' }}>
                       {model.modelId}
@@ -440,13 +440,13 @@ export default function AdminAIProviders({ token }) {
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '20px' }}>
           <div>
             <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '4px' }}>Total Providers</div>
-            <div style={{ fontSize: '28px', fontWeight: '700', color: 'var(--color-primary)' }}>
+            <div style={{ fontSize: '28px', fontWeight: '700', color: 'var(--accent-primary)' }}>
               {providers.length}
             </div>
           </div>
           <div>
             <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '4px' }}>Total Models</div>
-            <div style={{ fontSize: '28px', fontWeight: '700', color: 'var(--color-primary)' }}>
+            <div style={{ fontSize: '28px', fontWeight: '700', color: 'var(--accent-primary)' }}>
               {providers.reduce((sum, p) => sum + p.models.length, 0)}
             </div>
           </div>
@@ -542,8 +542,8 @@ function EditModelModal({ model, onClose, onSave }) {
   const inputStyle = (hasError) => ({
     width: '100%',
     padding: '10px 12px',
-    background: 'rgba(0,0,0,0.2)',
-    border: `1px solid ${hasError ? '#ef4444' : 'var(--border-color)'}`,
+    background: 'var(--bg-muted)',
+    border: `1px solid ${hasError ? '#ef4444' : 'var(--border-default)'}`,
     borderRadius: '8px',
     color: 'var(--text-primary)',
     fontSize: '13px',
@@ -554,22 +554,22 @@ function EditModelModal({ model, onClose, onSave }) {
   return (
     <div style={{
       position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
-      background: 'rgba(0, 0, 0, 0.6)', backdropFilter: 'blur(4px)',
+      background: 'var(--bg-muted)', backdropFilter: 'blur(4px)',
       display: 'flex', alignItems: 'center', justifyContent: 'center',
       zIndex: 1000, padding: '20px',
     }}>
       <div style={{
         background: 'var(--bg-secondary)', borderRadius: '16px', padding: '28px',
         maxWidth: '520px', width: '100%', maxHeight: '85vh', overflow: 'auto',
-        border: '1px solid var(--border-color)',
-        boxShadow: '0 20px 60px rgba(0,0,0,0.5)',
+        border: '1px solid var(--border-default)',
+        boxShadow: '0 20px 60px var(--bg-muted)',
       }}>
         {/* Header */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
           <div>
             <h2 style={{ fontSize: '20px', fontWeight: '700', margin: 0 }}>Edit Model AI</h2>
             <p style={{ fontSize: '12px', color: 'var(--text-muted)', margin: '4px 0 0' }}>
-              ID: <code style={{ background: 'rgba(0,0,0,0.1)', padding: '2px 6px', borderRadius: '4px' }}>{model.modelId}</code>
+              ID: <code style={{ background: 'var(--bg-muted)', padding: '2px 6px', borderRadius: '4px' }}>{model.modelId}</code>
             </p>
           </div>
           <button onClick={onClose} style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', padding: '4px' }}>
@@ -666,7 +666,7 @@ function EditModelModal({ model, onClose, onSave }) {
               onClick={onClose}
               style={{
                 flex: 1, padding: '11px', borderRadius: '10px',
-                border: '1px solid var(--border-color)', background: 'transparent',
+                border: '1px solid var(--border-default)', background: 'transparent',
                 color: 'var(--text-secondary)', fontSize: '13px', fontWeight: '600', cursor: 'pointer',
               }}
               disabled={loading}
@@ -719,7 +719,7 @@ function EditProviderModal({ provider, onClose, onSave }) {
       left: 0,
       right: 0,
       bottom: 0,
-      background: 'rgba(0, 0, 0, 0.7)',
+      background: 'var(--bg-muted)',
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
@@ -732,7 +732,7 @@ function EditProviderModal({ provider, onClose, onSave }) {
         padding: '30px',
         maxWidth: '500px',
         width: '100%',
-        border: '1px solid var(--border-color)',
+        border: '1px solid var(--border-default)',
         boxShadow: '0 20px 25px -5px rgb(0 0 0 / 0.5)',
       }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
@@ -750,7 +750,7 @@ function EditProviderModal({ provider, onClose, onSave }) {
               className="form-input"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              style={{ width: '100%', padding: '10px', background: 'rgba(0,0,0,0.2)', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-sm)', color: 'var(--text-primary)' }}
+              style={{ width: '100%', padding: '10px', background: 'var(--bg-muted)', border: '1px solid var(--border-default)', borderRadius: 'var(--radius-sm)', color: 'var(--text-primary)' }}
               required
             />
           </div>
@@ -762,7 +762,7 @@ function EditProviderModal({ provider, onClose, onSave }) {
               className="form-input"
               value={slug}
               onChange={(e) => setSlug(e.target.value)}
-              style={{ width: '100%', padding: '10px', background: 'rgba(0,0,0,0.2)', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-sm)', color: 'var(--text-primary)' }}
+              style={{ width: '100%', padding: '10px', background: 'var(--bg-muted)', border: '1px solid var(--border-default)', borderRadius: 'var(--radius-sm)', color: 'var(--text-primary)' }}
               required
             />
           </div>
@@ -773,7 +773,7 @@ function EditProviderModal({ provider, onClose, onSave }) {
               className="form-input"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              style={{ width: '100%', padding: '10px', background: 'rgba(0,0,0,0.2)', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-sm)', color: 'var(--text-primary)', minHeight: '80px', resize: 'vertical' }}
+              style={{ width: '100%', padding: '10px', background: 'var(--bg-muted)', border: '1px solid var(--border-default)', borderRadius: 'var(--radius-sm)', color: 'var(--text-primary)', minHeight: '80px', resize: 'vertical' }}
             />
           </div>
 
@@ -829,7 +829,7 @@ function CreateProviderModal({ onClose, onSave }) {
       left: 0,
       right: 0,
       bottom: 0,
-      background: 'rgba(0, 0, 0, 0.7)',
+      background: 'var(--bg-muted)',
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
@@ -842,7 +842,7 @@ function CreateProviderModal({ onClose, onSave }) {
         padding: '30px',
         maxWidth: '500px',
         width: '100%',
-        border: '1px solid var(--border-color)',
+        border: '1px solid var(--border-default)',
         boxShadow: '0 20px 25px -5px rgb(0 0 0 / 0.5)',
       }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
@@ -861,7 +861,7 @@ function CreateProviderModal({ onClose, onSave }) {
               placeholder="e.g. OpenAI"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              style={{ width: '100%', padding: '10px', background: 'rgba(0,0,0,0.2)', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-sm)', color: 'var(--text-primary)' }}
+              style={{ width: '100%', padding: '10px', background: 'var(--bg-muted)', border: '1px solid var(--border-default)', borderRadius: 'var(--radius-sm)', color: 'var(--text-primary)' }}
               required
             />
           </div>
@@ -874,7 +874,7 @@ function CreateProviderModal({ onClose, onSave }) {
               placeholder="e.g. openai"
               value={slug}
               onChange={(e) => setSlug(e.target.value)}
-              style={{ width: '100%', padding: '10px', background: 'rgba(0,0,0,0.2)', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-sm)', color: 'var(--text-primary)' }}
+              style={{ width: '100%', padding: '10px', background: 'var(--bg-muted)', border: '1px solid var(--border-default)', borderRadius: 'var(--radius-sm)', color: 'var(--text-primary)' }}
               required
             />
           </div>
@@ -886,7 +886,7 @@ function CreateProviderModal({ onClose, onSave }) {
               placeholder="Deskripsi provider..."
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              style={{ width: '100%', padding: '10px', background: 'rgba(0,0,0,0.2)', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-sm)', color: 'var(--text-primary)', minHeight: '80px', resize: 'vertical' }}
+              style={{ width: '100%', padding: '10px', background: 'var(--bg-muted)', border: '1px solid var(--border-default)', borderRadius: 'var(--radius-sm)', color: 'var(--text-primary)', minHeight: '80px', resize: 'vertical' }}
             />
           </div>
 
@@ -946,13 +946,13 @@ function CreateModelModal({ providerId, providerName, onClose, onSave }) {
   return (
     <div style={{
       position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
-      background: 'rgba(0, 0, 0, 0.7)', display: 'flex', alignItems: 'center',
+      background: 'var(--bg-muted)', display: 'flex', alignItems: 'center',
       justifyContent: 'center', zIndex: 1000, padding: '20px',
     }}>
       <div style={{
         background: 'var(--bg-secondary)', borderRadius: 'var(--radius-md)',
         padding: '30px', maxWidth: '550px', width: '100%',
-        border: '1px solid var(--border-color)',
+        border: '1px solid var(--border-default)',
         boxShadow: '0 20px 25px -5px rgb(0 0 0 / 0.5)',
       }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
@@ -973,7 +973,7 @@ function CreateModelModal({ providerId, providerName, onClose, onSave }) {
             <input
               type="text" className="form-input" placeholder="e.g. GPT-4o"
               value={name} onChange={(e) => setName(e.target.value)}
-              style={{ width: '100%', padding: '10px', background: 'rgba(0,0,0,0.2)', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-sm)', color: 'var(--text-primary)' }}
+              style={{ width: '100%', padding: '10px', background: 'var(--bg-muted)', border: '1px solid var(--border-default)', borderRadius: 'var(--radius-sm)', color: 'var(--text-primary)' }}
               required
             />
           </div>
@@ -983,7 +983,7 @@ function CreateModelModal({ providerId, providerName, onClose, onSave }) {
             <input
               type="text" className="form-input" placeholder="e.g. gpt-4o"
               value={modelId} onChange={(e) => setModelId(e.target.value)}
-              style={{ width: '100%', padding: '10px', background: 'rgba(0,0,0,0.2)', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-sm)', color: 'var(--text-primary)' }}
+              style={{ width: '100%', padding: '10px', background: 'var(--bg-muted)', border: '1px solid var(--border-default)', borderRadius: 'var(--radius-sm)', color: 'var(--text-primary)' }}
               required
             />
           </div>
@@ -994,7 +994,7 @@ function CreateModelModal({ providerId, providerName, onClose, onSave }) {
               <input
                 type="number" step="0.000001" className="form-input"
                 value={inputPrice} onChange={(e) => setInputPrice(e.target.value)}
-                style={{ width: '100%', padding: '10px', background: 'rgba(0,0,0,0.2)', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-sm)', color: 'var(--text-primary)' }}
+                style={{ width: '100%', padding: '10px', background: 'var(--bg-muted)', border: '1px solid var(--border-default)', borderRadius: 'var(--radius-sm)', color: 'var(--text-primary)' }}
                 required
               />
               <span style={{ fontSize: '11px', color: 'var(--text-muted)', display: 'block', marginTop: '4px' }}>
@@ -1006,7 +1006,7 @@ function CreateModelModal({ providerId, providerName, onClose, onSave }) {
               <input
                 type="number" step="0.000001" className="form-input"
                 value={outputPrice} onChange={(e) => setOutputPrice(e.target.value)}
-                style={{ width: '100%', padding: '10px', background: 'rgba(0,0,0,0.2)', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-sm)', color: 'var(--text-primary)' }}
+                style={{ width: '100%', padding: '10px', background: 'var(--bg-muted)', border: '1px solid var(--border-default)', borderRadius: 'var(--radius-sm)', color: 'var(--text-primary)' }}
                 required
               />
               <span style={{ fontSize: '11px', color: 'var(--text-muted)', display: 'block', marginTop: '4px' }}>
@@ -1020,7 +1020,7 @@ function CreateModelModal({ providerId, providerName, onClose, onSave }) {
             <input
               type="number" className="form-input"
               value={contextWindow} onChange={(e) => setContextWindow(e.target.value)}
-              style={{ width: '100%', padding: '10px', background: 'rgba(0,0,0,0.2)', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-sm)', color: 'var(--text-primary)' }}
+              style={{ width: '100%', padding: '10px', background: 'var(--bg-muted)', border: '1px solid var(--border-default)', borderRadius: 'var(--radius-sm)', color: 'var(--text-primary)' }}
               required
             />
           </div>

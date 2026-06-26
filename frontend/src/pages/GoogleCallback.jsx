@@ -67,7 +67,7 @@ export default function GoogleCallback({ onLogin }) {
         )}
         {status === 'success' && (
           <>
-            <div className="auth-icon-wrap" style={{ background: 'rgba(16,185,129,0.15)', color: 'var(--color-success)' }}>
+            <div className="auth-icon-wrap" style={{ background: 'rgba(16,185,129,0.15)', color: 'var(--accent-success)' }}>
               <CheckCircle size={28} />
             </div>
             <h2 className="auth-title">Login Berhasil! ✅</h2>
@@ -76,11 +76,11 @@ export default function GoogleCallback({ onLogin }) {
         )}
         {status === 'error' && (
           <>
-            <div className="auth-icon-wrap" style={{ background: 'rgba(239,68,68,0.1)', color: 'var(--color-error)' }}>
+            <div className="auth-icon-wrap" style={{ background: 'rgba(239,68,68,0.1)', color: 'var(--accent-danger)' }}>
               <AlertTriangle size={28} />
             </div>
             <h2 className="auth-title">Login Gagal</h2>
-            <p className="auth-subtitle" style={{ color: '#fca5a5' }}>{errorMsg}</p>
+            <p className="auth-subtitle" style={{ color: 'var(--accent-danger)' }}>{errorMsg}</p>
             <button
               onClick={() => navigate('/login')}
               className="btn btn-primary"

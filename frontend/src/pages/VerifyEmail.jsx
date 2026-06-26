@@ -127,7 +127,7 @@ export default function VerifyEmail({ onLogin }) {
             Selamat, akun Anda telah aktif dan siap digunakan. Mengarahkan Anda ke Dashboard…
           </p>
           <div style={{ display: 'flex', justifyContent: 'center', marginTop: '30px' }}>
-            <RefreshCw size={24} style={{ color: 'var(--color-success)', animation: 'spin 1s linear infinite' }} />
+            <RefreshCw size={24} style={{ color: 'var(--accent-success)', animation: 'spin 1s linear infinite' }} />
           </div>
 
           <style>{`
@@ -158,7 +158,7 @@ export default function VerifyEmail({ onLogin }) {
               right: -150px;
               width: 400px;
               height: 400px;
-              background: radial-gradient(circle, rgba(0, 242, 254, 0.08) 0%, rgba(0, 242, 254, 0) 70%);
+              background: radial-gradient(circle, var(--accent-primary-light) 0%, rgba(0, 242, 254, 0) 70%);
               border-radius: 50%;
               pointer-events: none;
               z-index: 0;
@@ -171,9 +171,9 @@ export default function VerifyEmail({ onLogin }) {
               padding: 40px;
               background: rgba(15, 22, 42, 0.45);
               backdrop-filter: blur(20px);
-              border: 1px solid rgba(255, 255, 255, 0.08);
+              border: 1px solid var(--bg-page);
               border-radius: 24px;
-              box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.7);
+              box-shadow: 0 20px 40px -15px var(--bg-muted);
               transition: all 0.3s ease;
               text-align: center;
             }
@@ -327,7 +327,7 @@ export default function VerifyEmail({ onLogin }) {
           left: -150px;
           width: 400px;
           height: 400px;
-          background: radial-gradient(circle, rgba(127, 0, 255, 0.12) 0%, rgba(127, 0, 255, 0) 70%);
+          background: radial-gradient(circle, rgba(59, 130, 246, 0.12) 0%, rgba(59, 130, 246, 0) 70%);
           border-radius: 50%;
           pointer-events: none;
           z-index: 0;
@@ -338,7 +338,7 @@ export default function VerifyEmail({ onLogin }) {
           right: -150px;
           width: 400px;
           height: 400px;
-          background: radial-gradient(circle, rgba(0, 242, 254, 0.08) 0%, rgba(0, 242, 254, 0) 70%);
+          background: radial-gradient(circle, var(--accent-primary-light) 0%, rgba(0, 242, 254, 0) 70%);
           border-radius: 50%;
           pointer-events: none;
           z-index: 0;
@@ -351,15 +351,15 @@ export default function VerifyEmail({ onLogin }) {
           padding: 40px;
           background: rgba(15, 22, 42, 0.45);
           backdrop-filter: blur(20px);
-          border: 1px solid rgba(255, 255, 255, 0.08);
+          border: 1px solid var(--bg-page);
           border-radius: 24px;
-          box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.7);
+          box-shadow: 0 20px 40px -15px var(--bg-muted);
           transition: all 0.3s ease;
           text-align: center;
         }
         .verify-card:hover {
           border-color: rgba(0, 242, 254, 0.25);
-          box-shadow: 0 20px 40px -15px rgba(0, 242, 254, 0.1);
+          box-shadow: 0 20px 40px -15px var(--accent-primary-light);
         }
         .verify-icon-box {
           display: inline-flex;
@@ -367,9 +367,9 @@ export default function VerifyEmail({ onLogin }) {
           justify-content: center;
           width: 68px;
           height: 68px;
-          background: linear-gradient(135deg, rgba(0, 242, 254, 0.1) 0%, rgba(79, 172, 254, 0.1) 100%);
-          border: 1px solid rgba(0, 242, 254, 0.2);
-          color: var(--color-primary);
+          background: linear-gradient(135deg, var(--accent-primary-light) 0%, rgba(79, 172, 254, 0.1) 100%);
+          border: 1px solid rgba(59, 130, 246, 0.15);
+          color: var(--accent-primary);
           border-radius: 20px;
           margin-bottom: 24px;
           box-shadow: 0 8px 24px -6px rgba(0, 242, 254, 0.25);
@@ -401,7 +401,7 @@ export default function VerifyEmail({ onLogin }) {
           width: 100%;
           aspect-ratio: 1;
           background: rgba(10, 15, 30, 0.5);
-          border: 1px solid var(--border-color);
+          border: 1px solid var(--border-default);
           border-radius: 12px;
           font-size: 24px;
           font-weight: 800;

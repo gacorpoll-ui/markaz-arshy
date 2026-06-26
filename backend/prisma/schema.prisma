@@ -54,7 +54,18 @@ model Product {
   priceUser         Int
   priceReseller     Int
   type              String    // SMM, PREMIUM
-  providerServiceId String?   
+  providerServiceId String?
+  source            String?   // e.g., "jakmall", "rajaitem", "local"
+  jakmallProductId  String?   @unique // ID unik dari Jakmall
+  categoryJakmall   String?   // Kategori dari Jakmall
+  weight            Float?    // Berat produk
+  length            Float?    // Dimensi panjang
+  width             Float?    // Dimensi lebar
+  height            Float?    // Dimensi tinggi
+  variants          Json?     // Menyimpan varian produk dalam format JSON
+  imageUrl          String?   // Path gambar lokal
+
+  shippingInfo      Json?     // Informasi pengiriman terkait dari Jakmall (jika ada)   
   minOrder          Int       @default(1)
   maxOrder          Int       @default(10000)
   isActive          Boolean   @default(true)

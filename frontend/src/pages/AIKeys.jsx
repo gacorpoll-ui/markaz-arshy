@@ -117,13 +117,13 @@ export default function AIKeys({ user, token, onUpdateUser }) {
           <div style={{ flex: 1 }}>
             <div style={{ fontSize: '11px', color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: '6px', fontWeight: '600' }}>Base URL</div>
             <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-              <code style={{ fontSize: '13px', color: 'var(--color-primary)', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', background: 'rgba(0,0,0,0.2)', padding: '6px 10px', borderRadius: '4px' }}>{aiRouterUrl}</code>
-              <button onClick={copyAll} style={{ background: 'none', border: '1px solid var(--border-color)', borderRadius: '6px', cursor: 'pointer', color: 'var(--text-muted)', padding: '6px 10px', fontSize: '12px', display: 'flex', alignItems: 'center', gap: '4px' }} title="Copy"><Copy size={13} /> Copy</button>
+              <code style={{ fontSize: '13px', color: 'var(--accent-primary)', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', background: 'var(--bg-muted)', padding: '6px 10px', borderRadius: '4px' }}>{aiRouterUrl}</code>
+              <button onClick={copyAll} style={{ background: 'none', border: '1px solid var(--border-default)', borderRadius: '6px', cursor: 'pointer', color: 'var(--text-muted)', padding: '6px 10px', fontSize: '12px', display: 'flex', alignItems: 'center', gap: '4px' }} title="Copy"><Copy size={13} /> Copy</button>
             </div>
           </div>
         </div>
         <div style={{ marginTop: '12px', paddingTop: '10px', borderTop: '1px solid rgba(79,172,254,0.1)' }}>
-          <button onClick={() => navigate('/docs/ai')} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-primary)', fontSize: '12px', display: 'flex', alignItems: 'center', gap: '4px', padding: 0 }}>
+          <button onClick={() => navigate('/docs/ai')} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--accent-primary)', fontSize: '12px', display: 'flex', alignItems: 'center', gap: '4px', padding: 0 }}>
             Lihat Panduan Lengkap <ExternalLink size={12} />
           </button>
         </div>
@@ -134,7 +134,7 @@ export default function AIKeys({ user, token, onUpdateUser }) {
         <div style={{
           textAlign: 'center', padding: '60px 20px',
           background: 'rgba(255,255,255,0.015)', borderRadius: 'var(--radius-md)',
-          border: '1px dashed var(--border-color)',
+          border: '1px dashed var(--border-default)',
         }}>
           <Key size={36} style={{ color: 'var(--text-muted)', marginBottom: '12px', opacity: 0.3 }} />
           <p style={{ fontSize: '15px', fontWeight: '600', marginBottom: '4px' }}>Belum ada API Key</p>
@@ -147,7 +147,7 @@ export default function AIKeys({ user, token, onUpdateUser }) {
         <div className="glass-card" style={{ padding: '0', overflow: 'hidden' }}>
           <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
             <thead>
-              <tr style={{ borderBottom: '1px solid var(--border-color)' }}>
+              <tr style={{ borderBottom: '1px solid var(--border-default)' }}>
                 <th style={{ padding: '14px 20px', textAlign: 'left', color: 'var(--text-muted)', fontSize: '11px', textTransform: 'uppercase', fontWeight: '600' }}>Nama</th>
                 <th style={{ padding: '14px 20px', textAlign: 'left', color: 'var(--text-muted)', fontSize: '11px', textTransform: 'uppercase', fontWeight: '600' }}>API Key</th>
                 <th style={{ padding: '14px 20px', textAlign: 'right', color: 'var(--text-muted)', fontSize: '11px', textTransform: 'uppercase', fontWeight: '600' }}>Kredit</th>
@@ -157,21 +157,21 @@ export default function AIKeys({ user, token, onUpdateUser }) {
             </thead>
             <tbody>
               {apiKeys.map((k) => (
-                <tr key={k.id} style={{ borderBottom: '1px solid var(--border-color)' }}>
+                <tr key={k.id} style={{ borderBottom: '1px solid var(--border-default)' }}>
                   <td style={{ padding: '16px 20px' }}>
                     <div style={{ fontWeight: '600', color: 'var(--text-primary)', marginBottom: '2px' }}>{k.keyName}</div>
                     <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{k.tier}</div>
                   </td>
                   <td style={{ padding: '16px 20px' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                      <code style={{ fontSize: '12px', color: 'var(--text-secondary)', background: 'rgba(0,0,0,0.2)', padding: '4px 8px', borderRadius: '4px', fontFamily: 'monospace' }}>
+                      <code style={{ fontSize: '12px', color: 'var(--text-secondary)', background: 'var(--bg-muted)', padding: '4px 8px', borderRadius: '4px', fontFamily: 'monospace' }}>
                         {maskKey(k.apiKey)}
                       </code>
                       <button onClick={() => copyKey(k.apiKey)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-primary)', padding: '2px' }} title="Copy full key"><Copy size={14} /></button>
                     </div>
                   </td>
                   <td style={{ padding: '16px 20px', textAlign: 'right' }}>
-                    <span style={{ fontWeight: '600', color: 'var(--color-success)' }}>
+                    <span style={{ fontWeight: '600', color: 'var(--accent-success)' }}>
                       Rp {Math.ceil(user?.balance || 0).toLocaleString('id-ID')}
                     </span>
                     <div style={{ fontSize: '10px', color: 'var(--text-muted)' }}>Saldo Wallet</div>
@@ -191,10 +191,10 @@ export default function AIKeys({ user, token, onUpdateUser }) {
                   </td>
                   <td style={{ padding: '16px 20px', textAlign: 'right' }}>
                     <div style={{ display: 'flex', gap: '6px', justifyContent: 'flex-end' }}>
-                      <button onClick={() => handleToggle(k.id, !k.isActive)} title={k.isActive ? 'Disable' : 'Enable'} style={{ background: 'none', border: '1px solid var(--border-color)', borderRadius: '6px', padding: '6px 8px', cursor: 'pointer', color: k.isActive ? '#f59e0b' : '#22c55e' }}>
+                      <button onClick={() => handleToggle(k.id, !k.isActive)} title={k.isActive ? 'Disable' : 'Enable'} style={{ background: 'none', border: '1px solid var(--border-default)', borderRadius: '6px', padding: '6px 8px', cursor: 'pointer', color: k.isActive ? '#f59e0b' : '#22c55e' }}>
                         <Power size={14} />
                       </button>
-                      <button onClick={() => handleDelete(k.id)} title="Delete" style={{ background: 'none', border: '1px solid var(--border-color)', borderRadius: '6px', padding: '6px 8px', cursor: 'pointer', color: '#ef4444' }}>
+                      <button onClick={() => handleDelete(k.id)} title="Delete" style={{ background: 'none', border: '1px solid var(--border-default)', borderRadius: '6px', padding: '6px 8px', cursor: 'pointer', color: '#ef4444' }}>
                         <Trash2 size={14} />
                       </button>
                     </div>
@@ -245,15 +245,15 @@ function CreateKeyModal({ token, onClose, userBalance, aiRouterUrl }) {
   };
 
   return (
-    <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: '20px' }}>
-      <div style={{ background: 'var(--bg-secondary)', borderRadius: 'var(--radius-md)', padding: '28px', maxWidth: '420px', width: '100%', border: '1px solid var(--border-color)' }}>
+    <div style={{ position: 'fixed', inset: 0, background: 'var(--bg-muted)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: '20px' }}>
+      <div style={{ background: 'var(--bg-secondary)', borderRadius: 'var(--radius-md)', padding: '28px', maxWidth: '420px', width: '100%', border: '1px solid var(--border-default)' }}>
         <h2 style={{ fontSize: '20px', fontWeight: '700', marginBottom: '4px' }}>Buat API Key Baru</h2>
         <p style={{ fontSize: '13px', color: 'var(--text-muted)', marginBottom: '20px' }}>Key ini bisa digunakan di Cursor, Claude Code, dll.</p>
 
         <div style={{ marginBottom: '16px' }}>
           <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', marginBottom: '6px', color: 'var(--text-primary)' }}>Nama Key</label>
           <input type="text" value={keyName} onChange={(e) => setKeyName(e.target.value)} placeholder="Contoh: Cursor Key"
-            style={{ width: '100%', padding: '10px 12px', background: 'rgba(0,0,0,0.2)', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-sm)', color: 'var(--text-primary)', fontSize: '14px', outline: 'none', boxSizing: 'border-box' }}
+            style={{ width: '100%', padding: '10px 12px', background: 'var(--bg-muted)', border: '1px solid var(--border-default)', borderRadius: 'var(--radius-sm)', color: 'var(--text-primary)', fontSize: '14px', outline: 'none', boxSizing: 'border-box' }}
             onKeyDown={(e) => e.key === 'Enter' && handleCreate()}
             autoFocus />
         </div>

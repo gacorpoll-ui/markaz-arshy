@@ -21,13 +21,13 @@ export default function LiveChat() {
                     width: '320px', 
                     padding: '0', 
                     overflow: 'hidden',
-                    boxShadow: '0 20px 40px rgba(0,0,0,0.4)',
+                    boxShadow: '0 20px 40px var(--bg-muted)',
                     border: '1px solid var(--border-color-active)'
                 }}>
                     <div style={{ 
-                        background: 'var(--grad-primary)', 
+                        background: 'var(--accent-primary)', 
                         padding: '20px', 
-                        color: '#070913',
+                        color: 'var(--text-inverse)',
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'space-between'
@@ -43,14 +43,14 @@ export default function LiveChat() {
                     
                     <div style={{ padding: '20px', background: 'rgba(7,9,19,0.95)' }}>
                         <div style={{ 
-                            background: 'rgba(255,255,255,0.05)', 
+                            background: 'var(--bg-page)', 
                             padding: '12px', 
                             borderRadius: '12px', 
                             fontSize: '13px', 
                             color: 'var(--text-secondary)',
                             marginBottom: '20px',
                             lineHeight: '1.5',
-                            borderLeft: '3px solid var(--color-primary)'
+                            borderLeft: '3px solid var(--accent-primary)'
                         }}>
                             Halo! Ada yang bisa kami bantu hari ini? Kami biasanya membalas dalam hitungan menit via WhatsApp.
                         </div>
@@ -62,7 +62,7 @@ export default function LiveChat() {
                                 width: '100%', 
                                 background: '#25d366', 
                                 border: 'none', 
-                                color: '#fff', 
+                                color: 'var(--text-primary)', 
                                 borderRadius: '12px',
                                 padding: '12px',
                                 display: 'flex',
@@ -76,7 +76,7 @@ export default function LiveChat() {
                         </button>
                     </div>
                     
-                    <div style={{ padding: '10px', textAlign: 'center', fontSize: '10px', color: 'var(--text-muted)', background: 'rgba(0,0,0,0.2)' }}>
+                    <div style={{ padding: '10px', textAlign: 'center', fontSize: '10px', color: 'var(--text-muted)', background: 'var(--bg-muted)' }}>
                         Powered by Markaz Arshy Support
                     </div>
                 </div>
@@ -102,7 +102,7 @@ export default function LiveChat() {
                 }}
             >
                 {!isOpen && <div className="pulse-ring"></div>}
-                {isOpen ? <X size={28} color="var(--color-primary)" /> : <MessageCircle size={28} color="#070913" />}
+                {isOpen ? <X size={28} color="var(--accent-primary)" /> : <MessageCircle size={28} color="#070913" />}
             </button>
         </div>
     );

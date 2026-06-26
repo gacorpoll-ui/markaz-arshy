@@ -5,7 +5,7 @@ export default function AdminAllOrders({ allOrders, loading }) {
 
     return (
         <div className="glass-card">
-            <h3 style={{ fontSize: '20px', fontWeight: '700', marginBottom: '20px', borderBottom: '1px solid var(--border-color)', paddingBottom: '10px' }}>
+            <h3 style={{ fontSize: '20px', fontWeight: '700', marginBottom: '20px', borderBottom: '1px solid var(--border-default)', paddingBottom: '10px' }}>
                 Seluruh Order Transaksi Sistem
             </h3>
 
@@ -15,7 +15,7 @@ export default function AdminAllOrders({ allOrders, loading }) {
                 <div style={{ overflowX: 'auto' }}>
                   <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '12px', textAlign: 'left' }}>
                     <thead>
-                      <tr style={{ background: 'rgba(255,255,255,0.02)', borderBottom: '1px solid var(--border-color)' }}>
+                      <tr style={{ background: 'var(--bg-page)', borderBottom: '1px solid var(--border-default)' }}>
                         <th style={{ padding: '12px 10px' }}>ID</th>
                         <th style={{ padding: '12px 10px' }}>Pengguna</th>
                         <th style={{ padding: '12px 10px' }}>Produk</th>
@@ -27,10 +27,10 @@ export default function AdminAllOrders({ allOrders, loading }) {
                     </thead>
                     <tbody>
                       {allOrders.map(ord => (
-                        <tr key={ord.id} style={{ borderBottom: '1px solid var(--border-color)' }}>
+                        <tr key={ord.id} style={{ borderBottom: '1px solid var(--border-default)' }}>
                           <td style={{ padding: '12px 10px', color: 'var(--text-muted)' }}>#{ord.id}</td>
                           <td style={{ padding: '12px 10px' }}>
-                            <strong style={{ color: '#fff' }}>{ord.user.name}</strong><br />
+                            <strong style={{ color: 'var(--text-primary)' }}>{ord.user.name}</strong><br />
                             <span style={{ color: 'var(--text-muted)' }}>{ord.user.email}</span>
                           </td>
                           <td style={{ padding: '12px 10px', fontWeight: '600' }}>{ord.product.name}</td>

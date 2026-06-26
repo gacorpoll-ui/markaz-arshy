@@ -1,0 +1,680 @@
+- generic [active] [ref=e1]:
+  - generic:
+    - generic:
+      - link "주요 콘텐츠로 이동" [ref=e2] [cursor=pointer]
+      - link "접근성 도움말" [ref=e3] [cursor=pointer]:
+        - /url: https://support.google.com/websearch/answer/181196?hl=ko
+  - generic [ref=e8]:
+    - search [ref=e9]:
+      - generic [ref=e11]:
+        - generic:
+          - generic:
+            - generic:
+              - img
+        - 'link "2026년 월드컵: 긴 패스의 기술" [ref=e13] [cursor=pointer]':
+          - /url: https://www.google.com/webhp?hl=ko&ictx=2&sa=X&ved=0ahUKEwiShY_LiJqVAxXrh1YBHQGJMGsQPQgK
+          - 'img "2026년 월드컵: 긴 패스의 기술" [ref=e14]'
+        - generic [ref=e15]:
+          - generic [ref=e16]:
+            - combobox "검색" [ref=e19]: Browser MCP Browser MCP
+            - generic [ref=e20]:
+              - button "지우기" [ref=e22] [cursor=pointer]:
+                - img [ref=e24]
+              - generic [ref=e27]:
+                - button "입력 도구" [ref=e28] [cursor=pointer]:
+                  - img [ref=e30]
+                - button "음성 검색" [ref=e32] [cursor=pointer]:
+                  - img [ref=e33]
+                - button "이미지로 검색" [ref=e35] [cursor=pointer]:
+                  - img [ref=e36]
+          - button "검색" [ref=e38] [cursor=pointer]:
+            - img [ref=e41]
+    - generic [ref=e43]:
+      - button "설정" [ref=e45] [cursor=pointer]:
+        - img [ref=e48]
+      - button "공유" [ref=e51] [cursor=pointer]:
+        - img [ref=e55]
+      - generic [ref=e57]:
+        - button "Google 앱" [ref=e59] [cursor=pointer]:
+          - img [ref=e60]
+        - link "로그인" [ref=e64] [cursor=pointer]:
+          - /url: https://accounts.google.com/ServiceLogin?hl=ko&passive=true&continue=https://www.google.com/search%3Fq%3DBrowser%2BMCP%26sca_esv%3D6afbdd065017325d%26source%3Dhp%26ei%3DP8E4atPhIJaq0-kPm6On2QY%26iflsig%3DABILxe8AAAAAajjPT0cecJFH3Kbb3QGpwWMxDjtroWbN%26ved%3D0ahUKEwiT_e6ViJqVAxUW1TQHHZvRKWsQ4dUDCDA%26uact%3D5%26oq%3DBrowser%2BMCP%26gs_lp%3DEgdnd3Mtd2l6IgtCcm93c2VyIE1DUEjC8ARQrPAEWKzwBHABeACQAQCYAQCgAQCqAQC4AQPIAQD4AQGYAgCgAgCoAgCYAwLxBad1yiINo0etkgcAoAcAsgcAuAcAwgcAyAcAgAgB%26sclient%3Dgws-wiz%26sei%3Dr8E4aszuAeqD2roPrIKJmQc&ec=futura_srp_og_si_72236_p
+  - generic [ref=e66]:
+    - navigation [ref=e72]:
+      - generic [ref=e78]:
+        - list [ref=e79]:
+          - listitem [ref=e80]:
+            - link "AI 모드" [ref=e83] [cursor=pointer]:
+              - /url: /search?q=Browser+MCP&sca_esv=6afbdd065017325d&udm=50&source=hp&fbs=ABfTbFUgt-aXEFkBhPo84x72c1XoLHFs6TcISYM3FayWAWWA7x3ZDrzG9CGSPZ4zI2S4lLj6BitkpM31E1HosXg1VqDabVtm4jDvfM69t6TNf6ZGl8BH-JEMWzNLONESz1h82nnZBIQ4zQvp5Sw4B_a2K4YW0s8L7c5IGu7mZlpGjDLswwXPecJXPYH1PKGMwjwgX0Y-mdlOrhRxtX9f2Bi9xc04gari0Q&aep=1&ntc=1&sa=X&ved=2ahUKEwiShY_LiJqVAxXrh1YBHQGJMGsQ2J8OegQIFBAD
+              - generic [ref=e86]: AI 모드
+          - listitem [ref=e87]:
+            - link "전체" [disabled] [ref=e88]:
+              - generic [ref=e90]: 전체
+          - listitem [ref=e91]:
+            - link "이미지" [ref=e92] [cursor=pointer]:
+              - /url: /search?sca_esv=6afbdd065017325d&udm=2&fbs=ABfTbFUgt-aXEFkBhPo84x72c1XoLHFs6TcISYM3FayWAWWA7x3ZDrzG9CGSPZ4zI2S4lLj6BitkpM31E1HosXg1VqDabVtm4jDvfM69t6TNf6ZGl8BH-JEMWzNLONESz1h82nnZBIQ4zQvp5Sw4B_a2K4YW0s8L7c5IGu7mZlpGjDLswwXPecJXPYH1PKGMwjwgX0Y-mdlOrhRxtX9f2Bi9xc04gari0Q&q=Browser+MCP&sa=X&ved=2ahUKEwiShY_LiJqVAxXrh1YBHQGJMGsQtKgLegQIGRAB
+              - generic [ref=e94]: 이미지
+          - listitem [ref=e95]:
+            - link "동영상" [ref=e96] [cursor=pointer]:
+              - /url: /search?sca_esv=6afbdd065017325d&udm=7&fbs=ABfTbFUgt-aXEFkBhPo84x72c1XoLHFs6TcISYM3FayWAWWA7x3ZDrzG9CGSPZ4zI2S4lLj6BitkpM31E1HosXg1VqDabVtm4jDvfM69t6TNf6ZGl8BH-JEMWzNLONESz1h82nnZBIQ4zQvp5Sw4B_a2K4YW0s8L7c5IGu7mZlpGjDLswwXPecJXPYH1PKGMwjwgX0Y-mdlOrhRxtX9f2Bi9xc04gari0Q&q=Browser+MCP&sa=X&ved=2ahUKEwiShY_LiJqVAxXrh1YBHQGJMGsQtKgLegQIGhAB
+              - generic [ref=e98]: 동영상
+          - listitem [ref=e99]:
+            - link "쇼핑" [ref=e100] [cursor=pointer]:
+              - /url: /search?sca_esv=6afbdd065017325d&udm=28&fbs=ABfTbFUgt-aXEFkBhPo84x72c1XoLHFs6TcISYM3FayWAWWA7x3ZDrzG9CGSPZ4zI2S4lLj6BitkpM31E1HosXg1VqDabVtm4jDvfM69t6TNf6ZGl8BH-JEMWzNLONESz1h82nnZBIQ4zQvp5Sw4B_a2K4YW0s8L7c5IGu7mZlpGjDLswwXPecJXPYH1PKGMwjwgX0Y-mdlOrhRxtX9f2Bi9xc04gari0Q&q=Browser+MCP&ved=1t:220175&ictx=111
+              - generic [ref=e102]: 쇼핑
+          - listitem [ref=e103]:
+            - link "짧은 동영상" [ref=e104] [cursor=pointer]:
+              - /url: /search?sca_esv=6afbdd065017325d&udm=39&fbs=ABfTbFUgt-aXEFkBhPo84x72c1XoLHFs6TcISYM3FayWAWWA7x3ZDrzG9CGSPZ4zI2S4lLj6BitkpM31E1HosXg1VqDabVtm4jDvfM69t6TNf6ZGl8BH-JEMWzNLONESz1h82nnZBIQ4zQvp5Sw4B_a2K4YW0s8L7c5IGu7mZlpGjDLswwXPecJXPYH1PKGMwjwgX0Y-mdlOrhRxtX9f2Bi9xc04gari0Q&q=Browser+MCP&sa=X&ved=2ahUKEwiShY_LiJqVAxXrh1YBHQGJMGsQs6gLegQIFxAB
+              - generic [ref=e106]: 짧은 동영상
+          - listitem [ref=e107]:
+            - link "뉴스" [ref=e108] [cursor=pointer]:
+              - /url: /search?sca_esv=6afbdd065017325d&q=Browser+MCP&tbm=nws&source=lnms&fbs=ABfTbFUgt-aXEFkBhPo84x72c1XoLHFs6TcISYM3FayWAWWA7x3ZDrzG9CGSPZ4zI2S4lLj6BitkpM31E1HosXg1VqDabVtm4jDvfM69t6TNf6ZGl8BH-JEMWzNLONESz1h82nnZBIQ4zQvp5Sw4B_a2K4YW0s8L7c5IGu7mZlpGjDLswwXPecJXPYH1PKGMwjwgX0Y-mdlOrhRxtX9f2Bi9xc04gari0Q&sa=X&ved=2ahUKEwiShY_LiJqVAxXrh1YBHQGJMGsQ0pQJegQIFhAB
+              - generic [ref=e110]: 뉴스
+          - listitem [ref=e111]:
+            - button "필터 더보기" [ref=e112] [cursor=pointer]:
+              - generic "필터 더보기" [ref=e113]:
+                - generic [ref=e114]:
+                  - generic [ref=e115]: 더보기
+                  - img [ref=e117]
+        - button "도구" [ref=e120] [cursor=pointer]:
+          - generic [ref=e122]:
+            - generic [ref=e123]: 도구
+            - img [ref=e125]
+    - heading "검색결과" [level=1] [ref=e128]
+    - generic [ref=e134]:
+      - generic [ref=e135]: Looking for results in English?
+      - link [ref=e136] [cursor=pointer]:
+        - /url: "#"
+        - img [ref=e138]
+      - link "Change to English" [ref=e140] [cursor=pointer]:
+        - /url: /setprefs?sig=0_w_RncF0C-q23TMn2vyoRTQs_Hho%3D&source=en_ignored_notification&prev=https://www.google.com/search?q%3DBrowser%2BMCP%26sca_esv%3D6afbdd065017325d%26source%3Dhp%26ei%3DP8E4atPhIJaq0-kPm6On2QY%26iflsig%3DABILxe8AAAAAajjPT0cecJFH3Kbb3QGpwWMxDjtroWbN%26ved%3D0ahUKEwiT_e6ViJqVAxUW1TQHHZvRKWsQ4dUDCDA%26uact%3D5%26oq%3DBrowser%2BMCP%26gs_lp%3DEgdnd3Mtd2l6IgtCcm93c2VyIE1DUEjC8ARQrPAEWKzwBHABeACQAQCYAQCgAQCqAQC4AQPIAQD4AQGYAgCgAgCoAgCYAwLxBad1yiINo0etkgcAoAcAsgcAuAcAwgcAyAcAgAgB%26sclient%3Dgws-wiz%26sei%3Dr8E4aszuAeqD2roPrIKJmQc&hl=en&sa=X&ved=2ahUKEwiShY_LiJqVAxXrh1YBHQGJMGsQhoQCKAF6BAgMEAQ
+      - link "한국어 계속 사용" [ref=e141] [cursor=pointer]:
+        - /url: "#"
+      - link "언어 설정" [ref=e143] [cursor=pointer]:
+        - /url: /preferences?lang=1&hl=ko&sa=X&ved=2ahUKEwiShY_LiJqVAxXrh1YBHQGJMGsQiIQCKAN6BAgMEAY#languages
+    - main [ref=e145]:
+      - generic [ref=e149]:
+        - generic [ref=e152]:
+          - heading "Web results" [level=2] [ref=e153]
+          - generic [ref=e154]:
+            - generic [ref=e157]:
+              - link "Browser MCP - Automate your browser using VS Code ... Browser MCP https://browsermcp.io" [ref=e159] [cursor=pointer]:
+                - /url: https://browsermcp.io/
+                - heading "Browser MCP - Automate your browser using VS Code ..." [level=3] [ref=e160]
+                - generic [ref=e162]:
+                  - img [ref=e167]
+                  - generic [ref=e169]:
+                    - generic [ref=e171]: Browser MCP
+                    - generic [ref=e173]: https://browsermcp.io
+              - button "검색결과에 관한 정보" [ref=e174] [cursor=pointer]:
+                - img [ref=e177]
+            - generic [ref=e181]:
+              - emphasis [ref=e182]: Browser MCP
+              - text: connects AI applications to your browser so you can automate tasks using AI. Supported by Claude, Cursor, VS Code, Windsurf, and more.
+        - generic [ref=e183]:
+          - generic [ref=e192]:
+            - generic [ref=e194]:
+              - generic [ref=e196]:
+                - generic [ref=e197]:
+                  - img [ref=e198]
+                  - heading "AI 개요" [level=2] [ref=e200]
+                - generic [ref=e201]:
+                  - button "확인 링크 7개 보기" [ref=e203] [cursor=pointer]:
+                    - generic [ref=e208]: "+4"
+                  - button "검색결과에 관한 정보" [ref=e211]:
+                    - img [ref=e213]
+              - generic [ref=e233]:
+                - generic [ref=e234]:
+                  - strong [ref=e235]: Browser MCP
+                  - text: 는
+                  - mark [ref=e236]: AI 모델이 웹 브라우저와 직접 상호작용하고 자동화할 수 있도록 지원하는 모델 컨텍스트 프로토콜(MCP) 서버 및 크롬 확장 프로그램
+                  - text: 입니다. AI 애플리케이션에 브라우저 제어 권한을 부여하여 복잡한 웹 작업을 대신 수행하게 합니다.
+                  - generic [ref=e238]:
+                    - link "GitHub 외 1개 - 관련 링크 보기" [ref=e239] [cursor=pointer]:
+                      - /url: https://github.com/browsermcp/mcp
+                    - button "GitHub 외 1개 - 관련 링크 보기" [ref=e240] [cursor=pointer]:
+                      - generic [ref=e242]:
+                        - generic [ref=e243]: GitHub
+                        - generic [ref=e244]: "+1"
+                      - img [ref=e247]
+                - heading "주요 기능 및 특징" [level=3] [ref=e249]
+                - list [ref=e251]:
+                  - listitem [ref=e252]:
+                    - generic [ref=e253]:
+                      - strong [ref=e254]: "AI 웹 탐색 및 제어:"
+                      - text: Claude, Cursor, VS Code, Windsurf 등의 AI 도구에서 웹사이트를 탐색하고 클릭, 스크롤, 폼 작성 등을 수행합니다.
+                    - generic [ref=e256]:
+                      - link "GitHub - 관련 링크 보기" [ref=e257] [cursor=pointer]:
+                        - /url: https://github.com/browsermcp/mcp
+                      - button "GitHub - 관련 링크 보기" [ref=e258] [cursor=pointer]:
+                        - generic [ref=e261]: GitHub
+                        - img [ref=e264]
+                  - listitem [ref=e266]:
+                    - generic [ref=e267]:
+                      - strong [ref=e268]: "작업 및 테스트 자동화:"
+                      - text: "QA 테스트(예: 온보딩 흐름 확인), 문서 수집, 웹 기반 양식 제출 등을 수동 작업 없이 자동화합니다."
+                    - generic [ref=e270]:
+                      - link [ref=e271] [cursor=pointer]:
+                        - /url: https://www.youtube.com/watch?v=eD5SUj5qqgI
+                      - button [ref=e272] [cursor=pointer]:
+                        - generic [ref=e274]:
+                          - generic [ref=e275]: YouTube
+                          - generic [ref=e276]: ·All About AI
+                          - generic [ref=e277]: "+1"
+                        - img [ref=e280]
+                  - listitem [ref=e282]:
+                    - generic [ref=e283]:
+                      - strong [ref=e284]: "화면 캡처 및 상태 확인:"
+                      - text: 브라우저의 현재 페이지 상태를 가져오고 스냅샷(스크린샷)을 추출할 수 있습니다.
+                    - generic [ref=e286]:
+                      - link [ref=e287] [cursor=pointer]:
+                        - /url: https://www.youtube.com/watch?v=eD5SUj5qqgI
+                      - button [ref=e288] [cursor=pointer]:
+                        - generic [ref=e290]:
+                          - generic [ref=e291]: YouTube
+                          - generic [ref=e292]: ·All About AI
+                          - generic [ref=e293]: "+2"
+                        - img [ref=e296]
+                - heading [level=3] [ref=e299]: 사용 방법
+                - list [ref=e301]:
+                  - listitem [ref=e302]:
+                    - generic [ref=e303]:
+                      - strong [ref=e304]: "확장 프로그램 및 서버 설치:"
+                      - text: 크롬 웹 스토어에서
+                      - link [ref=e306] [cursor=pointer]:
+                        - /url: https://chromewebstore.google.com/detail/browser-mcp-automate-your/bjfgambnhccakkhmkepdoekmckoijdlc
+                        - text: Browser MCP 크롬 확장 프로그램
+                      - text: 을 설치하고, MCP 서버를 설정합니다.
+                    - generic [ref=e308]:
+                      - link [ref=e309] [cursor=pointer]:
+                        - /url: https://chromewebstore.google.com/detail/browser-mcp-automate-your/bjfgambnhccakkhmkepdoekmckoijdlc
+                      - button [ref=e310] [cursor=pointer]:
+                        - generic [ref=e313]: Chrome Web Store
+                        - img [ref=e316]
+                  - listitem [ref=e318]:
+                    - generic [ref=e319]:
+                      - strong [ref=e320]: "AI 에디터 연동:"
+                      - link [ref=e322] [cursor=pointer]:
+                        - /url: https://github.com/browsermcp/mcp
+                        - text: BrowserMCP GitHub
+                      - text: 에서 제공하는 서버 구성(JSON 파일)을 복사하여 Claude 데스크톱이나 Cursor 등의 MCP 설정에 추가합니다.
+                    - generic [ref=e324]:
+                      - link [ref=e325] [cursor=pointer]:
+                        - /url: https://github.com/browsermcp/mcp
+                      - button [ref=e326] [cursor=pointer]:
+                        - generic [ref=e328]:
+                          - generic [ref=e329]: GitHub
+                          - generic [ref=e330]: "+1"
+                        - img [ref=e333]
+                  - listitem [ref=e336]:
+                    - generic [ref=e337]:
+                      - strong [ref=e338]: "명령어 사용:"
+                      - text: AI에게 "특정 URL에 접속해서 필요한 데이터를 가져와줘", "로그인하고 예약해줘"와 같은 자연어 프롬프트를 입력해 브라우저를 제어합니다.
+                    - generic [ref=e340]:
+                      - link [ref=e341] [cursor=pointer]:
+                        - /url: https://docs.browsermcp.io/
+                      - button [ref=e342] [cursor=pointer]:
+                        - generic [ref=e344]:
+                          - generic [ref=e345]: Browser MCP
+                          - generic [ref=e346]: "+2"
+                        - img [ref=e349]
+                - generic [ref=e351]:
+                  - generic [ref=e353]:
+                    - text: 더 다양한 브라우저 자동화 MCP 서버 목록은
+                    - link [ref=e355] [cursor=pointer]:
+                      - /url: https://mcpmarket.com/categories/browser-automation
+                      - text: Browser Automation MCP Servers
+                    - text: 에서 확인할 수 있습니다.
+                    - generic [ref=e357]:
+                      - link [ref=e358] [cursor=pointer]:
+                        - /url: https://mcpmarket.com/categories/browser-automation
+                      - button [ref=e359] [cursor=pointer]:
+                        - generic [ref=e362]: MCP Market
+                        - img [ref=e365]
+                  - list [ref=e369]:
+                    - generic [ref=e370]:
+                      - listitem [ref=e371]:
+                        - generic [ref=e372]:
+                          - link [ref=e373] [cursor=pointer]:
+                            - /url: https://github.com/browsermcp/mcp
+                          - generic [ref=e374]:
+                            - generic [ref=e376]:
+                              - generic [ref=e377]: "GitHub - BrowserMCP/mcp: Browser MCP is a Model Context Provider ..."
+                              - generic [ref=e379]: Browser MCP is an MCP server + Chrome extension that allows ...
+                            - generic [ref=e381]:
+                              - generic [ref=e384]: GitHub
+                              - button [ref=e388] [cursor=pointer]:
+                                - img [ref=e390]
+                      - listitem [ref=e393]:
+                        - generic [ref=e394]:
+                          - link [ref=e395] [cursor=pointer]:
+                            - /url: https://chromewebstore.google.com/detail/browser-mcp-automate-your/bjfgambnhccakkhmkepdoekmckoijdlc
+                          - generic [ref=e396]:
+                            - generic [ref=e398]:
+                              - generic [ref=e399]: Automate your browser using VS Code, Cursor, Claude, and more
+                              - generic [ref=e401]: Browser MCP is a Model Context Protocol (MCP) server that al...
+                            - generic [ref=e403]:
+                              - generic [ref=e406]: Chrome Web Store
+                              - button [ref=e410] [cursor=pointer]:
+                                - img [ref=e412]
+                      - listitem [ref=e415]:
+                        - generic [ref=e416]:
+                          - link [ref=e417] [cursor=pointer]:
+                            - /url: https://docs.browsermcp.io/
+                          - generic [ref=e418]:
+                            - generic [ref=e420]:
+                              - generic [ref=e421]: "Browser MCP: Welcome"
+                              - generic [ref=e423]: With Browser MCP, you can use MCP to automate your browser s...
+                            - generic [ref=e425]:
+                              - generic [ref=e428]: Browser MCP
+                              - button [ref=e432] [cursor=pointer]:
+                                - img [ref=e434]
+                      - listitem [ref=e437]:
+                        - generic [ref=e438]:
+                          - link [ref=e439] [cursor=pointer]:
+                            - /url: https://mcpmarket.com/categories/browser-automation
+                          - generic [ref=e440]:
+                            - generic [ref=e442]:
+                              - generic [ref=e443]: Browser Automation MCP Servers
+                              - generic [ref=e445]: Discover our curated collection of MCP servers for browser a...
+                            - generic [ref=e446]:
+                              - generic [ref=e449]: MCP Market
+                              - button [ref=e453] [cursor=pointer]:
+                                - img [ref=e455]
+                      - listitem [ref=e458]:
+                        - generic [ref=e459]:
+                          - link [ref=e460] [cursor=pointer]:
+                            - /url: https://www.youtube.com/watch?v=eD5SUj5qqgI
+                          - generic [ref=e461]:
+                            - generic [ref=e462]:
+                              - button [ref=e467] [cursor=pointer]:
+                                - generic [ref=e468]:
+                                  - img [ref=e469]
+                                  - generic [ref=e471]:
+                                    - generic:
+                                      - generic:
+                                        - generic:
+                                          - img
+                                      - generic: 10:55
+                                  - img [ref=e474]
+                              - generic [ref=e476]: "Browser MCP with Cursor: Automate Tasks and Testing"
+                            - generic [ref=e477]:
+                              - generic [ref=e480]:
+                                - text: YouTube
+                                - generic [ref=e481]: ·All About AI
+                              - button [ref=e485] [cursor=pointer]:
+                                - img [ref=e487]
+                      - listitem [ref=e490]:
+                        - generic [ref=e491]:
+                          - link [ref=e492] [cursor=pointer]:
+                            - /url: https://www.youtube.com/watch?v=cxOoV2guNQQ&t=46
+                          - generic [ref=e493]:
+                            - generic [ref=e494]:
+                              - button [ref=e499] [cursor=pointer]:
+                                - generic [ref=e500]:
+                                  - img [ref=e501]
+                                  - generic [ref=e503]:
+                                    - img [ref=e504]
+                                    - generic [ref=e506]: 2m
+                                  - img [ref=e511]
+                              - generic [ref=e513]: MCP 개념 및 사용법 정리｜초보도 따라하는 설치 & 연동부터 실습까지 총정리
+                            - generic [ref=e514]:
+                              - generic [ref=e517]:
+                                - text: YouTube
+                                - generic [ref=e518]: ·윤자동
+                              - button [ref=e522] [cursor=pointer]:
+                                - img [ref=e524]
+                      - listitem [ref=e527]:
+                        - generic [ref=e528]:
+                          - link [ref=e529] [cursor=pointer]:
+                            - /url: https://www.youtube.com/watch?v=VkAwC6q3Hbk&t=9
+                          - generic [ref=e530]:
+                            - generic [ref=e531]:
+                              - button [ref=e536] [cursor=pointer]:
+                                - generic [ref=e537]:
+                                  - img [ref=e538]
+                                  - generic [ref=e540]:
+                                    - img [ref=e541]
+                                    - generic [ref=e543]: 3m
+                                  - img [ref=e548]
+                              - generic [ref=e550]: Automate your browser with Browser MCP
+                            - generic [ref=e551]:
+                              - generic [ref=e554]:
+                                - text: YouTube
+                                - generic [ref=e555]: ·Elie Steinbock
+                              - button [ref=e559] [cursor=pointer]:
+                                - img [ref=e561]
+                      - generic [ref=e565]:
+                        - link [ref=e566] [cursor=pointer]:
+                          - /url: https://skywork.ai/skypage/ko/MCP-%EC%84%9C%EB%B2%84-%ED%8C%8C%EC%9D%BC%EC%8B%9C%EC%8A%A4%ED%85%9C:-AI-%EC%97%94%EC%A7%80%EB%8B%88%EC%96%B4%EB%A5%BC-%EC%9C%84%ED%95%9C-%EC%8B%AC%EC%B8%B5-%EA%B0%80%EC%9D%B4%EB%93%9C/1971094965323886592
+                        - generic [ref=e567]:
+                          - generic [ref=e569]:
+                            - generic [ref=e570]: "MCP 서버 파일시스템: AI 엔지니어를 위한 심층 가이드"
+                            - generic [ref=e572]: "browser-use-mcp-server: AI 에이전트가 웹 브라우저를 직접 제어하여 웹 페이지 탐색, 데..."
+                          - generic [ref=e574]:
+                            - generic [ref=e577]: Skywork.ai
+                            - button [ref=e581] [cursor=pointer]:
+                              - img [ref=e583]
+                    - button [ref=e586] [cursor=pointer]:
+                      - img [ref=e588]
+            - button "AI 개요 더보기" [ref=e593]:
+              - generic [ref=e595] [cursor=pointer]:
+                - generic [ref=e596]: 더보기
+                - img [ref=e598]
+          - generic [ref=e604]:
+            - generic [ref=e607]:
+              - link "Browser MCP, 자동화된 테스트, 작업 자동화 등을 위한 ... 파이토치 한국 사용자 모임 https://discuss.pytorch.kr › browser-mcp-mcp-server" [ref=e609] [cursor=pointer]:
+                - /url: https://discuss.pytorch.kr/t/browser-mcp-mcp-server/6730
+                - heading "Browser MCP, 자동화된 테스트, 작업 자동화 등을 위한 ..." [level=3] [ref=e610]
+                - generic [ref=e616]:
+                  - generic [ref=e618]: 파이토치 한국 사용자 모임
+                  - generic [ref=e620]: https://discuss.pytorch.kr › browser-mcp-mcp-server
+              - button "검색결과에 관한 정보" [ref=e621] [cursor=pointer]:
+                - img [ref=e624]
+            - generic [ref=e627]:
+              - generic [ref=e628]: 2025. 4. 8. —
+              - generic [ref=e629]:
+                - text: Browser MCP는
+                - emphasis [ref=e630]: 브라우저 자동화를 가능하게 해주는 MCP(Model Context Protocol) 기반 도구
+                - text: 입니다. MCP는 AI가 외부 서비스와 상호작용할 수 있게 해주는 ...
+          - generic [ref=e634]:
+            - generic [ref=e637]:
+              - link "브라우저 도구 MCP 서버 사용법 Apidog https://apidog.com › blog › browser-tools-mcp-server" [ref=e639] [cursor=pointer]:
+                - /url: https://apidog.com/kr/blog/browser-tools-mcp-server/
+                - heading "브라우저 도구 MCP 서버 사용법" [level=3] [ref=e640]
+                - generic [ref=e646]:
+                  - generic [ref=e648]: Apidog
+                  - generic [ref=e650]: https://apidog.com › blog › browser-tools-mcp-server
+              - button "검색결과에 관한 정보" [ref=e651] [cursor=pointer]:
+                - img [ref=e654]
+            - generic [ref=e657]:
+              - generic [ref=e658]: 2025. 7. 26. —
+              - generic [ref=e659]:
+                - emphasis [ref=e660]: Browser tools mcp를 사용하면 Cursor IDE가 반복적인 브라우저 작업을 자동화
+                - text: 하거나 실시간 웹 데이터를 가져와 코딩 생활을 더 쉽게 만들 수 있습니다.
+            - list [ref=e662]:
+              - listitem [ref=e663]:
+                - link "Browser tools mcp란 무엇인가..." [ref=e664] [cursor=pointer]:
+                  - /url: https://apidog.com/kr/blog/browser-tools-mcp-server/#browser-tools-mcp%EB%9E%80-%EB%AC%B4%EC%97%87%EC%9D%B8%EA%B0%80%EC%9A%94
+                  - generic [ref=e666]: Browser tools mcp란 무엇인가...
+              - listitem [ref=e667]:
+                - link "Browser tools mcp를 위한 환경..." [ref=e668] [cursor=pointer]:
+                  - /url: https://apidog.com/kr/blog/browser-tools-mcp-server/#browser-tools-mcp%EB%A5%BC-%EC%9C%84%ED%95%9C-%ED%99%98%EA%B2%BD-%EC%84%A4%EC%A0%95
+                  - generic [ref=e670]: Browser tools mcp를 위한 환경...
+          - generic [ref=e674]:
+            - generic [ref=e677]:
+              - 'link "BrowserMCP/mcp: Browser MCP is a Model Context ... GitHub https://github.com › browsermcp › mcp" [ref=e679] [cursor=pointer]':
+                - /url: https://github.com/browsermcp/mcp
+                - 'heading "BrowserMCP/mcp: Browser MCP is a Model Context ..." [level=3] [ref=e680]'
+                - generic [ref=e686]:
+                  - generic [ref=e688]: GitHub
+                  - generic [ref=e690]: https://github.com › browsermcp › mcp
+              - button "검색결과에 관한 정보" [ref=e691] [cursor=pointer]:
+                - img [ref=e694]
+            - generic [ref=e698]:
+              - emphasis [ref=e699]: Browser MCP
+              - text: is an MCP server + Chrome extension that allows you to automate your browser using AI applications like VS Code, Claude, Cursor, and Windsurf.
+          - generic [ref=e703]:
+            - generic [ref=e706]:
+              - link "Cursor, Claude, VS Code를 활용한 브라우저 자동화 - GeekNews GeekNews https://news.hada.io › topic" [ref=e708] [cursor=pointer]:
+                - /url: https://news.hada.io/topic?id=20209
+                - heading "Cursor, Claude, VS Code를 활용한 브라우저 자동화 - GeekNews" [level=3] [ref=e709]
+                - generic [ref=e715]:
+                  - generic [ref=e717]: GeekNews
+                  - generic [ref=e719]: https://news.hada.io › topic
+              - button "검색결과에 관한 정보" [ref=e720] [cursor=pointer]:
+                - img [ref=e723]
+            - generic [ref=e726]:
+              - generic [ref=e727]: 2025. 4. 8. —
+              - generic [ref=e728]:
+                - emphasis [ref=e729]: AI 앱을 MCP를 통해 브라우저에 연결하여 웹사이트에서 작업을 자동화
+                - text: 할 수 있게 하는 도구. 예를 들어, 웹사이트에서 반복적으로 양식을 작성하는 ...
+          - generic [ref=e733]:
+            - generic [ref=e735]:
+              - heading "동영상" [level=2] [ref=e736]
+              - button "검색결과에 관한 정보" [ref=e737] [cursor=pointer]:
+                - img [ref=e740]
+            - generic [ref=e743]:
+              - generic [ref=e749]:
+                - generic [ref=e750]:
+                  - generic [ref=e751]:
+                    - link "웹 개발에 필수! 오류 해결, SEO, 웹퍼포먼스 측정도 한 번에 ... YouTube Learning by Doing (러닝바이두잉) 2025. 3. 31." [ref=e753] [cursor=pointer]:
+                      - /url: https://www.youtube.com/watch?v=Md3rwMnhpsc
+                      - heading "웹 개발에 필수! 오류 해결, SEO, 웹퍼포먼스 측정도 한 번에 ... YouTube Learning by Doing (러닝바이두잉) 2025. 3. 31." [level=3] [ref=e754]:
+                        - generic [ref=e757]: 웹 개발에 필수! 오류 해결, SEO, 웹퍼포먼스 측정도 한 번에 ...
+                        - generic [ref=e759]:
+                          - generic [ref=e760]:
+                            - text: YouTube
+                            - generic [ref=e761]: · Learning by Doing (러닝바이두잉)
+                          - generic [ref=e762]: 2025. 3. 31.
+                    - generic:
+                      - generic:
+                        - generic:
+                          - generic:
+                            - generic:
+                              - text: YouTube
+                              - generic: · Learning by Doing (러닝바이두잉)
+                        - button "검색결과에 관한 정보" [ref=e763] [cursor=pointer]:
+                          - img [ref=e766]
+                  - button "Learning by Doing (러닝바이두잉)님이 YouTube에 게시한 웹 개발에 필수! 오류 해결, SEO, 웹퍼포먼스 측정도 한 번에 .... Google에서 재생. 6:16" [ref=e768] [cursor=pointer]:
+                    - generic [ref=e769]:
+                      - img [ref=e775]
+                      - generic [ref=e778]:
+                        - generic [ref=e779]: 6:16
+                        - img [ref=e782]
+                - button "이 동영상의 주요 순간 4개" [ref=e788] [cursor=pointer]:
+                  - generic [ref=e797]:
+                    - generic [ref=e800]: 이 동영상의 주요 순간 4개
+                    - img [ref=e802]
+              - generic [ref=e810]:
+                - generic [ref=e811]:
+                  - 'link "Browser MCP with Cursor: Automate Tasks and Testing YouTube All About AI 2025. 4. 9." [ref=e813] [cursor=pointer]':
+                    - /url: https://www.youtube.com/watch?v=eD5SUj5qqgI
+                    - 'heading "Browser MCP with Cursor: Automate Tasks and Testing YouTube All About AI 2025. 4. 9." [level=3] [ref=e814]':
+                      - generic [ref=e817]: "Browser MCP with Cursor: Automate Tasks and Testing"
+                      - generic [ref=e819]:
+                        - generic [ref=e820]:
+                          - text: YouTube
+                          - generic [ref=e821]: · All About AI
+                        - generic [ref=e822]: 2025. 4. 9.
+                  - generic:
+                    - generic:
+                      - generic:
+                        - generic:
+                          - generic:
+                            - text: YouTube
+                            - generic: · All About AI
+                      - button "검색결과에 관한 정보" [ref=e823] [cursor=pointer]:
+                        - img [ref=e826]
+                - 'button "All About AI님이 YouTube에 게시한 Browser MCP with Cursor: Automate Tasks and Testing. Google에서 재생. 10:55" [ref=e828] [cursor=pointer]':
+                  - generic [ref=e829]:
+                    - img [ref=e835]
+                    - generic [ref=e838]:
+                      - generic [ref=e839]: 10:55
+                      - img [ref=e842]
+              - generic [ref=e849]:
+                - generic [ref=e850]:
+                  - generic [ref=e851]:
+                    - link "Automate your browser with Browser MCP YouTube Elie Steinbock 2025. 8. 18." [ref=e853] [cursor=pointer]:
+                      - /url: https://www.youtube.com/watch?v=VkAwC6q3Hbk
+                      - heading "Automate your browser with Browser MCP YouTube Elie Steinbock 2025. 8. 18." [level=3] [ref=e854]:
+                        - generic [ref=e857]: Automate your browser with Browser MCP
+                        - generic [ref=e859]:
+                          - generic [ref=e860]:
+                            - text: YouTube
+                            - generic [ref=e861]: · Elie Steinbock
+                          - generic [ref=e862]: 2025. 8. 18.
+                    - generic:
+                      - generic:
+                        - generic:
+                          - generic:
+                            - generic:
+                              - text: YouTube
+                              - generic: · Elie Steinbock
+                        - button "검색결과에 관한 정보" [ref=e863] [cursor=pointer]:
+                          - img [ref=e866]
+                  - button "Elie Steinbock님이 YouTube에 게시한 Automate your browser with Browser MCP. Google에서 재생. 7:44" [ref=e868] [cursor=pointer]:
+                    - generic [ref=e869]:
+                      - img [ref=e875]
+                      - generic [ref=e878]:
+                        - generic [ref=e879]: 7:44
+                        - img [ref=e882]
+                - button "이 동영상의 주요 순간 5개" [ref=e888] [cursor=pointer]:
+                  - generic [ref=e897]:
+                    - generic [ref=e900]: 이 동영상의 주요 순간 5개
+                    - img [ref=e902]
+            - link "모든 동영상 보기" [ref=e906] [cursor=pointer]:
+              - /url: /search?sca_esv=6afbdd065017325d&udm=7&q=Browser+MCP&sa=X&ved=2ahUKEwiShY_LiJqVAxXrh1YBHQGJMGsQ8ccDKAJ6BAg-EAQ
+              - separator [ref=e907]
+              - generic [ref=e908]:
+                - generic [ref=e909]: 모두 보기
+                - img [ref=e911]
+          - generic [ref=e916]:
+            - generic [ref=e919]:
+              - link "코딩 에이전트가 Chrome DevTools MCP로 브라우저 세션을 ... Chrome for Developers https://developer.chrome.com › blog › chrome-devtool..." [ref=e921] [cursor=pointer]:
+                - /url: https://developer.chrome.com/blog/chrome-devtools-mcp-debug-your-browser-session?hl=ko
+                - heading "코딩 에이전트가 Chrome DevTools MCP로 브라우저 세션을 ..." [level=3] [ref=e922]
+                - generic [ref=e928]:
+                  - generic [ref=e930]: Chrome for Developers
+                  - generic [ref=e932]: https://developer.chrome.com › blog › chrome-devtool...
+              - button "검색결과에 관한 정보" [ref=e933] [cursor=pointer]:
+                - img [ref=e936]
+            - generic [ref=e939]:
+              - generic [ref=e940]: 2025. 12. 11. —
+              - generic [ref=e941]:
+                - text: "시작하기 · 1단계: Chrome에서 원격 디버깅 설정하기 · 2단계: 실행 중인 Chrome 인스턴스에 자동으로 연결되도록 Chrome DevTools"
+                - emphasis [ref=e942]: MCP
+                - text: 서버 구성 · 3단계 ...
+          - generic [ref=e946]:
+            - generic [ref=e949]:
+              - link "Browser MCP - Automate your browser using VS Code ... Chrome Web Store https://chromewebstore.google.com › detail › bjfgambn..." [ref=e951] [cursor=pointer]:
+                - /url: https://chromewebstore.google.com/detail/browser-mcp-automate-your/bjfgambnhccakkhmkepdoekmckoijdlc
+                - heading "Browser MCP - Automate your browser using VS Code ..." [level=3] [ref=e952]
+                - generic [ref=e958]:
+                  - generic [ref=e960]: Chrome Web Store
+                  - generic [ref=e962]: https://chromewebstore.google.com › detail › bjfgambn...
+              - button "검색결과에 관한 정보" [ref=e963] [cursor=pointer]:
+                - img [ref=e966]
+            - generic [ref=e970]:
+              - emphasis [ref=e971]: Browser MCP
+              - text: is a Model Context Protocol (MCP) server that allows clients like VS Code, Claude, Cursor, and Windsurf to automate your browser.
+          - generic [ref=e975]:
+            - generic [ref=e978]:
+              - link "Claude Code에서 Browser MCP 설정 및 사용 가이드 TILNOTE https://tilnote.io › pages" [ref=e980] [cursor=pointer]:
+                - /url: https://tilnote.io/pages/6891b6f8541ceac8a1a22397
+                - heading "Claude Code에서 Browser MCP 설정 및 사용 가이드" [level=3] [ref=e981]
+                - generic [ref=e987]:
+                  - generic [ref=e989]: TILNOTE
+                  - generic [ref=e991]: https://tilnote.io › pages
+              - button "검색결과에 관한 정보" [ref=e992] [cursor=pointer]:
+                - img [ref=e995]
+            - generic [ref=e998]:
+              - generic [ref=e999]: 2025. 8. 5. —
+              - generic [ref=e1000]:
+                - emphasis [ref=e1001]: Browser MCP
+                - text: 는 AI 애플리케이션(Claude, Cursor, VS Code 등)이
+                - emphasis [ref=e1002]: 브라우저
+                - text: 를 제어할 수 있게 해주는 도구입니다. 웹 자동화, 테스트, 반복 작업을 AI의 ...
+      - generic [ref=e1004]:
+        - generic [ref=e1009]:
+          - heading "관련 검색어" [level=2] [ref=e1011]
+          - generic [ref=e1013]:
+            - generic [ref=e1014]:
+              - link "Browser MCP 사용 방법" [ref=e1018] [cursor=pointer]:
+                - /url: /search?sca_esv=6afbdd065017325d&q=Browser+MCP+%EC%82%AC%EC%9A%A9+%EB%B0%A9%EB%B2%95&sa=X&ved=2ahUKEwiShY_LiJqVAxXrh1YBHQGJMGsQ1QJ6BAgcEAE
+                - generic [ref=e1019]:
+                  - generic [ref=e1024]: Browser MCP 사용 방법
+                  - img [ref=e1028]
+              - link "Chrome browser mcp" [ref=e1033] [cursor=pointer]:
+                - /url: /search?sca_esv=6afbdd065017325d&q=Chrome+browser+mcp&sa=X&ved=2ahUKEwiShY_LiJqVAxXrh1YBHQGJMGsQ1QJ6BAgqEAE
+                - generic [ref=e1034]:
+                  - generic [ref=e1039]: Chrome browser mcp
+                  - img [ref=e1043]
+              - link "Browser mcp extension" [ref=e1048] [cursor=pointer]:
+                - /url: /search?sca_esv=6afbdd065017325d&q=Browser+mcp+extension&sa=X&ved=2ahUKEwiShY_LiJqVAxXrh1YBHQGJMGsQ1QJ6BAgpEAE
+                - generic [ref=e1049]:
+                  - generic [ref=e1054]: Browser mcp extension
+                  - img [ref=e1058]
+              - link "Browser mcp claude code" [ref=e1063] [cursor=pointer]:
+                - /url: /search?sca_esv=6afbdd065017325d&q=Browser+mcp+claude+code&sa=X&ved=2ahUKEwiShY_LiJqVAxXrh1YBHQGJMGsQ1QJ6BAglEAE
+                - generic [ref=e1064]:
+                  - generic [ref=e1069]: Browser mcp claude code
+                  - img [ref=e1073]
+            - generic [ref=e1075]:
+              - link "브라우저 테스트 MCP" [ref=e1079] [cursor=pointer]:
+                - /url: /search?sca_esv=6afbdd065017325d&q=%EB%B8%8C%EB%9D%BC%EC%9A%B0%EC%A0%80+%ED%85%8C%EC%8A%A4%ED%8A%B8+MCP&sa=X&ved=2ahUKEwiShY_LiJqVAxXrh1YBHQGJMGsQ1QJ6BAgjEAE
+                - generic [ref=e1080]:
+                  - generic [ref=e1085]: 브라우저 테스트 MCP
+                  - img [ref=e1089]
+              - link "MCP server 모음" [ref=e1094] [cursor=pointer]:
+                - /url: /search?sca_esv=6afbdd065017325d&q=MCP+server+%EB%AA%A8%EC%9D%8C&sa=X&ved=2ahUKEwiShY_LiJqVAxXrh1YBHQGJMGsQ1QJ6BAgfEAE
+                - generic [ref=e1095]:
+                  - generic [ref=e1100]: MCP server 모음
+                  - img [ref=e1104]
+              - link "Playwright MCP" [ref=e1109] [cursor=pointer]:
+                - /url: /search?sca_esv=6afbdd065017325d&q=Playwright+MCP&sa=X&ved=2ahUKEwiShY_LiJqVAxXrh1YBHQGJMGsQ1QJ6BAgeEAE
+                - generic [ref=e1110]:
+                  - generic [ref=e1115]: Playwright MCP
+                  - img [ref=e1119]
+              - link "Google MCP" [ref=e1124] [cursor=pointer]:
+                - /url: /search?sca_esv=6afbdd065017325d&q=Google+MCP&sa=X&ved=2ahUKEwiShY_LiJqVAxXrh1YBHQGJMGsQ1QJ6BAgdEAE
+                - generic [ref=e1125]:
+                  - generic [ref=e1130]: Google MCP
+                  - img [ref=e1134]
+        - navigation [ref=e1136]:
+          - heading "페이지 탐색" [level=1] [ref=e1137]
+          - text: "1"
+          - link "Page 2" [ref=e1140] [cursor=pointer]:
+            - /url: /search?q=Browser+MCP&sca_esv=6afbdd065017325d&ei=r8E4atLxDOuP2roPgZLC2QY&start=10&sa=N&sstk=AU9db-BMfTZC9yvF__UJpSmlRk1x695WTfHuYq9hQH_cRr9wuDbcC-gIPlF7KbD29Q7TQu3xcZism5QQqj0JGzOYX4zWYqrw9We2YQ&ved=2ahUKEwiShY_LiJqVAxXrh1YBHQGJMGsQ8tMDegQIOhAE
+            - text: "2"
+          - link "Page 3" [ref=e1142] [cursor=pointer]:
+            - /url: /search?q=Browser+MCP&sca_esv=6afbdd065017325d&ei=r8E4atLxDOuP2roPgZLC2QY&start=20&sa=N&sstk=AU9db-BMfTZC9yvF__UJpSmlRk1x695WTfHuYq9hQH_cRr9wuDbcC-gIPlF7KbD29Q7TQu3xcZism5QQqj0JGzOYX4zWYqrw9We2YQ&ved=2ahUKEwiShY_LiJqVAxXrh1YBHQGJMGsQ8tMDegQIOhAG
+            - text: "3"
+          - link "Page 4" [ref=e1144] [cursor=pointer]:
+            - /url: /search?q=Browser+MCP&sca_esv=6afbdd065017325d&ei=r8E4atLxDOuP2roPgZLC2QY&start=30&sa=N&sstk=AU9db-BMfTZC9yvF__UJpSmlRk1x695WTfHuYq9hQH_cRr9wuDbcC-gIPlF7KbD29Q7TQu3xcZism5QQqj0JGzOYX4zWYqrw9We2YQ&ved=2ahUKEwiShY_LiJqVAxXrh1YBHQGJMGsQ8tMDegQIOhAI
+            - text: "4"
+          - link "Page 5" [ref=e1146] [cursor=pointer]:
+            - /url: /search?q=Browser+MCP&sca_esv=6afbdd065017325d&ei=r8E4atLxDOuP2roPgZLC2QY&start=40&sa=N&sstk=AU9db-BMfTZC9yvF__UJpSmlRk1x695WTfHuYq9hQH_cRr9wuDbcC-gIPlF7KbD29Q7TQu3xcZism5QQqj0JGzOYX4zWYqrw9We2YQ&ved=2ahUKEwiShY_LiJqVAxXrh1YBHQGJMGsQ8tMDegQIOhAK
+            - text: "5"
+          - link "Page 6" [ref=e1148] [cursor=pointer]:
+            - /url: /search?q=Browser+MCP&sca_esv=6afbdd065017325d&ei=r8E4atLxDOuP2roPgZLC2QY&start=50&sa=N&sstk=AU9db-BMfTZC9yvF__UJpSmlRk1x695WTfHuYq9hQH_cRr9wuDbcC-gIPlF7KbD29Q7TQu3xcZism5QQqj0JGzOYX4zWYqrw9We2YQ&ved=2ahUKEwiShY_LiJqVAxXrh1YBHQGJMGsQ8tMDegQIOhAM
+            - text: "6"
+          - link "Page 7" [ref=e1150] [cursor=pointer]:
+            - /url: /search?q=Browser+MCP&sca_esv=6afbdd065017325d&ei=r8E4atLxDOuP2roPgZLC2QY&start=60&sa=N&sstk=AU9db-BMfTZC9yvF__UJpSmlRk1x695WTfHuYq9hQH_cRr9wuDbcC-gIPlF7KbD29Q7TQu3xcZism5QQqj0JGzOYX4zWYqrw9We2YQ&ved=2ahUKEwiShY_LiJqVAxXrh1YBHQGJMGsQ8tMDegQIOhAO
+            - text: "7"
+          - link "Page 8" [ref=e1152] [cursor=pointer]:
+            - /url: /search?q=Browser+MCP&sca_esv=6afbdd065017325d&ei=r8E4atLxDOuP2roPgZLC2QY&start=70&sa=N&sstk=AU9db-BMfTZC9yvF__UJpSmlRk1x695WTfHuYq9hQH_cRr9wuDbcC-gIPlF7KbD29Q7TQu3xcZism5QQqj0JGzOYX4zWYqrw9We2YQ&ved=2ahUKEwiShY_LiJqVAxXrh1YBHQGJMGsQ8tMDegQIOhAQ
+            - text: "8"
+          - link "Page 9" [ref=e1154] [cursor=pointer]:
+            - /url: /search?q=Browser+MCP&sca_esv=6afbdd065017325d&ei=r8E4atLxDOuP2roPgZLC2QY&start=80&sa=N&sstk=AU9db-BMfTZC9yvF__UJpSmlRk1x695WTfHuYq9hQH_cRr9wuDbcC-gIPlF7KbD29Q7TQu3xcZism5QQqj0JGzOYX4zWYqrw9We2YQ&ved=2ahUKEwiShY_LiJqVAxXrh1YBHQGJMGsQ8tMDegQIOhAS
+            - text: "9"
+          - link "Page 10" [ref=e1156] [cursor=pointer]:
+            - /url: /search?q=Browser+MCP&sca_esv=6afbdd065017325d&ei=r8E4atLxDOuP2roPgZLC2QY&start=90&sa=N&sstk=AU9db-BMfTZC9yvF__UJpSmlRk1x695WTfHuYq9hQH_cRr9wuDbcC-gIPlF7KbD29Q7TQu3xcZism5QQqj0JGzOYX4zWYqrw9We2YQ&ved=2ahUKEwiShY_LiJqVAxXrh1YBHQGJMGsQ8tMDegQIOhAU
+            - text: "10"
+          - heading "다음" [level=2] [ref=e1158]:
+            - link "다음" [ref=e1159] [cursor=pointer]:
+              - /url: /search?q=Browser+MCP&sca_esv=6afbdd065017325d&ei=r8E4atLxDOuP2roPgZLC2QY&start=10&sa=N&sstk=AU9db-BMfTZC9yvF__UJpSmlRk1x695WTfHuYq9hQH_cRr9wuDbcC-gIPlF7KbD29Q7TQu3xcZism5QQqj0JGzOYX4zWYqrw9We2YQ&ved=2ahUKEwiShY_LiJqVAxXrh1YBHQGJMGsQ8NMDegQIOhAW
+              - generic [ref=e1161]: 다음
+      - navigation
+    - contentinfo [ref=e1162]:
+      - heading "바닥글 링크" [level=1] [ref=e1163]
+      - generic [ref=e1167]:
+        - generic [ref=e1169]:
+          - text: 대한민국
+          - generic [ref=e1171]:
+            - button "서울특별시 - IP 주소 기반" [ref=e1173] [cursor=pointer]:
+              - generic [ref=e1174]: 서울특별시
+              - generic [ref=e1176]:
+                - text: "-"
+                - generic [ref=e1177]: IP 주소 기반
+            - text: "-"
+            - button "위치 업데이트" [ref=e1179] [cursor=pointer]: 위치 업데이트
+        - generic [ref=e1182]:
+          - link "도움말" [ref=e1183] [cursor=pointer]:
+            - /url: https://support.google.com/websearch/?p=ws_results_help&hl=ko&fg=1
+          - link "의견 보내기" [ref=e1184] [cursor=pointer]:
+            - /url: "#"
+          - link "개인정보처리방침" [ref=e1185] [cursor=pointer]:
+            - /url: https://policies.google.com/privacy?hl=ko&fg=1
+          - link "약관" [ref=e1186] [cursor=pointer]:
+            - /url: https://policies.google.com/terms?hl=ko&fg=1

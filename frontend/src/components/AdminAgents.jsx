@@ -175,15 +175,15 @@ export default function AdminAgents({ token }) {
   };
 
   /* ── Progress Bar ── */
-  const ProgressBar = ({ value, max = 100, color = 'var(--color-primary)' }) => (
-    <div style={{ width: '100%', height: '8px', background: 'rgba(255,255,255,0.06)', borderRadius: '999px', overflow: 'hidden' }}>
+  const ProgressBar = ({ value, max = 100, color = 'var(--accent-primary)' }) => (
+    <div style={{ width: '100%', height: '8px', background: 'var(--bg-page)', borderRadius: '999px', overflow: 'hidden' }}>
       <div style={{ width: `${Math.min((value / max) * 100, 100)}%`, height: '100%', background: color, borderRadius: '999px', transition: 'width 0.8s ease' }} />
     </div>
   );
 
   /* ── Stat Card ── */
-  const StatCard = ({ icon: Icon, label, value, sub, color = 'var(--color-primary)' }) => (
-    <div style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid var(--border-color)', borderRadius: '12px', padding: '20px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+  const StatCard = ({ icon: Icon, label, value, sub, color = 'var(--accent-primary)' }) => (
+    <div style={{ background: 'var(--bg-page)', border: '1px solid var(--border-default)', borderRadius: '12px', padding: '20px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--text-secondary)', fontSize: '12px', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
         <Icon size={14} style={{ color }} />
         {label}
@@ -199,7 +199,7 @@ export default function AdminAgents({ token }) {
     const isRunning = runningAgent === agentType;
 
     return (
-      <div style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid var(--border-color)', borderRadius: '12px', padding: '16px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+      <div style={{ background: 'var(--bg-page)', border: '1px solid var(--border-default)', borderRadius: '12px', padding: '16px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
             <span style={{ fontSize: '24px' }}>{AGENT_ICONS[agentType] || '🤖'}</span>
@@ -213,7 +213,7 @@ export default function AdminAgents({ token }) {
           <button
             onClick={() => runAgent(agentType)}
             disabled={isRunning}
-            style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '6px 12px', borderRadius: '8px', border: '1px solid var(--border-color)', background: isRunning ? 'rgba(59,130,246,0.1)' : 'rgba(0,242,254,0.1)', color: isRunning ? '#3b82f6' : 'var(--color-primary)', fontSize: '12px', fontWeight: '600', cursor: isRunning ? 'wait' : 'pointer' }}
+            style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '6px 12px', borderRadius: '8px', border: '1px solid var(--border-default)', background: isRunning ? 'rgba(59,130,246,0.1)' : 'var(--accent-primary-light)', color: isRunning ? '#3b82f6' : 'var(--color-primary)', fontSize: '12px', fontWeight: '600', cursor: isRunning ? 'wait' : 'pointer' }}
           >
             {isRunning ? <RefreshCw size={12} className="spin" /> : <Play size={12} />}
             {isRunning ? 'Running...' : 'Run Now'}
@@ -251,15 +251,15 @@ export default function AdminAgents({ token }) {
           </h2>
           <p style={{ fontSize: '13px', color: 'var(--text-secondary)', margin: '4px 0 0' }}>12 otomatisasi agent untuk mencapai Rp 1 Miliar</p>
         </div>
-        <button onClick={fetchAll} style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '8px 16px', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'rgba(255,255,255,0.05)', color: 'var(--text-secondary)', fontSize: '12px', fontWeight: '600', cursor: 'pointer' }}>
+        <button onClick={fetchAll} style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '8px 16px', borderRadius: '8px', border: '1px solid var(--border-default)', background: 'var(--bg-page)', color: 'var(--text-secondary)', fontSize: '12px', fontWeight: '600', cursor: 'pointer' }}>
           <RefreshCw size={14} /> Refresh
         </button>
       </div>
 
       {/* Tab Bar */}
-      <div style={{ display: 'flex', gap: '4px', background: 'rgba(255,255,255,0.03)', borderRadius: '10px', padding: '4px', border: '1px solid var(--border-color)' }}>
+      <div style={{ display: 'flex', gap: '4px', background: 'var(--bg-page)', borderRadius: '10px', padding: '4px', border: '1px solid var(--border-default)' }}>
         {TABS.map(({ key, label, icon: Icon }) => (
-          <button key={key} onClick={() => setTab(key)} style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', padding: '8px', borderRadius: '8px', border: 'none', background: tab === key ? 'rgba(0,242,254,0.1)' : 'transparent', color: tab === key ? 'var(--color-primary)' : 'var(--text-secondary)', fontSize: '12px', fontWeight: '600', cursor: 'pointer', transition: 'all 0.15s' }}>
+          <button key={key} onClick={() => setTab(key)} style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', padding: '8px', borderRadius: '8px', border: 'none', background: tab === key ? 'var(--accent-primary-light)' : 'transparent', color: tab === key ? 'var(--color-primary)' : 'var(--text-secondary)', fontSize: '12px', fontWeight: '600', cursor: 'pointer', transition: 'all 0.15s' }}>
             <Icon size={14} />
             {label}
           </button>
@@ -270,7 +270,7 @@ export default function AdminAgents({ token }) {
       {tab === 'dashboard' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
           {/* Revenue Progress */}
-          <div style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid var(--border-color)', borderRadius: '12px', padding: '24px' }}>
+          <div style={{ background: 'var(--bg-page)', border: '1px solid var(--border-default)', borderRadius: '12px', padding: '24px' }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
               <span style={{ fontSize: '14px', fontWeight: '700', color: 'var(--text-primary)' }}>Progress ke Rp 1 Miliar</span>
               <span style={{ fontSize: '20px', fontWeight: '800', color: 'var(--color-primary)' }}>{kpi?.targetProgress || '0'}%</span>
@@ -293,11 +293,11 @@ export default function AdminAgents({ token }) {
           </div>
 
           {/* Recent Tasks */}
-          <div style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid var(--border-color)', borderRadius: '12px', padding: '20px' }}>
+          <div style={{ background: 'var(--bg-page)', border: '1px solid var(--border-default)', borderRadius: '12px', padding: '20px' }}>
             <h3 style={{ fontSize: '14px', fontWeight: '700', color: 'var(--text-primary)', margin: '0 0 12px' }}>Recent Agent Runs</h3>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
               {tasks.slice(0, 10).map(task => (
-                <div key={task.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 12px', borderRadius: '8px', background: 'rgba(255,255,255,0.02)', fontSize: '12px' }}>
+                <div key={task.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 12px', borderRadius: '8px', background: 'var(--bg-page)', fontSize: '12px' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                     <span>{AGENT_ICONS[task.agentType] || '🤖'}</span>
                     <span style={{ fontWeight: '600', color: 'var(--text-primary)' }}>{AGENT_NAMES[task.agentType] || task.agentType}</span>
@@ -326,16 +326,16 @@ export default function AdminAgents({ token }) {
 
       {/* ═══ SCHEDULES TAB ═══ */}
       {tab === 'schedules' && (
-        <div style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid var(--border-color)', borderRadius: '12px', padding: '20px' }}>
+        <div style={{ background: 'var(--bg-page)', border: '1px solid var(--border-default)', borderRadius: '12px', padding: '20px' }}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
             <div style={{ display: 'grid', gridTemplateColumns: '40px 1fr 160px 80px 160px', gap: '12px', padding: '8px 12px', fontSize: '11px', fontWeight: '700', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
               <span></span><span>Agent</span><span>Cron (UTC)</span><span>Status</span><span>Last Run</span>
             </div>
             {schedules.map(s => (
-              <div key={s.id} style={{ display: 'grid', gridTemplateColumns: '40px 1fr 160px 80px 160px', gap: '12px', alignItems: 'center', padding: '10px 12px', borderRadius: '8px', background: 'rgba(255,255,255,0.02)', fontSize: '13px' }}>
+              <div key={s.id} style={{ display: 'grid', gridTemplateColumns: '40px 1fr 160px 80px 160px', gap: '12px', alignItems: 'center', padding: '10px 12px', borderRadius: '8px', background: 'var(--bg-page)', fontSize: '13px' }}>
                 <span style={{ fontSize: '18px' }}>{AGENT_ICONS[s.agentType] || '🤖'}</span>
                 <span style={{ fontWeight: '600', color: 'var(--text-primary)' }}>{AGENT_NAMES[s.agentType] || s.agentType}</span>
-                <code style={{ fontSize: '12px', color: 'var(--color-primary)', background: 'rgba(0,242,254,0.06)', padding: '2px 8px', borderRadius: '4px' }}>{s.cronExpression}</code>
+                <code style={{ fontSize: '12px', color: 'var(--color-primary)', background: 'rgba(59, 130, 246,0.06)', padding: '2px 8px', borderRadius: '4px' }}>{s.cronExpression}</code>
                 <button onClick={() => updateSchedule(s.id, { isActive: !s.isActive })} style={{ padding: '4px 8px', borderRadius: '6px', border: 'none', background: s.isActive ? 'rgba(16,185,129,0.1)' : 'rgba(239,68,68,0.1)', color: s.isActive ? '#10b981' : '#ef4444', fontSize: '11px', fontWeight: '600', cursor: 'pointer' }}>
                   {s.isActive ? 'ON' : 'OFF'}
                 </button>
@@ -350,7 +350,7 @@ export default function AdminAgents({ token }) {
       {tab === 'reports' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
           {reports.map(r => (
-            <div key={r.id} style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid var(--border-color)', borderRadius: '12px', padding: '16px' }}>
+            <div key={r.id} style={{ background: 'var(--bg-page)', border: '1px solid var(--border-default)', borderRadius: '12px', padding: '16px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start' }}>
                 <div>
                   <div style={{ fontSize: '14px', fontWeight: '700', color: 'var(--text-primary)' }}>{r.title}</div>
@@ -359,7 +359,7 @@ export default function AdminAgents({ token }) {
                   </div>
                 </div>
               </div>
-              <div style={{ marginTop: '10px', padding: '12px', background: 'rgba(255,255,255,0.02)', borderRadius: '8px', fontSize: '13px', color: 'var(--text-secondary)', whiteSpace: 'pre-wrap', maxHeight: '200px', overflow: 'auto' }}>
+              <div style={{ marginTop: '10px', padding: '12px', background: 'var(--bg-page)', borderRadius: '8px', fontSize: '13px', color: 'var(--text-secondary)', whiteSpace: 'pre-wrap', maxHeight: '200px', overflow: 'auto' }}>
                 {r.summary?.slice(0, 500)}
               </div>
             </div>
@@ -372,7 +372,7 @@ export default function AdminAgents({ token }) {
       {tab === 'content' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
           {content.map(c => (
-            <div key={c.id} style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid var(--border-color)', borderRadius: '12px', padding: '16px' }}>
+            <div key={c.id} style={{ background: 'var(--bg-page)', border: '1px solid var(--border-default)', borderRadius: '12px', padding: '16px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <div>
                   <div style={{ fontSize: '14px', fontWeight: '700', color: 'var(--text-primary)' }}>{c.title}</div>
@@ -389,7 +389,7 @@ export default function AdminAgents({ token }) {
                   )}
                 </div>
               </div>
-              <div style={{ marginTop: '8px', padding: '10px', background: 'rgba(255,255,255,0.02)', borderRadius: '8px', fontSize: '12px', color: 'var(--text-secondary)', whiteSpace: 'pre-wrap', maxHeight: '120px', overflow: 'auto' }}>
+              <div style={{ marginTop: '8px', padding: '10px', background: 'var(--bg-page)', borderRadius: '8px', fontSize: '12px', color: 'var(--text-secondary)', whiteSpace: 'pre-wrap', maxHeight: '120px', overflow: 'auto' }}>
                 {c.body?.slice(0, 300)}
               </div>
               <div style={{ marginTop: '6px', display: 'flex', gap: '8px' }}>
@@ -423,7 +423,7 @@ export default function AdminAgents({ token }) {
           {/* Config List */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
             {configs.map(c => (
-              <div key={c.agentType} style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid var(--border-color)', borderRadius: '12px', padding: '16px' }}>
+              <div key={c.agentType} style={{ background: 'var(--bg-page)', border: '1px solid var(--border-default)', borderRadius: '12px', padding: '16px' }}>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                     <div style={{ width: '36px', height: '36px', borderRadius: '8px', background: c.isActive ? 'rgba(16,185,129,0.15)' : 'rgba(239,68,68,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -441,7 +441,7 @@ export default function AdminAgents({ token }) {
                     </div>
                   </div>
                   <div style={{ display: 'flex', gap: '6px' }}>
-                    <button onClick={() => openEditConfig(c)} style={{ padding: '6px 12px', borderRadius: '6px', border: '1px solid var(--border-color)', background: 'rgba(255,255,255,0.05)', color: 'var(--text-secondary)', fontSize: '11px', fontWeight: '600', cursor: 'pointer' }}>Edit</button>
+                    <button onClick={() => openEditConfig(c)} style={{ padding: '6px 12px', borderRadius: '6px', border: '1px solid var(--border-default)', background: 'var(--bg-page)', color: 'var(--text-secondary)', fontSize: '11px', fontWeight: '600', cursor: 'pointer' }}>Edit</button>
                     {c.agentType !== 'global' && (
                       <button onClick={() => deleteConfig(c.agentType)} style={{ padding: '6px 12px', borderRadius: '6px', border: 'none', background: 'rgba(239,68,68,0.1)', color: '#ef4444', fontSize: '11px', fontWeight: '600', cursor: 'pointer' }}>Delete</button>
                     )}
@@ -454,7 +454,7 @@ export default function AdminAgents({ token }) {
 
           {/* Edit / New Config Form */}
           {editingConfig && (
-            <div style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid var(--color-primary)', borderRadius: '12px', padding: '24px' }}>
+            <div style={{ background: 'var(--bg-page)', border: '1px solid var(--color-primary)', borderRadius: '12px', padding: '24px' }}>
               <h4 style={{ fontSize: '14px', fontWeight: '700', color: 'var(--text-primary)', margin: '0 0 16px' }}>
                 {editingConfig.isNew ? 'Add New Config' : `Edit: ${editingConfig.agentType.toUpperCase()}`}
               </h4>
@@ -466,7 +466,7 @@ export default function AdminAgents({ token }) {
                   <select
                     value={editingConfig.agentType || ''}
                     onChange={e => setEditingConfig({ ...editingConfig, agentType: e.target.value })}
-                    style={{ width: '100%', padding: '8px 12px', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'rgba(255,255,255,0.05)', color: 'var(--text-primary)', fontSize: '13px' }}
+                    style={{ width: '100%', padding: '8px 12px', borderRadius: '8px', border: '1px solid var(--border-default)', background: 'var(--bg-page)', color: 'var(--text-primary)', fontSize: '13px' }}
                   >
                     <option value="">-- Select Agent Type --</option>
                     <option value="global">🌍 Global (Default)</option>
@@ -483,7 +483,7 @@ export default function AdminAgents({ token }) {
                   value={configForm.baseUrl}
                   onChange={e => setConfigForm({ ...configForm, baseUrl: e.target.value })}
                   placeholder="https://api.openai.com/v1"
-                  style={{ width: '100%', padding: '8px 12px', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'rgba(255,255,255,0.05)', color: 'var(--text-primary)', fontSize: '13px', fontFamily: 'monospace' }}
+                  style={{ width: '100%', padding: '8px 12px', borderRadius: '8px', border: '1px solid var(--border-default)', background: 'var(--bg-page)', color: 'var(--text-primary)', fontSize: '13px', fontFamily: 'monospace' }}
                 />
               </div>
 
@@ -497,7 +497,7 @@ export default function AdminAgents({ token }) {
                   value={configForm.apiKey}
                   onChange={e => setConfigForm({ ...configForm, apiKey: e.target.value })}
                   placeholder={editingConfig.isNew ? 'sk-...' : '•••••••• (leave empty to keep)'}
-                  style={{ width: '100%', padding: '8px 12px', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'rgba(255,255,255,0.05)', color: 'var(--text-primary)', fontSize: '13px', fontFamily: 'monospace' }}
+                  style={{ width: '100%', padding: '8px 12px', borderRadius: '8px', border: '1px solid var(--border-default)', background: 'var(--bg-page)', color: 'var(--text-primary)', fontSize: '13px', fontFamily: 'monospace' }}
                 />
               </div>
 
@@ -509,7 +509,7 @@ export default function AdminAgents({ token }) {
                   value={configForm.model}
                   onChange={e => setConfigForm({ ...configForm, model: e.target.value })}
                   placeholder="claude-sonnet-4-6 / gpt-4o-mini"
-                  style={{ width: '100%', padding: '8px 12px', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'rgba(255,255,255,0.05)', color: 'var(--text-primary)', fontSize: '13px', fontFamily: 'monospace' }}
+                  style={{ width: '100%', padding: '8px 12px', borderRadius: '8px', border: '1px solid var(--border-default)', background: 'var(--bg-page)', color: 'var(--text-primary)', fontSize: '13px', fontFamily: 'monospace' }}
                 />
               </div>
 
@@ -521,7 +521,7 @@ export default function AdminAgents({ token }) {
                     type="number"
                     value={configForm.maxTokens}
                     onChange={e => setConfigForm({ ...configForm, maxTokens: parseInt(e.target.value) || 4096 })}
-                    style={{ width: '100%', padding: '8px 12px', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'rgba(255,255,255,0.05)', color: 'var(--text-primary)', fontSize: '13px' }}
+                    style={{ width: '100%', padding: '8px 12px', borderRadius: '8px', border: '1px solid var(--border-default)', background: 'var(--bg-page)', color: 'var(--text-primary)', fontSize: '13px' }}
                   />
                 </div>
                 <div>
@@ -533,7 +533,7 @@ export default function AdminAgents({ token }) {
                     max="2"
                     value={configForm.temperature}
                     onChange={e => setConfigForm({ ...configForm, temperature: parseFloat(e.target.value) || 0.7 })}
-                    style={{ width: '100%', padding: '8px 12px', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'rgba(255,255,255,0.05)', color: 'var(--text-primary)', fontSize: '13px' }}
+                    style={{ width: '100%', padding: '8px 12px', borderRadius: '8px', border: '1px solid var(--border-default)', background: 'var(--bg-page)', color: 'var(--text-primary)', fontSize: '13px' }}
                   />
                 </div>
               </div>
@@ -550,17 +550,17 @@ export default function AdminAgents({ token }) {
                 <button onClick={saveConfig} disabled={savingConfig} style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '8px 20px', borderRadius: '8px', border: 'none', background: 'var(--color-primary)', color: '#000', fontSize: '12px', fontWeight: '700', cursor: savingConfig ? 'wait' : 'pointer' }}>
                   <Save size={14} /> {savingConfig ? 'Saving...' : 'Save'}
                 </button>
-                <button onClick={testApi} disabled={testingApi || !configForm.baseUrl || !configForm.apiKey || !configForm.model} style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '8px 20px', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'rgba(255,255,255,0.05)', color: 'var(--text-secondary)', fontSize: '12px', fontWeight: '600', cursor: testingApi ? 'wait' : 'pointer' }}>
+                <button onClick={testApi} disabled={testingApi || !configForm.baseUrl || !configForm.apiKey || !configForm.model} style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '8px 20px', borderRadius: '8px', border: '1px solid var(--border-default)', background: 'var(--bg-page)', color: 'var(--text-secondary)', fontSize: '12px', fontWeight: '600', cursor: testingApi ? 'wait' : 'pointer' }}>
                   <TestTube size={14} /> {testingApi ? 'Testing...' : 'Test Connection'}
                 </button>
-                <button onClick={() => setEditingConfig(null)} style={{ padding: '8px 20px', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'transparent', color: 'var(--text-secondary)', fontSize: '12px', fontWeight: '600', cursor: 'pointer' }}>Cancel</button>
+                <button onClick={() => setEditingConfig(null)} style={{ padding: '8px 20px', borderRadius: '8px', border: '1px solid var(--border-default)', background: 'transparent', color: 'var(--text-secondary)', fontSize: '12px', fontWeight: '600', cursor: 'pointer' }}>Cancel</button>
               </div>
             </div>
           )}
 
           {/* Info Box */}
           {!editingConfig && (
-            <div style={{ background: 'rgba(0,242,254,0.03)', border: '1px solid rgba(0,242,254,0.15)', borderRadius: '12px', padding: '16px' }}>
+            <div style={{ background: 'rgba(59, 130, 246,0.03)', border: '1px solid var(--accent-primary-light)', borderRadius: '12px', padding: '16px' }}>
               <h4 style={{ fontSize: '13px', fontWeight: '700', color: 'var(--color-primary)', margin: '0 0 8px' }}>Cara Kerja</h4>
               <ul style={{ fontSize: '12px', color: 'var(--text-secondary)', margin: 0, paddingLeft: '16px', lineHeight: '1.8' }}>
                 <li><strong>Global config</strong> dipakai sebagai default untuk semua agent.</li>

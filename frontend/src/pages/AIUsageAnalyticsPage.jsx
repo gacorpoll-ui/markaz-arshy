@@ -25,7 +25,7 @@ const getStatusColor = (code) => code >= 200 && code < 300 ? '#22c55e' : code >=
 // ═══════════════════════════════════════
 function UsageSkeleton() {
   const s = {
-    background: 'linear-gradient(90deg, rgba(255,255,255,0.04) 25%, rgba(255,255,255,0.08) 50%, rgba(255,255,255,0.04) 75%)',
+    background: 'linear-gradient(90deg, var(--bg-page) 25%, var(--bg-page) 50%, var(--bg-page) 75%)',
     backgroundSize: '200% 100%', animation: 'shimmer 1.5s infinite', borderRadius: 'var(--radius-sm)',
   };
   return (
@@ -56,8 +56,8 @@ function CostBreakdown({ log, onClose }) {
   if (!p) return null;
 
   return (
-    <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: '20px', backdropFilter: 'blur(4px)' }} onClick={onClose}>
-      <div style={{ background: 'var(--bg-surface)', borderRadius: 'var(--radius-md)', padding: '28px', maxWidth: '480px', width: '100%', border: '1px solid var(--border-color)', boxShadow: '0 20px 60px rgba(0,0,0,0.5)' }} onClick={e => e.stopPropagation()}>
+    <div style={{ position: 'fixed', inset: 0, background: 'var(--bg-muted)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: '20px', backdropFilter: 'blur(4px)' }} onClick={onClose}>
+      <div style={{ background: 'var(--bg-surface)', borderRadius: 'var(--radius-md)', padding: '28px', maxWidth: '480px', width: '100%', border: '1px solid var(--border-default)', boxShadow: '0 20px 60px var(--bg-muted)' }} onClick={e => e.stopPropagation()}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
           <div>
             <h3 style={{ fontSize: '18px', fontWeight: '700', marginBottom: '4px' }}>Rincian Biaya</h3>
@@ -67,7 +67,7 @@ function CostBreakdown({ log, onClose }) {
         </div>
 
         {/* Pricing Formula */}
-        <div style={{ background: 'rgba(0,0,0,0.3)', borderRadius: 'var(--radius-sm)', padding: '14px', marginBottom: '20px', fontFamily: 'monospace', fontSize: '11px', color: 'var(--text-secondary)', lineHeight: 1.8, wordBreak: 'break-all' }}>
+        <div style={{ background: 'var(--bg-muted)', borderRadius: 'var(--radius-sm)', padding: '14px', marginBottom: '20px', fontFamily: 'monospace', fontSize: '11px', color: 'var(--text-secondary)', lineHeight: 1.8, wordBreak: 'break-all' }}>
           <div style={{ color: 'var(--text-muted)', marginBottom: '6px', fontFamily: 'var(--font-primary)', fontSize: '10px', textTransform: 'uppercase', fontWeight: '600' }}>Formula Perhitungan</div>
           <div><span style={{ color: 'var(--color-secondary)' }}>Input:</span> {formatNumber(log.inputTokens)} tokens x Rp{formatNumber(p.inputPricePer1K)}/1K</div>
           <div><span style={{ color: '#a855f7' }}>Output:</span> {formatNumber(log.outputTokens)} tokens x Rp{formatNumber(p.outputPricePer1K)}/1K</div>
@@ -90,7 +90,7 @@ function CostBreakdown({ log, onClose }) {
             <div style={{ fontSize: '16px', fontWeight: '700', color: '#a855f7' }}>{formatCost(p.calculatedOutputCost)}</div>
           </div>
 
-          <div style={{ borderTop: '1px solid var(--border-color)', margin: '4px 0' }} />
+          <div style={{ borderTop: '1px solid var(--border-default)', margin: '4px 0' }} />
 
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px', background: 'rgba(16,185,129,0.06)', borderRadius: 'var(--radius-sm)', border: '1px solid rgba(16,185,129,0.1)' }}>
             <div>
@@ -101,7 +101,7 @@ function CostBreakdown({ log, onClose }) {
           </div>
         </div>
 
-        <div style={{ marginTop: '16px', padding: '10px 14px', background: 'rgba(255,255,255,0.02)', borderRadius: 'var(--radius-sm)', fontSize: '11px', color: 'var(--text-muted)', lineHeight: 1.6 }}>
+        <div style={{ marginTop: '16px', padding: '10px 14px', background: 'var(--bg-page)', borderRadius: 'var(--radius-sm)', fontSize: '11px', color: 'var(--text-muted)', lineHeight: 1.6 }}>
           <div>Harga saat request: Input Rp{formatNumber(p.inputPricePer1K)}/1K | Output Rp{formatNumber(p.outputPricePer1K)}/1K</div>
           <div>Latency: {formatLatency(log.latencyMs)} | Status: {log.statusCode}</div>
         </div>
@@ -115,7 +115,7 @@ function CostBreakdown({ log, onClose }) {
 // ═══════════════════════════════════════
 const LogRow = React.memo(function LogRow({ log, index, onShowBreakdown }) {
   return (
-    <tr style={{ borderBottom: '1px solid var(--border-color)', background: index % 2 === 0 ? 'transparent' : 'rgba(255,255,255,0.015)' }}
+    <tr style={{ borderBottom: '1px solid var(--border-default)', background: index % 2 === 0 ? 'transparent' : 'rgba(255,255,255,0.015)' }}
       onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(79,172,254,0.04)'}
       onMouseLeave={(e) => e.currentTarget.style.background = index % 2 === 0 ? 'transparent' : 'rgba(255,255,255,0.015)'}
     >
@@ -137,7 +137,7 @@ const LogRow = React.memo(function LogRow({ log, index, onShowBreakdown }) {
       </td>
       <td style={{ padding: '12px 14px', textAlign: 'right' }}>
         <button onClick={() => onShowBreakdown(log)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '4px 8px', borderRadius: '4px', display: 'flex', alignItems: 'center', gap: '4px', marginLeft: 'auto' }}
-          onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.06)'}
+          onMouseEnter={(e) => e.currentTarget.style.background = 'var(--bg-page)'}
           onMouseLeave={(e) => e.currentTarget.style.background = 'none'} title="Lihat rincian biaya">
           <span style={{ fontWeight: '600', color: getPriceColor(log.totalCost), fontSize: '13px' }}>{formatCost(log.totalCost)}</span>
           <Info size={12} style={{ color: 'var(--text-muted)' }} />
@@ -363,12 +363,12 @@ export default function AIUsageAnalyticsPage({ user, token }) {
         </button>
         <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', flexWrap: 'wrap', gap: '16px' }}>
           <div>
-            <h1 style={{ fontFamily: 'var(--font-title)', fontSize: '28px', fontWeight: '700', marginBottom: '6px' }}>Usage Analytics</h1>
+            <h1 style={{ fontFamily: 'var(--font-display)', fontSize: '28px', fontWeight: '700', marginBottom: '6px' }}>Usage Analytics</h1>
             <p style={{ fontSize: '13px', color: 'var(--text-muted)' }}>Pantau penggunaan AI secara real-time. Semua biaya dari Saldo Wallet.</p>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
             <button onClick={exportCSV} disabled={!logs.length}
-              style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '8px 14px', borderRadius: 'var(--radius-sm)', fontSize: '12px', fontWeight: '600', background: 'rgba(255,255,255,0.04)', border: '1px solid var(--border-color)', color: logs.length ? 'var(--text-secondary)' : 'var(--text-muted)', cursor: logs.length ? 'pointer' : 'not-allowed' }}>
+              style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '8px 14px', borderRadius: 'var(--radius-sm)', fontSize: '12px', fontWeight: '600', background: 'var(--bg-page)', border: '1px solid var(--border-default)', color: logs.length ? 'var(--text-secondary)' : 'var(--text-muted)', cursor: logs.length ? 'pointer' : 'not-allowed' }}>
               <Download size={14} /> Export CSV
             </button>
             <div style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '6px 12px', borderRadius: '999px', fontSize: '11px', fontWeight: '600', background: sseStatus === 'connected' ? 'rgba(34,197,94,0.12)' : sseStatus === 'connecting' ? 'rgba(250,204,21,0.12)' : 'rgba(239,68,68,0.12)', color: sseStatus === 'connected' ? '#22c55e' : sseStatus === 'connecting' ? '#facc15' : '#ef4444' }}>
@@ -384,15 +384,15 @@ export default function AIUsageAnalyticsPage({ user, token }) {
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
           <Filter size={14} style={{ color: 'var(--text-muted)' }} />
           <select value={selectedKeyId} onChange={(e) => setSelectedKeyId(e.target.value)}
-            style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-sm)', padding: '8px 12px', color: 'var(--text-primary)', fontSize: '13px', cursor: 'pointer', minWidth: '180px', outline: 'none' }}>
+            style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-default)', borderRadius: 'var(--radius-sm)', padding: '8px 12px', color: 'var(--text-primary)', fontSize: '13px', cursor: 'pointer', minWidth: '180px', outline: 'none' }}>
             <option value="">Semua API Keys</option>
             {apiKeys.map(k => <option key={k.id} value={k.id}>{k.keyName}</option>)}
           </select>
         </div>
-        <div style={{ display: 'flex', gap: '4px', background: 'rgba(255,255,255,0.03)', padding: '4px', borderRadius: 'var(--radius-sm)' }}>
+        <div style={{ display: 'flex', gap: '4px', background: 'var(--bg-page)', padding: '4px', borderRadius: 'var(--radius-sm)' }}>
           {[{ val: '7d', label: '7H' }, { val: '30d', label: '30H' }, { val: 'all', label: 'Semua' }].map(opt => (
             <button key={opt.val} onClick={() => setTimeframe(opt.val)}
-              style={{ padding: '6px 14px', fontSize: '12px', fontWeight: '600', borderRadius: '6px', border: 'none', cursor: 'pointer', background: timeframe === opt.val ? 'var(--grad-primary)' : 'transparent', color: timeframe === opt.val ? '#fff' : 'var(--text-muted)' }}>
+              style={{ padding: '6px 14px', fontSize: '12px', fontWeight: '600', borderRadius: '6px', border: 'none', cursor: 'pointer', background: timeframe === opt.val ? 'var(--accent-primary)' : 'transparent', color: timeframe === opt.val ? '#fff' : 'var(--text-muted)' }}>
               {opt.label}
             </button>
           ))}
@@ -409,7 +409,7 @@ export default function AIUsageAnalyticsPage({ user, token }) {
         <>
           {/* Summary Cards */}
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '14px', marginBottom: '28px' }}>
-            <SummaryCard icon={Cpu} label="Requests" value={formatNumber(summary?.totalRequests)} color="var(--color-primary)" />
+            <SummaryCard icon={Cpu} label="Requests" value={formatNumber(summary?.totalRequests)} color="var(--accent-primary)" />
             <SummaryCard icon={Activity} label="Tokens" value={formatNumber(summary?.totalTokens)}
               subValue={`In: ${formatNumber(summary?.inputTokens)} / Out: ${formatNumber(summary?.outputTokens)}`} color="var(--color-secondary)" />
             <SummaryCard icon={DollarSign} label="Biaya" value={formatCost(summary?.totalCost)} color={getPriceColor(summary?.totalCost || 0)} />
@@ -424,7 +424,7 @@ export default function AIUsageAnalyticsPage({ user, token }) {
                 Rata-rata: <strong style={{ color: 'var(--text-primary)' }}>{formatNumber(Math.round(stats.avgTokensPerRequest))}</strong> tokens/request
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 16px', borderRadius: 'var(--radius-sm)', background: 'rgba(16,185,129,0.06)', border: '1px solid rgba(16,185,129,0.1)', fontSize: '12px', color: 'var(--text-secondary)' }}>
-                <DollarSign size={14} style={{ color: 'var(--color-success)' }} />
+                <DollarSign size={14} style={{ color: 'var(--accent-success)' }} />
                 Rata-rata: <strong style={{ color: 'var(--text-primary)' }}>{formatCost(stats.avgCostPerRequest)}</strong>/request
               </div>
             </div>
@@ -434,11 +434,11 @@ export default function AIUsageAnalyticsPage({ user, token }) {
           {summary?.byModel?.length > 0 && (
             <div className="glass-card" style={{ padding: '24px', marginBottom: '28px' }}>
               <h3 style={{ fontSize: '16px', fontWeight: '700', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <Activity size={18} style={{ color: 'var(--color-primary)' }} /> Usage per Model
+                <Activity size={18} style={{ color: 'var(--accent-primary)' }} /> Usage per Model
               </h3>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '10px' }}>
                 {summary.byModel.map((m, i) => (
-                  <div key={i} style={{ background: 'rgba(0,0,0,0.2)', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-sm)', padding: '14px' }}>
+                  <div key={i} style={{ background: 'var(--bg-muted)', border: '1px solid var(--border-default)', borderRadius: 'var(--radius-sm)', padding: '14px' }}>
                     <div style={{ fontSize: '13px', fontWeight: '600', color: 'var(--text-primary)', marginBottom: '6px' }}>{m.model.name}</div>
                     <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginBottom: '6px' }}>{m.requestCount} req | {formatNumber(m.totalTokens)} tok</div>
                     <div style={{ fontSize: '15px', fontWeight: '700', color: getPriceColor(m.totalCost) }}>{formatCost(m.totalCost)}</div>
@@ -458,13 +458,13 @@ export default function AIUsageAnalyticsPage({ user, token }) {
           {/* Logs Table */}
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '14px' }}>
             <h2 style={{ fontSize: '18px', fontWeight: '700', display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <Clock size={18} style={{ color: 'var(--color-primary)' }} /> Recent Requests
+              <Clock size={18} style={{ color: 'var(--accent-primary)' }} /> Recent Requests
             </h2>
             <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>{logsTotal} entries</span>
           </div>
 
           {logs.length === 0 ? (
-            <div style={{ textAlign: 'center', padding: '50px 20px', color: 'var(--text-muted)', background: 'rgba(255,255,255,0.02)', borderRadius: 'var(--radius-md)', border: '1px dashed var(--border-color)' }}>
+            <div style={{ textAlign: 'center', padding: '50px 20px', color: 'var(--text-muted)', background: 'var(--bg-page)', borderRadius: 'var(--radius-md)', border: '1px dashed var(--border-default)' }}>
               <Activity size={40} style={{ marginBottom: '12px', opacity: 0.3 }} />
               <p style={{ fontSize: '14px', fontWeight: '500' }}>Belum ada usage data.</p>
               <p style={{ fontSize: '12px', marginTop: '4px' }}>Buat request AI untuk mulai melihat data.</p>
@@ -474,7 +474,7 @@ export default function AIUsageAnalyticsPage({ user, token }) {
               <div style={{ overflowX: 'auto' }}>
                 <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
                   <thead>
-                    <tr style={{ borderBottom: '1px solid var(--border-color)', background: 'rgba(0,0,0,0.2)' }}>
+                    <tr style={{ borderBottom: '1px solid var(--border-default)', background: 'var(--bg-muted)' }}>
                       {['Waktu', 'Key', 'Model', 'In / Out', 'Biaya', 'Latency', 'Status'].map(h => (
                         <th key={h} style={{ padding: '10px 14px', textAlign: h === 'Biaya' || h === 'In / Out' || h === 'Latency' || h === 'Status' ? 'right' : 'left', color: 'var(--text-muted)', fontSize: '10px', textTransform: 'uppercase', fontWeight: '600', letterSpacing: '0.5px' }}>{h}</th>
                       ))}
@@ -489,7 +489,7 @@ export default function AIUsageAnalyticsPage({ user, token }) {
               </div>
               {/* Load More */}
               {logs.length < logsTotal && (
-                <div style={{ padding: '16px', textAlign: 'center', borderTop: '1px solid var(--border-color)' }}>
+                <div style={{ padding: '16px', textAlign: 'center', borderTop: '1px solid var(--border-default)' }}>
                   <button onClick={loadMoreLogs} disabled={loadingMore}
                     className="btn btn-secondary"
                     style={{ padding: '8px 24px', fontSize: '12px', display: 'inline-flex', alignItems: 'center', gap: '6px' }}>

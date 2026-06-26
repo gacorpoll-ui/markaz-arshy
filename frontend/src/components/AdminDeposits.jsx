@@ -19,7 +19,7 @@ export default function AdminDeposits({ pendingDeposits, handleConfirmDeposit, h
 
     return (
         <div className="glass-card">
-            <h3 style={{ fontSize: '20px', fontWeight: '700', marginBottom: '20px', borderBottom: '1px solid var(--border-color)', paddingBottom: '10px' }}>
+            <h3 style={{ fontSize: '20px', fontWeight: '700', marginBottom: '20px', borderBottom: '1px solid var(--border-default)', paddingBottom: '10px' }}>
                 Menunggu Persetujuan Transfer Manual
             </h3>
 
@@ -30,11 +30,11 @@ export default function AdminDeposits({ pendingDeposits, handleConfirmDeposit, h
             ) : (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
                     {pendingDeposits.map(dep => (
-                        <div key={dep.id} className="flex-between" style={{ padding: '16px', background: 'rgba(255,255,255,0.02)', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-sm)' }}>
+                        <div key={dep.id} className="flex-between" style={{ padding: '16px', background: 'var(--bg-page)', border: '1px solid var(--border-default)', borderRadius: 'var(--radius-sm)' }}>
                             <div>
                                 <div style={{ fontSize: '13px', color: 'var(--text-muted)' }}>Deposit ID: #{dep.id} &bull; User ID: {dep.userId}</div>
-                                <h4 style={{ fontSize: '16px', fontWeight: '700', color: '#fff', marginTop: '4px' }}>{dep.user.name} ({dep.user.email})</h4>
-                                <div style={{ fontSize: '18px', fontWeight: '800', color: 'var(--color-primary)', marginTop: '4px' }}>
+                                <h4 style={{ fontSize: '16px', fontWeight: '700', color: 'var(--text-primary)', marginTop: '4px' }}>{dep.user.name} ({dep.user.email})</h4>
+                                <div style={{ fontSize: '18px', fontWeight: '800', color: 'var(--accent-primary)', marginTop: '4px' }}>
                                     Rp {dep.amount.toLocaleString('id-ID')}
                                 </div>
                                 <div style={{ fontSize: '13px', color: 'var(--text-secondary)', marginTop: '8px' }}>
@@ -42,7 +42,7 @@ export default function AdminDeposits({ pendingDeposits, handleConfirmDeposit, h
                                 </div>
                                 {dep.paymentProof && (
                                     <div style={{ marginTop: '10px' }}>
-                                        <a href={`${import.meta.env.VITE_API_BASE_URL}${dep.paymentProof}`} target="_blank" rel="noopener noreferrer" style={{ fontSize: '12px', color: 'var(--color-primary)', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                        <a href={`${import.meta.env.VITE_API_BASE_URL}${dep.paymentProof}`} target="_blank" rel="noopener noreferrer" style={{ fontSize: '12px', color: 'var(--accent-primary)', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '4px' }}>
                                             <ExternalLink size={12} /> Lihat Bukti Transfer
                                         </a>
                                     </div>

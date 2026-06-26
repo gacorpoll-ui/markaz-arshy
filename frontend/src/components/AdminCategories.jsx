@@ -22,7 +22,7 @@ export default function AdminCategories({
 
     return (
         <div className="glass-card">
-            <h3 style={{ fontSize: '20px', fontWeight: '700', marginBottom: '20px', borderBottom: '1px solid var(--border-color)', paddingBottom: '10px' }}>
+            <h3 style={{ fontSize: '20px', fontWeight: '700', marginBottom: '20px', borderBottom: '1px solid var(--border-default)', paddingBottom: '10px' }}>
                 Kelola Kategori Produk
             </h3>
 
@@ -49,7 +49,7 @@ export default function AdminCategories({
 
             <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '14px' }}>
                 <thead>
-                    <tr style={{ background: 'rgba(255,255,255,0.02)', borderBottom: '1px solid var(--border-color)', textAlign: 'left' }}>
+                    <tr style={{ background: 'var(--bg-page)', borderBottom: '1px solid var(--border-default)', textAlign: 'left' }}>
                         <th style={{ padding: '12px' }}>ID</th>
                         <th style={{ padding: '12px' }}>Nama</th>
                         <th style={{ padding: '12px' }}>Slug</th>
@@ -59,7 +59,7 @@ export default function AdminCategories({
                 </thead>
                 <tbody>
                     {categories.map(cat => (
-                        <tr key={cat.id} style={{ borderBottom: '1px solid var(--border-color)' }}>
+                        <tr key={cat.id} style={{ borderBottom: '1px solid var(--border-default)' }}>
                             <td style={{ padding: '12px', color: 'var(--text-muted)' }}>#{cat.id}</td>
                             <td style={{ padding: '12px', fontWeight: '600' }}>{cat.name}</td>
                             <td style={{ padding: '12px', fontFamily: 'monospace' }}>{cat.slug}</td>
@@ -67,7 +67,7 @@ export default function AdminCategories({
                                 <span className={`badge ${cat.type === 'PREMIUM' ? 'badge-premium' : 'badge-smm'}`}>{cat.type}</span>
                             </td>
                             <td style={{ padding: '12px' }}>
-                                <button onClick={() => handleDeleteCategory(cat.id)} className="btn btn-secondary" style={{ padding: '6px', color: 'var(--color-error)' }}>
+                                <button onClick={() => handleDeleteCategory(cat.id)} className="btn btn-secondary" style={{ padding: '6px', color: 'var(--accent-danger)' }}>
                                     <Trash2 size={16} />
                                 </button>
                             </td>

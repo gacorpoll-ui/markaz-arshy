@@ -69,13 +69,13 @@ export default function AdminReviews({ token }) {
   }
 
   if (error) {
-    return <div style={{ color: 'var(--color-error)', textAlign: 'center', padding: '50px' }}>Error: {error}</div>;
+    return <div style={{ color: 'var(--accent-danger)', textAlign: 'center', padding: '50px' }}>Error: {error}</div>;
   }
 
   return (
     <div className="glass-card" style={{ padding: '30px' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '25px', borderBottom: '1px solid var(--border-color)', paddingBottom: '20px' }}>
-        <h2 style={{ fontFamily: 'var(--font-title)', fontSize: '24px', fontWeight: '800', display: 'flex', alignItems: 'center', gap: '10px' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '25px', borderBottom: '1px solid var(--border-default)', paddingBottom: '20px' }}>
+        <h2 style={{ fontFamily: 'var(--font-display)', fontSize: '24px', fontWeight: '800', display: 'flex', alignItems: 'center', gap: '10px' }}>
           <Eye size={24} className="text-gradient" /> Manajemen Ulasan
         </h2>
         <button onClick={fetchReviews} className="btn btn-secondary">
@@ -90,7 +90,7 @@ export default function AdminReviews({ token }) {
       ) : (
         <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '14px', textAlign: 'left' }}>
           <thead>
-            <tr style={{ background: 'rgba(255,255,255,0.03)', borderBottom: '1px solid var(--border-color)' }}>
+            <tr style={{ background: 'var(--bg-page)', borderBottom: '1px solid var(--border-default)' }}>
               <th style={{ padding: '15px 20px' }}>Produk</th>
               <th style={{ padding: '15px 20px' }}>User</th>
               <th style={{ padding: '15px 20px' }}>Rating</th>
@@ -101,7 +101,7 @@ export default function AdminReviews({ token }) {
           </thead>
           <tbody>
             {reviews.map(review => (
-              <tr key={review.id} style={{ borderBottom: '1px solid var(--border-color)' }}>
+              <tr key={review.id} style={{ borderBottom: '1px solid var(--border-default)' }}>
                 <td style={{ padding: '15px 20px', color: 'var(--text-primary)' }}>
                   {review.product ? review.product.name : 'N/A'}
                 </td>
@@ -109,7 +109,7 @@ export default function AdminReviews({ token }) {
                   {review.user ? review.user.name : 'N/A'}
                 </td>
                 <td style={{ padding: '15px 20px' }}>
-                  <div style={{ display: 'flex', gap: '2px', color: 'var(--color-warning)' }}>
+                  <div style={{ display: 'flex', gap: '2px', color: 'var(--accent-warning)' }}>
                     {[...Array(5)].map((_, i) => (
                       <svg key={i} fill={i < review.rating ? 'currentColor' : 'none'} stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24" style={{ width: '16px', height: '16px' }}>
                         <path d="M12 2l3.09 6.31L22 9.27l-5 4.87 1.18 6.88L12 17.25l-6.18 3.27L7 14.14l-5-4.87 7.91-1.01L12 2z"></path>

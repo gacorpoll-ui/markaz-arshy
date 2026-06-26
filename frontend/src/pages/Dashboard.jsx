@@ -111,71 +111,63 @@ export default function Dashboard({ user, token, onUpdateUser }) {
     <div className="container animate-fade-in" style={{ paddingBottom: '100px' }}>
       
       {/* --- HERO DASHBOARD & STATS --- */}
-      <div style={{ 
-        background: 'linear-gradient(135deg, rgba(0, 242, 254, 0.08) 0%, rgba(225, 48, 108, 0.08) 100%)',
-        borderRadius: '30px',
+      <div style={{
+        background: 'var(--bg-surface)',
+        borderRadius: '16px',
         padding: '40px',
         marginBottom: '40px',
-        border: '1px solid var(--border-color)',
-        position: 'relative',
-        overflow: 'hidden'
+        border: '1px solid var(--border-default)',
+        boxShadow: 'var(--shadow-sm)',
       }}>
-        <div style={{ position: 'relative', zIndex: 1, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '30px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '24px' }}>
           <div style={{ flex: '1', minWidth: '300px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '15px' }}>
-              <div className={`badge ${user.role === 'ADMIN' ? 'badge-premium' : user.role === 'RESELLER' ? 'badge-smm' : 'badge-secondary'}`} style={{ padding: '8px 20px', fontSize: '12px', borderRadius: '50px', fontWeight: '800', letterSpacing: '1px' }}>
-                 ✨ {user.role === 'ADMIN' ? 'ADMINISTRATOR' : user.role === 'RESELLER' ? 'RESELLER PARTNER' : 'MEMBER PREMIUM'}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '12px' }}>
+              <div className={`badge ${user.role === 'ADMIN' ? 'badge-premium' : user.role === 'RESELLER' ? 'badge-smm' : 'badge-secondary'}`} style={{ padding: '4px 14px', fontSize: '11px', borderRadius: '99px', fontWeight: '700' }}>
+                 {user.role === 'ADMIN' ? 'ADMINISTRATOR' : user.role === 'RESELLER' ? 'RESELLER PARTNER' : 'MEMBER'}
               </div>
-              {user.isVerified && <span style={{ color: 'var(--color-success)', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '4px', fontWeight: '600' }}><CheckCircle size={16} /> Verified</span>}
+              {user.isVerified && <span style={{ color: 'var(--accent-success)', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '4px', fontWeight: '600' }}><CheckCircle size={14} /> Verified</span>}
             </div>
-            <h2 style={{ fontFamily: 'var(--font-title)', fontSize: '42px', fontWeight: '900', color: '#fff', lineHeight: '1.1' }}>
-              Hello, <span className="text-gradient">{user.name.split(' ')[0]}!</span>
+            <h2 style={{ fontFamily: 'var(--font-display)', fontSize: '36px', fontWeight: '800', color: 'var(--text-primary)', lineHeight: '1.1' }}>
+              Hello, <span style={{ color: 'var(--accent-primary)' }}>{user.name.split(' ')[0]}</span>
             </h2>
-            <p style={{ color: 'var(--text-secondary)', fontSize: '16px', marginTop: '12px', maxWidth: '450px' }}>
-              Selamat datang kembali. Semua sistem berjalan normal. Anda siap untuk meledakkan interaksi sosial media hari ini?
+            <p style={{ color: 'var(--text-secondary)', fontSize: '15px', marginTop: '8px', maxWidth: '450px' }}>
+              Selamat datang kembali. Semua sistem berjalan normal.
             </p>
           </div>
 
-          <div style={{ display: 'flex', gap: '20px', flexWrap: 'wrap' }}>
+          <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap' }}>
             {/* Balance Card */}
             <div style={{
-              background: 'rgba(255, 255, 255, 0.03)',
-              backdropFilter: 'blur(10px)',
-              border: '1px solid rgba(255, 255, 255, 0.1)',
-              borderRadius: '24px',
-              padding: '25px',
-              minWidth: '280px',
-              boxShadow: '0 20px 40px rgba(0,0,0,0.3)',
+              background: 'var(--bg-surface)',
+              border: '1px solid var(--border-default)',
+              borderRadius: '14px',
+              padding: '24px',
+              minWidth: '260px',
+              boxShadow: 'var(--shadow-xs)',
             }}>
-              <div style={{ color: 'var(--text-muted)', fontSize: '12px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '10px' }}>Saldo Wallet</div>
-              <div style={{ fontSize: '36px', fontWeight: '900', fontFamily: 'var(--font-title)', color: 'var(--color-primary)', display: 'flex', alignItems: 'baseline', gap: '5px' }}>
-                <span style={{ fontSize: '18px', fontWeight: '600' }}>Rp</span>
+              <div style={{ color: 'var(--text-muted)', fontSize: '11px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '8px' }}>Saldo Wallet</div>
+              <div style={{ fontSize: '32px', fontWeight: '800', fontFamily: 'var(--font-display)', color: 'var(--accent-primary)', display: 'flex', alignItems: 'baseline', gap: '4px' }}>
+                <span style={{ fontSize: '16px', fontWeight: '600' }}>Rp</span>
                 {user.balance.toLocaleString('id-ID')}
               </div>
-              <div style={{ display: 'flex', gap: '10px', marginTop: '20px' }}>
-                <button onClick={() => navigate('/deposit')} className="btn btn-primary" style={{ flex: 1, padding: '10px', fontSize: '13px', borderRadius: '10px' }}>
-                   Top Up
-                </button>
-                <button onClick={fetchDashboardData} className="btn btn-secondary" style={{ padding: '10px', borderRadius: '10px' }}>
-                   <RefreshCw size={16} />
-                </button>
+              <div style={{ display: 'flex', gap: '8px', marginTop: '16px' }}>
+                <button onClick={() => navigate('/deposit')} className="btn btn-primary" style={{ flex: 1, padding: '8px', fontSize: '13px' }}>Top Up</button>
+                <button onClick={fetchDashboardData} className="btn btn-secondary" style={{ padding: '8px' }}><RefreshCw size={15} /></button>
               </div>
             </div>
 
             {/* Quick Stats Card */}
             <div style={{
-              background: 'rgba(255, 255, 255, 0.03)',
-              backdropFilter: 'blur(10px)',
-              border: '1px solid rgba(255, 255, 255, 0.1)',
-              borderRadius: '24px',
-              padding: '25px',
-              minWidth: '200px',
+              background: 'var(--bg-surface)',
+              border: '1px solid var(--border-default)',
+              borderRadius: '14px',
+              padding: '24px',
+              minWidth: '180px',
+              boxShadow: 'var(--shadow-xs)',
             }}>
-              <div style={{ color: 'var(--text-muted)', fontSize: '12px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '15px' }}>Total Pesanan</div>
-              <div style={{ fontSize: '36px', fontWeight: '900', fontFamily: 'var(--font-title)', color: '#fff' }}>
-                {orders.length}
-              </div>
-              <div style={{ marginTop: '10px', fontSize: '12px', color: 'var(--color-success)', fontWeight: '600' }}>
+              <div style={{ color: 'var(--text-muted)', fontSize: '11px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '12px' }}>Total Pesanan</div>
+              <div style={{ fontSize: '32px', fontWeight: '800', fontFamily: 'var(--font-display)', color: 'var(--text-primary)' }}>{orders.length}</div>
+              <div style={{ marginTop: '8px', fontSize: '12px', color: 'var(--accent-success)', fontWeight: '600' }}>
                 +{orders.filter(o => o.status === 'COMPLETED').length} Berhasil
               </div>
             </div>
@@ -185,24 +177,24 @@ export default function Dashboard({ user, token, onUpdateUser }) {
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '30px' }}>
         {/* Navigation Tabs */}
-        <div style={{ display: 'flex', gap: '10px', background: 'rgba(255,255,255,0.02)', padding: '6px', borderRadius: '16px', border: '1px solid var(--border-color)', width: 'fit-content', marginBottom: '10px', flexWrap: 'wrap' }}>
+        <div style={{ display: 'flex', gap: '6px', background: 'var(--bg-muted)', padding: '4px', borderRadius: '12px', border: '1px solid var(--border-default)', width: 'fit-content', marginBottom: '10px', flexWrap: 'wrap' }}>
           <button
             onClick={() => setActiveTab('orders')}
-            style={{ padding: '10px 24px', borderRadius: '12px', border: 'none', cursor: 'pointer', fontWeight: '700', fontSize: '14px', transition: 'all 0.3s', display: 'flex', alignItems: 'center', gap: '8px', color: activeTab === 'orders' ? '#070913' : 'var(--text-secondary)', background: activeTab === 'orders' ? 'var(--color-primary)' : 'transparent' }}
+            style={{ padding: '8px 20px', borderRadius: '8px', border: 'none', cursor: 'pointer', fontWeight: '600', fontSize: '13px', transition: 'all 0.2s', display: 'flex', alignItems: 'center', gap: '6px', color: activeTab === 'orders' ? 'var(--accent-primary)' : 'var(--text-secondary)', background: activeTab === 'orders' ? 'var(--bg-surface)' : 'transparent', boxShadow: activeTab === 'orders' ? 'var(--shadow-sm)' : 'none' }}
           >
-            <History size={17} /> Riwayat Pesanan
+            <History size={15} /> Riwayat Pesanan
           </button>
           <button
             onClick={() => setActiveTab('deposits')}
-            style={{ padding: '10px 24px', borderRadius: '12px', border: 'none', cursor: 'pointer', fontWeight: '700', fontSize: '14px', transition: 'all 0.3s', display: 'flex', alignItems: 'center', gap: '8px', color: activeTab === 'deposits' ? '#070913' : 'var(--text-secondary)', background: activeTab === 'deposits' ? 'var(--color-primary)' : 'transparent' }}
+            style={{ padding: '8px 20px', borderRadius: '8px', border: 'none', cursor: 'pointer', fontWeight: '600', fontSize: '13px', transition: 'all 0.2s', display: 'flex', alignItems: 'center', gap: '6px', color: activeTab === 'deposits' ? 'var(--accent-primary)' : 'var(--text-secondary)', background: activeTab === 'deposits' ? 'var(--bg-surface)' : 'transparent', boxShadow: activeTab === 'deposits' ? 'var(--shadow-sm)' : 'none' }}
           >
-            <Wallet size={17} /> Riwayat Deposit
+            <Wallet size={15} /> Riwayat Deposit
           </button>
           <button
             onClick={() => navigate('/dashboard/ai-keys')}
-            style={{ padding: '10px 24px', borderRadius: '12px', border: 'none', cursor: 'pointer', fontWeight: '700', fontSize: '14px', transition: 'all 0.3s', display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--text-secondary)', background: 'transparent' }}
+            style={{ padding: '8px 20px', borderRadius: '8px', border: 'none', cursor: 'pointer', fontWeight: '600', fontSize: '13px', transition: 'all 0.2s', display: 'flex', alignItems: 'center', gap: '6px', color: 'var(--text-secondary)', background: 'transparent' }}
           >
-            <Key size={17} /> My API Keys ↗
+            <Key size={15} /> My API Keys ↗
           </button>
         </div>
 
@@ -220,12 +212,12 @@ export default function Dashboard({ user, token, onUpdateUser }) {
             ) : (
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(400px, 1fr))', gap: '20px' }}>
                 {orders.map(order => (
-                  <div key={order.id} className="glass-card" style={{ padding: '0', overflow: 'hidden', border: '1px solid var(--border-color)' }}>
+                  <div key={order.id} className="glass-card" style={{ padding: '0', overflow: 'hidden' }}>
                     {/* Card Header */}
-                    <div style={{ padding: '20px', borderBottom: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'rgba(255,255,255,0.01)' }}>
+                    <div style={{ padding: '18px', borderBottom: '1px solid var(--border-subtle)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                       <div>
                         <span style={{ fontSize: '11px', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: '700' }}>#{order.id} &bull; {new Date(order.createdAt).toLocaleDateString('id-ID')}</span>
-                        <h4 style={{ fontSize: '16px', fontWeight: '800', marginTop: '4px' }}>{order.product.name}</h4>
+                        <h4 style={{ fontSize: '15px', fontWeight: '700', marginTop: '2px', color: 'var(--text-primary)' }}>{order.product.name}</h4>
                       </div>
                       {getStatusBadge(order.status)}
                     </div>
@@ -234,9 +226,9 @@ export default function Dashboard({ user, token, onUpdateUser }) {
                     <div style={{ padding: '20px' }}>
                       {order.type === 'SMM' ? (
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
-                          <div style={{ padding: '12px', background: 'rgba(255,255,255,0.02)', borderRadius: '12px', border: '1px solid var(--border-color)' }}>
+                          <div style={{ padding: '12px', background: 'var(--bg-page)', borderRadius: '12px', border: '1px solid var(--border-subtle)' }}>
                             <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginBottom: '4px' }}>Link Target</div>
-                            <a href={order.targetUrl} target="_blank" rel="noopener noreferrer" style={{ color: 'var(--color-primary)', fontSize: '13px', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                            <a href={order.targetUrl} target="_blank" rel="noopener noreferrer" style={{ color: 'var(--accent-primary)', fontSize: '13px', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '6px' }}>
                                {order.targetUrl.substring(0, 40)}... <ExternalLink size={12} />
                             </a>
                           </div>
@@ -247,11 +239,11 @@ export default function Dashboard({ user, token, onUpdateUser }) {
                             </div>
                             <div>
                                <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Biaya</div>
-                               <div style={{ fontSize: '15px', fontWeight: '700', color: 'var(--color-primary)' }}>Rp {order.amount.toLocaleString('id-ID')}</div>
+                               <div style={{ fontSize: '15px', fontWeight: '700', color: 'var(--accent-primary)' }}>Rp {order.amount.toLocaleString('id-ID')}</div>
                             </div>
                           </div>
                           {order.notes && (
-                            <div style={{ fontSize: '12px', color: 'var(--text-secondary)', fontStyle: 'italic', padding: '10px', background: 'rgba(0,0,0,0.2)', borderRadius: '8px' }}>
+                            <div style={{ fontSize: '12px', color: 'var(--text-secondary)', fontStyle: 'italic', padding: '10px', background: 'var(--bg-muted)', borderRadius: '8px' }}>
                                💡 {order.notes}
                             </div>
                           )}
@@ -260,23 +252,23 @@ export default function Dashboard({ user, token, onUpdateUser }) {
                         /* PREMIUM LAYOUT */
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
                            {order.account ? (
-                             <div style={{ background: 'rgba(0, 242, 254, 0.05)', borderRadius: '16px', padding: '20px', border: '1px solid rgba(0, 242, 254, 0.1)' }}>
+                             <div style={{ background: 'var(--accent-primary-light)', borderRadius: '16px', padding: '20px', border: '1px solid rgba(59, 130, 246, 0.1)' }}>
                                 <div style={{ marginBottom: '15px' }}>
                                    <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginBottom: '5px' }}>Email / Username</div>
                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                      <span style={{ fontWeight: '700', color: '#fff', fontSize: '15px' }}>{order.account.email}</span>
+                                      <span style={{ fontWeight: '700', color: 'var(--text-primary)', fontSize: '15px' }}>{order.account.email}</span>
                                       <button onClick={() => { navigator.clipboard.writeText(order.account.email); alert('Email disalin!'); }} style={{ background: 'transparent', border: 'none', color: 'var(--color-primary)', cursor: 'pointer' }}><Key size={16} /></button>
                                    </div>
                                 </div>
                                 <div style={{ marginBottom: '15px' }}>
                                    <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginBottom: '5px' }}>Password</div>
                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                      <span style={{ fontWeight: '700', color: '#fff', fontSize: '15px' }}>{order.account.password}</span>
+                                      <span style={{ fontWeight: '700', color: 'var(--text-primary)', fontSize: '15px' }}>{order.account.password}</span>
                                       <button onClick={() => { navigator.clipboard.writeText(order.account.password); alert('Password disalin!'); }} style={{ background: 'transparent', border: 'none', color: 'var(--color-primary)', cursor: 'pointer' }}><Key size={16} /></button>
                                    </div>
                                 </div>
                                 {order.account.extraInfo && (
-                                   <div style={{ marginTop: '15px', paddingTop: '15px', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
+                                   <div style={{ marginTop: '15px', paddingTop: '15px', borderTop: '1px solid var(--border-subtle)' }}>
                                       <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginBottom: '5px' }}>Informasi Tambahan / Catatan</div>
                                       <div style={{ color: 'var(--text-secondary)', fontSize: '13px', whiteSpace: 'pre-wrap', wordBreak: 'break-all' }}>
                                          {order.account.extraInfo}
@@ -285,19 +277,19 @@ export default function Dashboard({ user, token, onUpdateUser }) {
                                 )}
                              </div>
                            ) : order.notes && order.status === 'COMPLETED' ? (
-                             <div style={{ background: 'rgba(0, 242, 254, 0.05)', borderRadius: '16px', padding: '20px', border: '1px solid rgba(0, 242, 254, 0.1)' }}>
+                             <div style={{ background: 'var(--accent-primary-light)', borderRadius: '16px', padding: '20px', border: '1px solid rgba(59, 130, 246, 0.1)' }}>
                                 <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginBottom: '5px' }}>Detail Akun / Kode SN</div>
                                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '10px' }}>
-                                   <span style={{ fontWeight: '700', color: '#fff', fontSize: '15px', whiteSpace: 'pre-wrap', wordBreak: 'break-all', flex: 1 }}>{order.notes}</span>
+                                   <span style={{ fontWeight: '700', color: 'var(--text-primary)', fontSize: '15px', whiteSpace: 'pre-wrap', wordBreak: 'break-all', flex: 1 }}>{order.notes}</span>
                                    <button onClick={() => { navigator.clipboard.writeText(order.notes); alert('Detail akun disalin!'); }} style={{ background: 'transparent', border: 'none', color: 'var(--color-primary)', cursor: 'pointer', flexShrink: 0 }}><Key size={16} /></button>
                                 </div>
                              </div>
                            ) : (
-                             <div style={{ textAlign: 'center', padding: '20px', background: 'rgba(255,255,255,0.02)', borderRadius: '16px', border: '1px dashed var(--border-color)' }}>
+                             <div style={{ textAlign: 'center', padding: '20px', background: 'var(--bg-page)', borderRadius: '16px', border: '1px dashed var(--border-default)' }}>
                                 <Clock size={24} style={{ color: 'var(--text-muted)', marginBottom: '10px' }} />
                                 <div style={{ fontSize: '13px', color: 'var(--text-muted)' }}>Akun sedang disiapkan oleh sistem...</div>
                                 {order.notes && (
-                                  <div style={{ fontSize: '11px', color: 'var(--text-secondary)', marginTop: '8px', fontStyle: 'italic', background: 'rgba(0,0,0,0.1)', padding: '5px 10px', borderRadius: '6px' }}>
+                                  <div style={{ fontSize: '11px', color: 'var(--text-secondary)', marginTop: '8px', fontStyle: 'italic', background: 'var(--bg-muted)', padding: '5px 10px', borderRadius: '6px' }}>
                                     {order.notes}
                                   </div>
                                 )}
@@ -330,7 +322,7 @@ export default function Dashboard({ user, token, onUpdateUser }) {
           <div className="animate-fade-in glass-card" style={{ padding: '0', overflow: 'hidden' }}>
              <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
                 <thead>
-                  <tr style={{ background: 'rgba(255,255,255,0.03)', borderBottom: '1px solid var(--border-color)' }}>
+                  <tr style={{ background: 'var(--bg-page)', borderBottom: '1px solid var(--border-default)' }}>
                     <th style={{ padding: '20px' }}>ID DEPOSIT</th>
                     <th style={{ padding: '20px' }}>NOMINAL</th>
                     <th style={{ padding: '20px' }}>METODE</th>
@@ -340,7 +332,7 @@ export default function Dashboard({ user, token, onUpdateUser }) {
                 </thead>
                 <tbody>
                   {deposits.map(dep => (
-                    <tr key={dep.id} style={{ borderBottom: '1px solid var(--border-color)' }}>
+                    <tr key={dep.id} style={{ borderBottom: '1px solid var(--border-default)' }}>
                       <td style={{ padding: '20px', color: 'var(--text-muted)' }}>#{dep.id}</td>
                       <td style={{ padding: '20px', fontWeight: '800', fontSize: '16px', color: 'var(--color-primary)' }}>Rp {dep.amount.toLocaleString('id-ID')}</td>
                       <td style={{ padding: '20px' }}><span className="badge badge-secondary">{dep.paymentMethod}</span></td>

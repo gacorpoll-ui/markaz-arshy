@@ -118,29 +118,25 @@ export default function DepositPage({ user, token, onUpdateUser }) {
     <div className="container animate-fade-in" style={{ paddingBottom: '100px' }}>
       
       {/* --- HERO DEPOSIT --- */}
-      <div style={{ 
-        background: 'linear-gradient(135deg, rgba(0, 242, 254, 0.05) 0%, rgba(225, 48, 108, 0.05) 100%)',
-        borderRadius: '24px',
-        padding: '40px',
-        marginBottom: '40px',
-        border: '1px solid var(--border-color)',
+      <div style={{
+        background: 'var(--accent-primary-light)',
+        borderRadius: '16px',
+        padding: '36px',
+        marginBottom: '36px',
+        border: '1px solid var(--border-default)',
         textAlign: 'center',
-        position: 'relative',
-        overflow: 'hidden'
       }}>
-        <div style={{ position: 'relative', zIndex: 1 }}>
-          <h2 style={{ fontFamily: 'var(--font-title)', fontSize: '36px', fontWeight: '900', color: '#fff' }}>
-            Isi Ulang <span className="text-gradient">Saldo Wallet</span>
-          </h2>
-          <p style={{ color: 'var(--text-secondary)', fontSize: '15px', marginTop: '10px', maxWidth: '600px', margin: '10px auto 0 auto' }}>
-            Gunakan saldo Anda untuk melakukan transaksi instan 24/7 di seluruh katalog SMM dan Akun Premium kami.
-          </p>
-        </div>
+        <h2 style={{ fontFamily: 'var(--font-display)', fontSize: '32px', fontWeight: '800', color: 'var(--text-primary)' }}>
+          Isi Ulang <span style={{ color: 'var(--accent-primary)' }}>Saldo Wallet</span>
+        </h2>
+        <p style={{ color: 'var(--text-secondary)', fontSize: '15px', marginTop: '8px', maxWidth: '550px', margin: '8px auto 0 auto' }}>
+          Gunakan saldo Anda untuk melakukan transaksi instan 24/7 di seluruh katalog kami.
+        </p>
       </div>
 
       {success ? (
         <div className="glass-card" style={{ textAlign: 'center', padding: '50px 20px' }}>
-          <div style={{ display: 'inline-flex', padding: '16px', borderRadius: '50%', background: 'rgba(16, 185, 129, 0.15)', color: 'var(--color-success)', marginBottom: '15px' }}>
+          <div style={{ display: 'inline-flex', padding: '16px', borderRadius: '50%', background: 'rgba(16, 185, 129, 0.15)', color: 'var(--accent-success)', marginBottom: '15px' }}>
             <CheckCircle size={40} />
           </div>
           <h3 style={{ fontSize: '22px', fontWeight: '700', marginBottom: '10px' }}>Pengajuan Deposit Berhasil!</h3>
@@ -188,8 +184,8 @@ export default function DepositPage({ user, token, onUpdateUser }) {
                           style={{
                               padding: '15px',
                               textAlign: 'left',
-                              background: selectedMethodId === method.id.toString() ? 'rgba(0, 242, 254, 0.1)' : 'rgba(255,255,255,0.03)',
-                              border: `1px solid ${selectedMethodId === method.id.toString() ? 'var(--color-primary)' : 'var(--border-color)'}`,
+                              background: selectedMethodId === method.id.toString() ? 'var(--accent-primary-light)' : 'var(--bg-page)',
+                              border: `1px solid ${selectedMethodId === method.id.toString() ? 'var(--accent-primary)' : 'var(--border-default)'}`,
                               borderRadius: 'var(--radius-sm)',
                               color: 'var(--text-primary)',
                               cursor: 'pointer',
@@ -211,8 +207,8 @@ export default function DepositPage({ user, token, onUpdateUser }) {
                       alignItems: 'center',
                       justifyContent: 'center',
                       padding: '30px',
-                      background: 'rgba(255,255,255,0.02)',
-                      border: '2px dashed var(--border-color)',
+                      background: 'var(--bg-page)',
+                      border: '2px dashed var(--border-default)',
                       borderRadius: 'var(--radius-md)',
                       cursor: 'pointer',
                       transition: 'all 0.2s'
@@ -230,13 +226,13 @@ export default function DepositPage({ user, token, onUpdateUser }) {
               </div>
 
               {previewUrl && (
-                  <div style={{ marginBottom: '20px', borderRadius: 'var(--radius-sm)', overflow: 'hidden', border: '1px solid var(--border-color)' }}>
+                  <div style={{ marginBottom: '20px', borderRadius: 'var(--radius-sm)', overflow: 'hidden', border: '1px solid var(--border-default)' }}>
                       <img src={previewUrl} alt="Preview" style={{ width: '100%', height: 'auto', display: 'block' }} />
                   </div>
               )}
 
               {error && (
-                <div style={{ background: 'rgba(239, 68, 68, 0.1)', border: '1px solid rgba(239, 68, 68, 0.2)', padding: '12px', borderRadius: 'var(--radius-sm)', color: '#fca5a5', fontSize: '13px', marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <div style={{ background: 'rgba(239, 68, 68, 0.1)', border: '1px solid rgba(239, 68, 68, 0.2)', padding: '12px', borderRadius: 'var(--radius-sm)', color: 'var(--accent-danger)', fontSize: '13px', marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '8px' }}>
                   <AlertCircle size={16} /> {error}
                 </div>
               )}
@@ -260,13 +256,13 @@ export default function DepositPage({ user, token, onUpdateUser }) {
                           )}
                           <div style={{ marginBottom: '15px' }}>
                               <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>Penerima:</span>
-                              <div style={{ fontSize: '16px', fontWeight: '700', color: 'var(--color-primary)' }}>{selectedMethod.accountName}</div>
+                              <div style={{ fontSize: '16px', fontWeight: '700', color: 'var(--accent-primary)' }}>{selectedMethod.accountName}</div>
                           </div>
                           <div style={{ marginBottom: '15px' }}>
                               <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>Nomor Rekening / Tujuan:</span>
                               <div style={{ fontSize: '20px', fontWeight: '800', letterSpacing: '1px' }}>{selectedMethod.accountNumber}</div>
                           </div>
-                          <div style={{ padding: '15px', background: 'rgba(255,255,255,0.03)', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-color)' }}>
+                          <div style={{ padding: '15px', background: 'var(--bg-page)', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-default)' }}>
                               <span style={{ fontSize: '12px', color: 'var(--text-muted)', display: 'block', marginBottom: '6px' }}>Catatan:</span>
                               <p style={{ fontSize: '13px', color: 'var(--text-secondary)', lineHeight: '1.5' }}>
                                   {selectedMethod.instructions}

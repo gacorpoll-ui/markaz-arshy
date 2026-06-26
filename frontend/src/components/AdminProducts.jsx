@@ -52,7 +52,7 @@ export default function AdminProducts({ products, categories, handleAddProduct, 
 
     return (
         <div className="glass-card">
-            <h3 style={{ fontSize: '20px', fontWeight: '700', marginBottom: '20px', borderBottom: '1px solid var(--border-color)', paddingBottom: '10px' }}>
+            <h3 style={{ fontSize: '20px', fontWeight: '700', marginBottom: '20px', borderBottom: '1px solid var(--border-default)', paddingBottom: '10px' }}>
                 Kelola Produk & Layanan
             </h3>
 
@@ -133,7 +133,7 @@ export default function AdminProducts({ products, categories, handleAddProduct, 
                             </button>
                           </div>
                         ))}
-                      {durations.length === 0 && <div style={{ fontSize: '12px', color: 'var(--text-muted)', textAlign: 'center', padding: '10px', border: '1px dashed var(--border-color)', borderRadius: 'var(--radius-sm)' }}>Belum ada pilihan durasi.</div>}
+                      {durations.length === 0 && <div style={{ fontSize: '12px', color: 'var(--text-muted)', textAlign: 'center', padding: '10px', border: '1px dashed var(--border-default)', borderRadius: 'var(--radius-sm)' }}>Belum ada pilihan durasi.</div>}
                     </div>
 
                     <div className="form-group" style={{ gridColumn: 'span 2' }}>
@@ -159,7 +159,7 @@ export default function AdminProducts({ products, categories, handleAddProduct, 
                           </button>
                         </div>
                       ))}
-                      {oss.length === 0 && <div style={{ fontSize: '12px', color: 'var(--text-muted)', textAlign: 'center', padding: '10px', border: '1px dashed var(--border-color)', borderRadius: 'var(--radius-sm)' }}>Belum ada pilihan OS.</div>}
+                      {oss.length === 0 && <div style={{ fontSize: '12px', color: 'var(--text-muted)', textAlign: 'center', padding: '10px', border: '1px dashed var(--border-default)', borderRadius: 'var(--radius-sm)' }}>Belum ada pilihan OS.</div>}
                     </div>
                   </>
                 )}
@@ -175,7 +175,7 @@ export default function AdminProducts({ products, categories, handleAddProduct, 
               <div style={{ overflowX: 'auto' }}>
               <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
                 <thead>
-                  <tr style={{ background: 'rgba(255,255,255,0.02)', borderBottom: '1px solid var(--border-color)', textAlign: 'left' }}>
+                  <tr style={{ background: 'var(--bg-page)', borderBottom: '1px solid var(--border-default)', textAlign: 'left' }}>
                     <th style={{ padding: '12px 10px' }}>ID</th>
                     <th style={{ padding: '12px 10px' }}>Nama</th>
                     <th style={{ padding: '12px 10px' }}>Kategori</th>
@@ -204,7 +204,7 @@ export default function AdminProducts({ products, categories, handleAddProduct, 
                     } catch(e) {}
 
                     return (
-                      <tr key={prod.id} style={{ borderBottom: '1px solid var(--border-color)' }}>
+                      <tr key={prod.id} style={{ borderBottom: '1px solid var(--border-default)' }}>
                         <td style={{ padding: '12px 10px', color: 'var(--text-muted)' }}>#{prod.id}</td>
                         <td style={{ padding: '12px 10px', fontWeight: '600' }}>{prod.name}</td>
                         <td style={{ padding: '12px 10px' }}>{prod.category.name}</td>

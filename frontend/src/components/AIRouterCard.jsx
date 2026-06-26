@@ -39,16 +39,16 @@ export default function AIRouterCard({ model, provider }) {
         marginBottom: '16px',
         transition: 'all 0.2s ease',
         cursor: 'pointer',
-        border: '1px solid var(--border-color)',
+        border: '1px solid var(--border-default)',
       }}
       onMouseEnter={(e) => {
         e.currentTarget.style.transform = 'translateY(-2px)';
-        e.currentTarget.style.borderColor = 'var(--color-primary)';
+        e.currentTarget.style.borderColor = 'var(--accent-primary)';
         e.currentTarget.style.boxShadow = '0 8px 24px rgba(79, 172, 254, 0.15)';
       }}
       onMouseLeave={(e) => {
         e.currentTarget.style.transform = 'translateY(0)';
-        e.currentTarget.style.borderColor = 'var(--border-color)';
+        e.currentTarget.style.borderColor = 'var(--border-default)';
         e.currentTarget.style.boxShadow = 'none';
       }}
     >
@@ -88,7 +88,7 @@ export default function AIRouterCard({ model, provider }) {
 
         {/* Pricing */}
         <div style={{ textAlign: 'right' }}>
-          <div style={{ fontSize: '24px', fontWeight: '700', color: 'var(--color-primary)' }}>
+          <div style={{ fontSize: '24px', fontWeight: '700', color: 'var(--accent-primary)' }}>
             {formatPrice(model.inputPricePer1K)}
           </div>
           <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
@@ -148,7 +148,7 @@ export default function AIRouterCard({ model, provider }) {
           padding: '12px',
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '4px' }}>
-            <Clock size={14} style={{ color: 'var(--color-success)' }} />
+            <Clock size={14} style={{ color: 'var(--accent-success)' }} />
             <span style={{ fontSize: '11px', color: 'var(--text-muted)', textTransform: 'uppercase' }}>
               Speed
             </span>

@@ -48,7 +48,7 @@ export default function AIKeyCard({ apiKey, onDelete, onToggleActive, userBalanc
       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: '16px' }}>
         <div style={{ flex: 1 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
-            <Key size={18} style={{ color: 'var(--color-primary)' }} />
+            <Key size={18} style={{ color: 'var(--accent-primary)' }} />
             <h3 style={{ 
               fontSize: '18px', 
               fontWeight: '700', 
@@ -86,8 +86,8 @@ export default function AIKeyCard({ apiKey, onDelete, onToggleActive, userBalanc
 
           {/* API Key Display */}
           <div style={{
-            background: 'rgba(0, 0, 0, 0.3)',
-            border: '1px solid var(--border-color)',
+            background: 'var(--bg-muted)',
+            border: '1px solid var(--border-default)',
             borderRadius: 'var(--radius-sm)',
             padding: '10px 12px',
             fontFamily: 'monospace',
@@ -138,7 +138,7 @@ export default function AIKeyCard({ apiKey, onDelete, onToggleActive, userBalanc
             onClick={() => setShowMenu(!showMenu)}
             style={{
               background: 'transparent',
-              border: '1px solid var(--border-color)',
+              border: '1px solid var(--border-default)',
               borderRadius: 'var(--radius-sm)',
               padding: '8px',
               cursor: 'pointer',
@@ -157,9 +157,9 @@ export default function AIKeyCard({ apiKey, onDelete, onToggleActive, userBalanc
               right: 0,
               marginTop: '8px',
               background: 'var(--bg-secondary)',
-              border: '1px solid var(--border-color)',
+              border: '1px solid var(--border-default)',
               borderRadius: 'var(--radius-sm)',
-              boxShadow: '0 8px 24px rgba(0, 0, 0, 0.3)',
+              boxShadow: '0 8px 24px var(--bg-muted)',
               minWidth: '180px',
               zIndex: 10,
             }}>
@@ -227,7 +227,7 @@ export default function AIKeyCard({ apiKey, onDelete, onToggleActive, userBalanc
           padding: '12px',
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '4px' }}>
-            <DollarSign size={14} style={{ color: 'var(--color-primary)' }} />
+            <DollarSign size={14} style={{ color: 'var(--accent-primary)' }} />
             <span style={{ fontSize: '11px', color: 'var(--text-muted)', textTransform: 'uppercase' }}>
               Credits
             </span>
@@ -263,7 +263,7 @@ export default function AIKeyCard({ apiKey, onDelete, onToggleActive, userBalanc
           padding: '12px',
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '4px' }}>
-            <TrendingUp size={14} style={{ color: 'var(--color-success)' }} />
+            <TrendingUp size={14} style={{ color: 'var(--accent-success)' }} />
             <span style={{ fontSize: '11px', color: 'var(--text-muted)', textTransform: 'uppercase' }}>
               Model
             </span>

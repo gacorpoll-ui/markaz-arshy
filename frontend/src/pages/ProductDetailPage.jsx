@@ -172,7 +172,7 @@ export default function ProductDetailPage({ user, token }) {
   /* ── Loading ── */
   if (loading) return (
     <div style={{ textAlign: 'center', padding: '120px 0', color: 'var(--text-secondary)' }}>
-      <RefreshCw size={36} style={{ animation: 'spin 1s linear infinite', color: 'var(--color-primary)' }} />
+      <RefreshCw size={36} style={{ animation: 'spin 1s linear infinite', color: 'var(--accent-primary)' }} />
       <p style={{ marginTop: '16px', fontSize: '15px' }}>Memuat detail produk…</p>
       <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
     </div>
@@ -211,7 +211,7 @@ export default function ProductDetailPage({ user, token }) {
                       🚫 Gangguan
                     </span>
                   ) : (
-                    <span className="badge badge-success" style={{ background: 'rgba(34, 197, 94, 0.15)', color: 'var(--color-success)', border: '1px solid rgba(34, 197, 94, 0.3)', padding: '3px 8px', borderRadius: '12px', fontSize: '11px', fontWeight: '700' }}>
+                    <span className="badge badge-success" style={{ background: 'rgba(34, 197, 94, 0.15)', color: 'var(--accent-success)', border: '1px solid rgba(34, 197, 94, 0.3)', padding: '3px 8px', borderRadius: '12px', fontSize: '11px', fontWeight: '700' }}>
                       🟢 Tersedia
                     </span>
                   )
@@ -219,7 +219,7 @@ export default function ProductDetailPage({ user, token }) {
               </div>
               {reviews.length > 0 && (
                 <div className="pd-avg-rating">
-                  <Star size={14} fill="currentColor" style={{ color: 'var(--color-warning)' }} />
+                  <Star size={14} fill="currentColor" style={{ color: 'var(--accent-warning)' }} />
                   <span>{averageRating.toFixed(1)}</span>
                   <span className="pd-review-count">({reviews.length} ulasan)</span>
                 </div>
@@ -245,7 +245,7 @@ export default function ProductDetailPage({ user, token }) {
                 </>
               )}
               <div className="pd-stat-item">
-                <Zap size={14} style={{ color: 'var(--color-primary)' }} />
+                <Zap size={14} style={{ color: 'var(--accent-primary)' }} />
                 <span>Pengiriman Otomatis</span>
               </div>
               {isVpsRdp && (
@@ -443,13 +443,13 @@ export default function ProductDetailPage({ user, token }) {
             ) : (
               <>
                 {/* ── Dynamic Price Block ── */}
-                <div className="pd-price-block" style={{ borderRadius: '20px', background: 'linear-gradient(135deg, rgba(0,242,254,0.06) 0%, rgba(225,48,108,0.06) 100%)', border: '1px solid rgba(0,242,254,0.15)', padding: '20px', marginBottom: '20px' }}>
+                <div className="pd-price-block" style={{ borderRadius: '20px', background: 'linear-gradient(135deg, rgba(59, 130, 246,0.06) 0%, rgba(225,48,108,0.06) 100%)', border: '1px solid var(--accent-primary-light)', padding: '20px', marginBottom: '20px' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                     <div>
                       <span className="pd-price-label" style={{ fontSize: '11px', textTransform: 'uppercase', letterSpacing: '1px', fontWeight: '700', color: 'var(--text-muted)' }}>
                         {durationOptions.length > 0 ? `Harga — ${selectedDuration}` : 'Harga Layanan'}
                       </span>
-                      <div className="pd-price-main" style={{ fontSize: '32px', fontWeight: '900', fontFamily: 'var(--font-title)', background: 'linear-gradient(90deg, var(--color-primary), #e1306c)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', marginTop: '4px' }}>
+                      <div className="pd-price-main" style={{ fontSize: '32px', fontWeight: '900', fontFamily: 'var(--font-display)', background: 'linear-gradient(90deg, var(--color-primary), #e1306c)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', marginTop: '4px' }}>
                         Rp {calculateTotal().toLocaleString('id-ID')}
                         {product.type === 'SMM' && <span style={{ fontSize: '16px', fontWeight: '600', WebkitTextFillColor: 'var(--text-secondary)' }}> / 1k</span>}
                       </div>
@@ -554,19 +554,19 @@ export default function ProductDetailPage({ user, token }) {
                                   position: 'relative',
                                   padding: '14px 12px',
                                   borderRadius: '14px',
-                                  border: isActive ? '2px solid var(--color-primary)' : '1px solid var(--border-color)',
-                                  background: isActive ? 'rgba(0,242,254,0.1)' : 'rgba(255,255,255,0.02)',
+                                  border: isActive ? '2px solid var(--color-primary)' : '1px solid var(--border-default)',
+                                  background: isActive ? 'var(--accent-primary-light)' : 'var(--bg-page)',
                                   cursor: 'pointer',
                                   textAlign: 'left',
                                   transition: 'all 0.25s ease',
-                                  boxShadow: isActive ? '0 0 20px rgba(0,242,254,0.15)' : 'none',
+                                  boxShadow: isActive ? '0 0 20px var(--accent-primary-light)' : 'none',
                                 }}
                               >
                                 {isBest && (
                                   <span style={{
                                     position: 'absolute', top: '-9px', right: '10px',
                                     background: 'linear-gradient(90deg, var(--color-primary), #06b6d4)',
-                                    color: '#070913', fontSize: '9px', fontWeight: '900',
+                                    color: 'var(--text-inverse)', fontSize: '9px', fontWeight: '900',
                                     padding: '2px 8px', borderRadius: '20px', letterSpacing: '0.5px',
                                   }}>
                                     ★ TERBAIK
@@ -664,7 +664,7 @@ export default function ProductDetailPage({ user, token }) {
                         className="form-input"
                         value={selectedOs}
                         onChange={e => setSelectedOs(e.target.value)}
-                        style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid var(--border-color)', borderRadius: '12px' }}
+                        style={{ background: 'var(--bg-page)', border: '1px solid var(--border-default)', borderRadius: '12px' }}
                       >
                         {osOptions.map((o, i) => <option key={i} value={o}>{o}</option>)}
                       </select>
@@ -672,15 +672,15 @@ export default function ProductDetailPage({ user, token }) {
                   )}
 
                   {/* ── Total Box ── */}
-                  <div style={{ background: 'rgba(255,255,255,0.03)', borderRadius: '16px', padding: '16px', border: '1px solid var(--border-color)', marginBottom: '16px' }}>
+                  <div style={{ background: 'var(--bg-page)', borderRadius: '16px', padding: '16px', border: '1px solid var(--border-default)', marginBottom: '16px' }}>
                     {product.type === 'SMM' && (
-                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', color: 'var(--text-muted)', paddingBottom: '10px', marginBottom: '10px', borderBottom: '1px solid var(--border-color)' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', color: 'var(--text-muted)', paddingBottom: '10px', marginBottom: '10px', borderBottom: '1px solid var(--border-default)' }}>
                         <span>Harga per 1k</span>
                         <span>Rp {getBasePrice().toLocaleString('id-ID')} × {(quantity / 1000).toFixed(1)}k</span>
                       </div>
                     )}
                     {product.type === 'PREMIUM' && durationOptions.length > 0 && (
-                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', color: 'var(--text-muted)', paddingBottom: '10px', marginBottom: '10px', borderBottom: '1px solid var(--border-color)' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', color: 'var(--text-muted)', paddingBottom: '10px', marginBottom: '10px', borderBottom: '1px solid var(--border-default)' }}>
                         <span>Durasi dipilih</span>
                         <span style={{ fontWeight: '600', color: 'var(--color-primary)' }}>{selectedDuration || '—'}</span>
                       </div>

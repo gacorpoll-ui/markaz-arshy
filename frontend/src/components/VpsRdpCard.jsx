@@ -39,11 +39,11 @@ const VpsRdpCard = ({ product, user }) => {
   const specs = parseSpecs(product.name);
   const typeLabel = isRdp ? 'RDP' : isVps ? 'VPS' : 'Server';
   const typeColor = isRdp
-    ? { bg: 'rgba(0, 242, 254, 0.12)', color: '#a5f3fc', border: 'rgba(0, 242, 254, 0.3)' }
-    : { bg: 'rgba(127, 0, 255, 0.12)', color: '#d8b4fe', border: 'rgba(127, 0, 255, 0.3)' };
+    ? { bg: 'var(--accent-primary-light)', color: 'var(--accent-primary)', border: 'rgba(59, 130, 246, 0.2)' }
+    : { bg: '#F5F3FF', color: '#7C3AED', border: 'rgba(124, 58, 237, 0.2)' };
 
   return (
-    <div className="vps-rdp-card glass-card">
+    <div className="vps-rdp-card">
       {/* Header */}
       <div className="vps-rdp-card-header">
         <span
@@ -52,8 +52,8 @@ const VpsRdpCard = ({ product, user }) => {
         >
           {typeLabel}
         </span>
-        <span className="vps-rdp-card-stock" style={{ color: 'var(--color-primary)' }}>
-          ∞ Unlimited
+        <span className="vps-rdp-card-stock" style={{ color: '#047857' }}>
+          Unlimited
         </span>
       </div>
 
@@ -81,7 +81,7 @@ const VpsRdpCard = ({ product, user }) => {
 
       {/* Footer: Harga & Tombol */}
       <div className="vps-rdp-card-footer">
-        <div className="vps-rdp-card-price-group">
+        <div>
           <span className="vps-rdp-price-label">Mulai Dari</span>
           <span className="vps-rdp-price-value">
             Rp {price.toLocaleString('id-ID')}
@@ -89,7 +89,7 @@ const VpsRdpCard = ({ product, user }) => {
         </div>
         <button
           onClick={() => navigate(`/product/${product.slug}`)}
-          className="btn btn-primary"
+          className="btn btn-primary btn-md"
         >
           <ShoppingCart size={15} />
           Pesan

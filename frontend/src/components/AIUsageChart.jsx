@@ -76,8 +76,8 @@ export default React.memo(function AIUsageChart({ data, title = 'AI Usage Over T
     scales: {
       x: {
         ticks: { color: '#64748b', font: { size: 10 } },
-        grid: { color: 'rgba(255, 255, 255, 0.04)' },
-        border: { color: 'rgba(255, 255, 255, 0.08)' },
+        grid: { color: 'var(--bg-page)' },
+        border: { color: 'var(--bg-page)' },
       },
       y: {
         type: 'linear',
@@ -88,8 +88,8 @@ export default React.memo(function AIUsageChart({ data, title = 'AI Usage Over T
           font: { size: 10 },
           callback: (v) => `${(v / 1000).toFixed(0)}K`,
         },
-        grid: { color: 'rgba(255, 255, 255, 0.04)' },
-        border: { color: 'rgba(255, 255, 255, 0.08)' },
+        grid: { color: 'var(--bg-page)' },
+        border: { color: 'var(--bg-page)' },
         title: { display: true, text: 'Tokens', color: '#4facfe', font: { size: 11 } },
       },
       y1: {
@@ -102,7 +102,7 @@ export default React.memo(function AIUsageChart({ data, title = 'AI Usage Over T
           callback: (v) => `Rp${Math.ceil(v).toLocaleString('id-ID')}`,
         },
         grid: { drawOnChartArea: false },
-        border: { color: 'rgba(255, 255, 255, 0.08)' },
+        border: { color: 'var(--bg-page)' },
         title: { display: true, text: 'Biaya (Rp)', color: '#a855f7', font: { size: 11 } },
       },
     },

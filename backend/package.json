@@ -8,24 +8,30 @@
     "start": "node src/index.js",
     "dev": "nodemon src/index.js",
     "db:migrate": "prisma migrate dev",
-    "db:seed": "node src/seed.js"
+    "db:seed": "node src/seed.js",
+    "sync-jakmall": "node backend/scripts/sync_jakmall_products.js"
   },
   "dependencies": {
-    "@prisma/client": "^6.0.0",
+    "@prisma/client": "^6.19.3",
+    "axios": "^1.6.8",
     "bcryptjs": "^2.4.3",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.5",
+    "csv-parser": "^3.0.0",
     "dotenv": "^16.4.5",
     "express": "^4.19.2",
     "express-rate-limit": "^8.5.2",
     "google-auth-library": "^10.7.0",
     "jsonwebtoken": "^9.0.2",
     "multer": "^2.2.0",
+    "node-cron": "^3.0.0",
     "node-fetch": "^3.3.2",
-    "nodemailer": "^9.0.1"
+    "nodemailer": "^9.0.1",
+    "nodemon": "^3.1.0",
+    "puppeteer": "^22.9.0"
   },
   "devDependencies": {
-    "nodemon": "^3.1.0",
     "prisma": "^6.0.0"
   }
 }
+

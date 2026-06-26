@@ -2,7 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import cookieParser from 'cookie-parser';
-import { initCrons } from './cron.js';
+import { setupCronJobs } from './utils/cron_jobs.js';
 
 // Load environment variables
 dotenv.config();
@@ -76,7 +76,7 @@ app.use('/api/admin', adminAIRouter);
 app.use('/api/admin', adminAgentsRouter);
 
 // Initialize Cron Jobs
-initCrons();
+setupCronJobs();
 
 // Global Error Handler
 app.use((err, req, res, next) => {

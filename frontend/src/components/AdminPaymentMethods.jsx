@@ -38,7 +38,7 @@ export default function AdminPaymentMethods({
 
     return (
         <div className="glass-card">
-              <h3 style={{ fontSize: '20px', fontWeight: '700', marginBottom: '20px', borderBottom: '1px solid var(--border-color)', paddingBottom: '10px' }}>
+              <h3 style={{ fontSize: '20px', fontWeight: '700', marginBottom: '20px', borderBottom: '1px solid var(--border-default)', paddingBottom: '10px' }}>
                 Manajemen Metode Pembayaran & Wallet
               </h3>
 
@@ -73,7 +73,7 @@ export default function AdminPaymentMethods({
               <h3 style={{ fontSize: '18px', fontWeight: '700', marginBottom: '15px' }}>Daftar Metode Pembayaran</h3>
               <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
                 <thead>
-                  <tr style={{ background: 'rgba(255,255,255,0.02)', borderBottom: '1px solid var(--border-color)', textAlign: 'left' }}>
+                  <tr style={{ background: 'var(--bg-page)', borderBottom: '1px solid var(--border-default)', textAlign: 'left' }}>
                     <th style={{ padding: '12px 10px' }}>ID</th>
                     <th style={{ padding: '12px 10px' }}>Bank/Wallet</th>
                     <th style={{ padding: '12px 10px' }}>A.N (Pemilik)</th>
@@ -85,9 +85,9 @@ export default function AdminPaymentMethods({
                 </thead>
                 <tbody>
                   {paymentMethods.map(pm => (
-                    <tr key={pm.id} style={{ borderBottom: '1px solid var(--border-color)' }}>
+                    <tr key={pm.id} style={{ borderBottom: '1px solid var(--border-default)' }}>
                       <td style={{ padding: '12px 10px', color: 'var(--text-muted)' }}>#{pm.id}</td>
-                      <td style={{ padding: '12px 10px', fontWeight: '600', color: '#fff' }}>{pm.name}</td>
+                      <td style={{ padding: '12px 10px', fontWeight: '600', color: 'var(--text-primary)' }}>{pm.name}</td>
                       <td style={{ padding: '12px 10px' }}>{pm.accountName}</td>
                       <td style={{ padding: '12px 10px', fontFamily: 'monospace' }}>{pm.accountNumber}</td>
                       <td style={{ padding: '12px 10px' }}>

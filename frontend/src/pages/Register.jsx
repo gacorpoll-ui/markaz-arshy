@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { UserPlus, User, Mail, Phone, Lock, AlertTriangle, CheckCircle } from 'lucide-react';
 
-/* ── Google Icon SVG ── */
 const GoogleIcon = () => (
   <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
     <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
@@ -30,26 +29,16 @@ export default function Register({ onLogin }) {
     e.preventDefault();
     setError('');
     setLoading(true);
-
     try {
       const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/auth/register`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name, email, whatsapp, password }),
       });
-
       const data = await response.json();
-      if (!response.ok) {
-        throw new Error(data.error || 'Registration failed.');
-      }
-
-      // Registrasi berhasil — tampilkan pesan verifikasi
+      if (!response.ok) throw new Error(data.error || 'Registration failed.');
       setRegistrationSuccess(true);
-
-      // Redirect ke halaman verifikasi setelah 3 detik
-      setTimeout(() => {
-        navigate(`/verify-email?email=${encodeURIComponent(email)}`);
-      }, 3000);
+      setTimeout(() => navigate(`/verify-email?email=${encodeURIComponent(email)}`), 3000);
     } catch (err) {
       setError(err.message);
     } finally {
@@ -57,45 +46,23 @@ export default function Register({ onLogin }) {
     }
   };
 
-  // Tampilan sukses registrasi
   if (registrationSuccess) {
     return (
-      <div className="container animate-fade-in" style={{ maxWidth: '480px', marginTop: '60px' }}>
-        <div className="glass-card" style={{ textAlign: 'center' }}>
-          <div style={{
-            display: 'inline-flex',
-            padding: '16px',
-            borderRadius: '50%',
-            background: 'rgba(16, 185, 129, 0.15)',
-            color: 'var(--color-success)',
-            marginBottom: '15px'
-          }}>
-            <CheckCircle size={36} />
+      <div className="auth-page animate-fade-in">
+        <div className="auth-card" style={{ textAlign: 'center' }}>
+          <div className="auth-icon" style={{ background: 'var(--accent-success-light)', color: 'var(--accent-success)' }}>
+            <CheckCircle size={32} />
           </div>
-          <h2 style={{ fontFamily: 'var(--font-title)', fontSize: '24px', fontWeight: '700', marginBottom: '12px' }}>
-            Registrasi Berhasil! 🎉
-          </h2>
+          <h2 className="auth-title">Registrasi Berhasil!</h2>
           <p style={{ color: 'var(--text-secondary)', fontSize: '14px', lineHeight: '1.6', marginBottom: '20px' }}>
-            Kode verifikasi telah dikirim ke <strong style={{ color: 'var(--color-primary)' }}>{email}</strong>.
-            <br />Silakan cek email Anda dan masukkan kode 6 digit untuk mengaktifkan akun.
+            Kode verifikasi telah dikirim ke <strong style={{ color: 'var(--accent-primary)' }}>{email}</strong>.
+            <br />Silakan cek email Anda dan masukkan kode 6 digit.
           </p>
-          <div style={{
-            background: 'rgba(79, 172, 254, 0.05)',
-            border: '1px solid rgba(79, 172, 254, 0.15)',
-            borderRadius: 'var(--radius-sm)',
-            padding: '12px',
-            fontSize: '13px',
-            color: 'var(--text-secondary)',
-            marginBottom: '25px'
-          }}>
-            ⏳ Anda akan otomatis dialihkan ke halaman verifikasi dalam 3 detik...
+          <div style={{ background: 'var(--accent-primary-light)', border: '1px solid rgba(59,130,246,0.15)', borderRadius: '8px', padding: '12px', fontSize: '13px', color: 'var(--text-secondary)', marginBottom: '20px' }}>
+            Anda akan otomatis dialihkan ke halaman verifikasi dalam 3 detik...
           </div>
-          <button
-            onClick={() => navigate(`/verify-email?email=${encodeURIComponent(email)}`)}
-            className="btn btn-primary"
-            style={{ width: '100%', padding: '14px' }}
-          >
-            Verifikasi Sekarang →
+          <button onClick={() => navigate(`/verify-email?email=${encodeURIComponent(email)}`)} className="btn btn-primary" style={{ width: '100%', padding: '12px' }}>
+            Verifikasi Sekarang &rarr;
           </button>
         </div>
       </div>
@@ -103,175 +70,58 @@ export default function Register({ onLogin }) {
   }
 
   return (
-    <div className="container animate-fade-in" style={{ maxWidth: '480px', marginTop: '60px' }}>
-      <div className="glass-card">
-        <div style={{ textAlign: 'center', marginBottom: '30px' }}>
-          <div style={{
-            display: 'inline-flex',
-            padding: '16px',
-            borderRadius: '50%',
-            background: 'var(--grad-primary)',
-            color: '#070913',
-            marginBottom: '15px'
-          }}>
-            <UserPlus size={28} />
-          </div>
-          <h2 style={{ fontFamily: 'var(--font-title)', fontSize: '28px', fontWeight: '700', marginBottom: '8px' }}>
-            Daftar Akun Baru
-          </h2>
-          <p style={{ color: 'var(--text-secondary)', fontSize: '14px' }}>
-            Bergabunglah dan dapatkan harga khusus untuk layanan SMM & Premium.
-          </p>
+    <div className="auth-page animate-fade-in">
+      <div className="auth-card">
+        <div className="auth-header">
+          <div className="auth-icon"><UserPlus size={26} /></div>
+          <h2 className="auth-title">Daftar Akun Baru</h2>
+          <p className="auth-subtitle">Bergabunglah dan dapatkan harga khusus untuk layanan SMM & Premium.</p>
         </div>
 
-        {error && (
-          <div style={{
-            background: 'rgba(239, 68, 68, 0.1)',
-            border: '1px solid rgba(239, 68, 68, 0.2)',
-            borderRadius: 'var(--radius-sm)',
-            padding: '12px 16px',
-            color: '#fca5a5',
-            fontSize: '14px',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '10px',
-            marginBottom: '20px'
-          }}>
-            <AlertTriangle size={18} />
-            <span>{error}</span>
-          </div>
-        )}
+        {error && <div className="auth-error"><AlertTriangle size={16} /><span>{error}</span></div>}
 
-        {/* Google OAuth Button */}
-        <button
-          onClick={handleGoogleRegister}
-          type="button"
-          style={{
-            width: '100%',
-            padding: '14px',
-            borderRadius: 'var(--radius-sm)',
-            border: '1px solid var(--border-color)',
-            background: 'rgba(255, 255, 255, 0.97)',
-            color: '#1f2937',
-            fontSize: '15px',
-            fontWeight: '600',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            gap: '12px',
-            cursor: 'pointer',
-            transition: 'all 0.2s ease',
-            marginBottom: '24px'
-          }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.background = 'rgba(255, 255, 255, 1)';
-            e.currentTarget.style.transform = 'translateY(-1px)';
-            e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.1)';
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.background = 'rgba(255, 255, 255, 0.97)';
-            e.currentTarget.style.transform = 'translateY(0)';
-            e.currentTarget.style.boxShadow = 'none';
-          }}
-        >
-          <GoogleIcon />
-          Daftar dengan Google
+        <button onClick={handleGoogleRegister} type="button" className="btn btn-secondary" style={{ width: '100%', padding: '12px', fontSize: '14px', marginBottom: '20px' }}>
+          <GoogleIcon /> Daftar dengan Google
         </button>
 
-        {/* Divider */}
-        <div style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: '12px',
-          margin: '24px 0',
-          color: 'var(--text-muted)',
-          fontSize: '13px'
-        }}>
-          <div style={{ flex: 1, height: '1px', background: 'var(--border-color)' }} />
-          atau
-          <div style={{ flex: 1, height: '1px', background: 'var(--border-color)' }} />
-        </div>
+        <div className="auth-divider">atau</div>
 
         <form onSubmit={handleSubmit}>
           <div className="form-group">
             <label className="form-label">Nama Lengkap</label>
             <div style={{ position: 'relative' }}>
-              <User size={18} style={{ position: 'absolute', left: '14px', top: '14px', color: 'var(--text-muted)' }} />
-              <input
-                type="text"
-                className="form-input"
-                placeholder="Budi Santoso"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                style={{ paddingLeft: '45px' }}
-                required
-              />
+              <User size={16} style={{ position: 'absolute', left: '12px', top: '12px', color: '#9CA3AF' }} />
+              <input type="text" className="form-input" placeholder="Budi Santoso" value={name} onChange={(e) => setName(e.target.value)} style={{ paddingLeft: '38px' }} required />
             </div>
           </div>
-
           <div className="form-group">
             <label className="form-label">Alamat Email</label>
             <div style={{ position: 'relative' }}>
-              <Mail size={18} style={{ position: 'absolute', left: '14px', top: '14px', color: 'var(--text-muted)' }} />
-              <input
-                type="email"
-                className="form-input"
-                placeholder="budi@email.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                style={{ paddingLeft: '45px' }}
-                required
-              />
+              <Mail size={16} style={{ position: 'absolute', left: '12px', top: '12px', color: '#9CA3AF' }} />
+              <input type="email" className="form-input" placeholder="budi@email.com" value={email} onChange={(e) => setEmail(e.target.value)} style={{ paddingLeft: '38px' }} required />
             </div>
           </div>
-
           <div className="form-group">
             <label className="form-label">Nomor WhatsApp (Opsional)</label>
             <div style={{ position: 'relative' }}>
-              <Phone size={18} style={{ position: 'absolute', left: '14px', top: '14px', color: 'var(--text-muted)' }} />
-              <input
-                type="tel"
-                className="form-input"
-                placeholder="08123456789"
-                value={whatsapp}
-                onChange={(e) => setWhatsapp(e.target.value)}
-                style={{ paddingLeft: '45px' }}
-              />
+              <Phone size={16} style={{ position: 'absolute', left: '12px', top: '12px', color: '#9CA3AF' }} />
+              <input type="tel" className="form-input" placeholder="08123456789" value={whatsapp} onChange={(e) => setWhatsapp(e.target.value)} style={{ paddingLeft: '38px' }} />
             </div>
           </div>
-
-          <div className="form-group" style={{ marginBottom: '25px' }}>
+          <div className="form-group">
             <label className="form-label">Kata Sandi</label>
             <div style={{ position: 'relative' }}>
-              <Lock size={18} style={{ position: 'absolute', left: '14px', top: '14px', color: 'var(--text-muted)' }} />
-              <input
-                type="password"
-                className="form-input"
-                placeholder="Minimal 6 karakter"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                style={{ paddingLeft: '45px' }}
-                required
-                minLength={6}
-              />
+              <Lock size={16} style={{ position: 'absolute', left: '12px', top: '12px', color: '#9CA3AF' }} />
+              <input type="password" className="form-input" placeholder="Minimal 6 karakter" value={password} onChange={(e) => setPassword(e.target.value)} style={{ paddingLeft: '38px' }} required minLength={6} />
             </div>
           </div>
-
-          <button
-            type="submit"
-            className="btn btn-primary"
-            style={{ width: '100%', padding: '14px', fontSize: '15px' }}
-            disabled={loading}
-          >
+          <button type="submit" className="btn btn-primary" style={{ width: '100%', padding: '12px', fontSize: '14px', marginTop: '4px' }} disabled={loading}>
             {loading ? 'Mendaftarkan...' : 'Daftar'}
           </button>
         </form>
 
-        <div style={{ textAlign: 'center', marginTop: '25px', fontSize: '14px', color: 'var(--text-secondary)' }}>
-          Sudah punya akun?{' '}
-          <Link to="/login" style={{ color: 'var(--color-primary)', textDecoration: 'none', fontWeight: '600' }}>
-            Masuk Disini
-          </Link>
+        <div className="auth-link">
+          Sudah punya akun? <Link to="/login">Masuk Disini</Link>
         </div>
       </div>
     </div>

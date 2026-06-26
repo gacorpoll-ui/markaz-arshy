@@ -1,0 +1,33 @@
+/* ═══════════════════════════════════════════
+   RESPONSIVE — Global media queries
+   ═══════════════════════════════════════════ */
+
+/* ── Touch devices ── */
+@media (hover: none) {
+  .card:hover,
+  .glass-card:hover {
+    transform: none;
+    box-shadow: var(--shadow-sm);
+  }
+  .card:active,
+  .glass-card:active {
+    transform: scale(0.98);
+  }
+}
+
+/* ── Safe area for notch devices ── */
+@supports (padding-top: env(safe-area-inset-top)) {
+  body {
+    padding-top: env(safe-area-inset-top);
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+}
+
+/* ── Reduced motion ── */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
