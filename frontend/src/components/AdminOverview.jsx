@@ -2,7 +2,7 @@ import React from 'react';
 import {
   LayoutDashboard, Users, Database, RefreshCw,
   ShoppingCart, TrendingUp, AlertCircle, BarChart2,
-  Package, CheckCircle, Clock, ArrowUpRight, Zap
+  Package, CheckCircle, Clock, ArrowUpRight, Zap, RotateCw
 } from 'lucide-react';
 
 const STATUS_CONFIG = {
@@ -12,7 +12,7 @@ const STATUS_CONFIG = {
   FAILED:     { color: 'var(--color-error)',   bg: 'rgba(239,68,68,0.1)',   label: 'Gagal' },
 };
 
-export default function AdminOverview({ stats, loading }) {
+export default function AdminOverview({ stats, loading, onRetry }) {
   if (loading) return (
     <div style={{ textAlign: 'center', padding: '100px 0', color: 'var(--text-secondary)' }}>
       <RefreshCw size={34} style={{ animation: 'spin 1s linear infinite', color: 'var(--color-primary)' }} />
@@ -23,7 +23,12 @@ export default function AdminOverview({ stats, loading }) {
 
   if (!stats) return (
     <div style={{ textAlign: 'center', padding: '60px', color: 'var(--text-muted)' }}>
-      Gagal memuat statistik.
+      <RefreshCw size={34} style={{ animation: 'spin 1s linear infinite', marginBottom: '16px', opacity: 0.5 }} />
+      <p style={{ marginBottom: '20px' }}>Gagal memuat statistik.</p>
+      <button onClick={onRetry} className="btn btn-primary" style={{ padding: '10px 20px', fontSize: '13px', display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+        <RotateCw size={15} /> Muat Ulang
+      </button>
+      <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
     </div>
   );
 

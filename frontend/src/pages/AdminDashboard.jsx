@@ -59,30 +59,34 @@ export default function AdminDashboard({ user, token }) {
       setSyncing(true);
       const H = { 'Authorization': `Bearer ${token}` };
 
-      const [statsR, pendR, ordR, catR, prodR, pmR] = await Promise.all([
-        fetch(`${import.meta.env.VITE_API_BASE_URL}/api/admin/stats`, { headers: H }),
-        fetch(`${import.meta.env.VITE_API_BASE_URL}/api/admin/deposits/pending`, { headers: H }),
-        fetch(`${import.meta.env.VITE_API_BASE_URL}/api/admin/orders`, { headers: H }),
-        fetch(`${import.meta.env.VITE_API_BASE_URL}/api/catalog/categories`),
-        fetch(`${import.meta.env.VITE_API_BASE_URL}/api/catalog/products`),
-        fetch(`${import.meta.env.VITE_API_BASE_URL}/api/deposits/payment-methods`, { headers: H }),
+      // Helper: fetch + validasi response.ok -> parse JSON atau null
+      const fetchJson = async (url, opts = {}) => {
+        try {
+          const res = await fetch(url, opts);
+          const data = await res.json();
+          return res.ok ? data : null;
+        } catch {
+          return null;
+        }
+      };
+
+      const [sD, pD, oD, cD, prD, pmD, revD] = await Promise.all([
+        fetchJson(`${import.meta.env.VITE_API_BASE_URL}/api/admin/stats`, { headers: H }),
+        fetchJson(`${import.meta.env.VITE_API_BASE_URL}/api/admin/deposits/pending`, { headers: H }),
+        fetchJson(`${import.meta.env.VITE_API_BASE_URL}/api/admin/orders`, { headers: H }),
+        fetchJson(`${import.meta.env.VITE_API_BASE_URL}/api/catalog/categories`),
+        fetchJson(`${import.meta.env.VITE_API_BASE_URL}/api/catalog/products`),
+        fetchJson(`${import.meta.env.VITE_API_BASE_URL}/api/deposits/payment-methods`, { headers: H }),
+        fetchJson(`${import.meta.env.VITE_API_BASE_URL}/api/reviews/admin`, { headers: H }),
       ]);
 
-      const [sD, pD, oD, cD, prD, pmD] = await Promise.all([
-        statsR.json(), pendR.json(), ordR.json(),
-        catR.json(), prodR.json(), pmR.json(),
-      ]);
-
-      const revR = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/reviews/admin`, { headers: H });
-      const revD = await revR.json();
-
-      setStats(sD.stats);
-      setPendingDeposits(pD.deposits || []);
-      setPendingReviews((revD.reviews || []).filter(r => !r.isApproved).length);
-      setAllOrders(oD.orders || []);
-      setCategories(cD.categories || []);
-      setProducts(prD.products || []);
-      setPaymentMethods(pmD.paymentMethods || []);
+      setStats(sD?.stats || null);
+      setPendingDeposits(pD?.deposits || []);
+      setPendingReviews((revD?.reviews || []).filter(r => !r.isApproved).length);
+      setAllOrders(oD?.orders || []);
+      setCategories(cD?.categories || []);
+      setProducts(prD?.products || []);
+      setPaymentMethods(pmD?.paymentMethods || []);
     } catch (err) {
       console.error('Failed to fetch admin data:', err);
     } finally {
@@ -230,7 +234,7 @@ export default function AdminDashboard({ user, token }) {
         {/* Route content */}
         <div className="adm-content-area">
           <Routes>
-            <Route path="/" element={loading ? <AdminSkeleton /> : <AdminOverview stats={stats} loading={loading} />} />
+            <Route path="/" element={loading ? <AdminSkeleton /> : <AdminOverview stats={stats} loading={loading} onRetry={fetchAdminData} />} />
             <Route path="/deposits" element={<AdminDeposits pendingDeposits={pendingDeposits} handleConfirmDeposit={handleConfirmDeposit} handleRejectDeposit={handleRejectDeposit} loading={loading} />} />
             <Route path="/products" element={<AdminProducts products={products} categories={categories} handleAddProduct={handleAddProduct} loading={loading} />} />
             <Route path="/categories" element={<AdminCategories categories={categories} handleAddCategory={handleAddCategory} handleDeleteCategory={handleDeleteCategory} loading={loading} />} />
