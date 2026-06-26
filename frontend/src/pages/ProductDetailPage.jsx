@@ -1,10 +1,51 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import {
   RefreshCw, ShieldCheck, Star, CheckCircle2, Zap,
   ShoppingCart, ArrowLeft, Tag, Clock, Users,
-  Info, MessageSquare, ChevronRight, Package, Infinity
+  Info, MessageSquare, ChevronRight, Package, Infinity,
+  AlertTriangle, Check, ExternalLink, Copy
 } from 'lucide-react';
+
+/* ── Skeleton loading ── */
+function DetailSkeleton() {
+  const sh = {
+    background: 'var(--bg-muted)', borderRadius: '8px',
+    animation: 'shimmer 1.5s infinite',
+    backgroundImage: 'linear-gradient(90deg, var(--bg-muted) 0%, var(--bg-page) 50%, var(--bg-muted) 100%)',
+    backgroundSize: '200% 100%',
+  };
+  return (
+    <div className="container" style={{ padding: '40px 20px' }}>
+      <div style={{ ...sh, width: '200px', height: '14px', marginBottom: '24px' }} />
+      <div className="pd-layout">
+        <div style={{ flex: 1 }}>
+          <div className="glass-card" style={{ padding: '28px' }}>
+            <div style={{ ...sh, width: '120px', height: '24px', marginBottom: '16px' }} />
+            <div style={{ ...sh, width: '80%', height: '32px', marginBottom: '20px' }} />
+            <div style={{ display: 'flex', gap: '12px', marginBottom: '24px' }}>
+              <div style={{ ...sh, width: '80px', height: '20px' }} />
+              <div style={{ ...sh, width: '120px', height: '20px' }} />
+            </div>
+            <div style={{ ...sh, width: '100%', height: '100px' }} />
+          </div>
+        </div>
+        <div style={{ width: '380px' }}>
+          <div className="glass-card" style={{ padding: '24px' }}>
+            <div style={{ ...sh, width: '60%', height: '18px', marginBottom: '16px' }} />
+            <div style={{ ...sh, width: '100%', height: '48px', marginBottom: '12px' }} />
+            <div style={{ ...sh, width: '100%', height: '48px', marginBottom: '12px' }} />
+            <div style={{ ...sh, width: '100%', height: '56px' }} />
+          </div>
+        </div>
+      </div>
+      <style>{`@keyframes shimmer { to { background-position: -200% 0; } }`}</style>
+    </div>
+  );
+}
+
+/* ── Utility ── */
+const formatRupiah = (n) => `Rp ${Math.round(n || 0).toLocaleString('id-ID')}`;
 
 export default function ProductDetailPage({ user, token }) {
   const { slug } = useParams();
@@ -19,7 +60,7 @@ export default function ProductDetailPage({ user, token }) {
   const [orderError, setOrderError]     = useState('');
   const [orderSuccess, setOrderSuccess] = useState(null);
   const [submitting, setSubmitting]     = useState(false);
-  const [activeTab, setActiveTab]       = useState('deskripsi'); // 'deskripsi' | 'ulasan'
+  const [activeTab, setActiveTab]       = useState('deskripsi');
 
   const [reviews, setReviews]               = useState([]);
   const [averageRating, setAverageRating]   = useState(0);
@@ -87,7 +128,6 @@ export default function ProductDetailPage({ user, token }) {
   const getSelectedDurationPrice = () => {
     if (!selectedDuration || durationOptions.length === 0) return null;
     const d = durationOptions.find(d => d.label === selectedDuration);
-    // Gunakan harga langsung jika ada (price > 0), atau kalkulasi dari multiplier
     if (d?.price && parseFloat(d.price) > 0) return parseFloat(d.price);
     if (d?.priceMultiplier && d.priceMultiplier !== 1) return getBasePrice() * d.priceMultiplier;
     return null;
@@ -97,15 +137,20 @@ export default function ProductDetailPage({ user, token }) {
     if (!product) return 0;
     const base = getBasePrice();
     if (product.type === 'SMM') return (base / 1000) * quantity;
-    // Gunakan harga durasi jika ada
     const durationPrice = getSelectedDurationPrice();
     if (durationPrice !== null) return durationPrice;
     return base;
   };
 
+  const orderTotal = useMemo(() => calculateTotal(), [product, quantity, selectedDuration, selectedOs, user]);
+
   const handleOrderSubmit = async (e) => {
     e.preventDefault();
     if (!user) { navigate('/login'); return; }
+
+    // Konfirmasi untuk pesanan besar
+    if (orderTotal > 500000 && !window.confirm(`Total pesanan Anda Rp ${Math.round(orderTotal).toLocaleString('id-ID')}. Lanjutkan?`)) return;
+
     setOrderError('');
     setSubmitting(true);
     try {
@@ -170,18 +215,12 @@ export default function ProductDetailPage({ user, token }) {
   };
 
   /* ── Loading ── */
-  if (loading) return (
-    <div style={{ textAlign: 'center', padding: '120px 0', color: 'var(--text-secondary)' }}>
-      <RefreshCw size={36} style={{ animation: 'spin 1s linear infinite', color: 'var(--accent-primary)' }} />
-      <p style={{ marginTop: '16px', fontSize: '15px' }}>Memuat detail produk…</p>
-      <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
-    </div>
-  );
-
+  if (loading) return <DetailSkeleton />;
   if (!product) return null;
 
   const isVpsRdp = product.category?.slug === 'vps-rdp';
   const badgeClass = product.type === 'SMM' ? 'badge-smm' : 'badge-premium';
+  const isOutOfStock = product.type === 'PREMIUM' && !isVpsRdp && !product.providerServiceId && (product.stockCount || 0) === 0;
 
   return (
     <div className="container animate-fade-in pd-page">
@@ -197,25 +236,22 @@ export default function ProductDetailPage({ user, token }) {
 
       <div className="pd-layout">
 
-        {/* ══════════════ KOLOM KIRI ══════════════ */}
+        {/* ═══ KOLOM KIRI ═══ */}
         <div className="pd-left">
 
-          {/* Info utama produk */}
           <div className="glass-card pd-info-card">
+            {/* Badge + Rating */}
             <div className="pd-info-top">
-              <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                <span className={`badge ${badgeClass}`}>{product.category.name}</span>
-                {product.type === 'PREMIUM' && (
-                  product.providerStatus === 'Gangguan' ? (
-                    <span className="badge badge-danger" style={{ background: 'rgba(239, 68, 68, 0.15)', color: '#ef4444', border: '1px solid rgba(239, 68, 68, 0.3)', padding: '3px 8px', borderRadius: '12px', fontSize: '11px', fontWeight: '700' }}>
-                      🚫 Gangguan
-                    </span>
+              <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
+                <span className={`badge ${badgeClass}`} style={{ fontSize: '11px', padding: '4px 12px' }}>{product.category.name}</span>
+                {product.type === 'PREMIUM' && !isVpsRdp && (
+                  product.providerStatus === 'Gangguan' || isOutOfStock ? (
+                    <span className="badge badge-danger" style={{ fontSize: '10px' }}>🚫 Stok Habis</span>
                   ) : (
-                    <span className="badge badge-success" style={{ background: 'rgba(34, 197, 94, 0.15)', color: 'var(--accent-success)', border: '1px solid rgba(34, 197, 94, 0.3)', padding: '3px 8px', borderRadius: '12px', fontSize: '11px', fontWeight: '700' }}>
-                      🟢 Tersedia
-                    </span>
+                    <span className="badge badge-success" style={{ fontSize: '10px' }}>🟢 Tersedia</span>
                   )
                 )}
+                {isVpsRdp && <span className="badge badge-success" style={{ fontSize: '10px' }}>♾️ Unlimited</span>}
               </div>
               {reviews.length > 0 && (
                 <div className="pd-avg-rating">
@@ -228,7 +264,7 @@ export default function ProductDetailPage({ user, token }) {
 
             <h1 className="pd-title">{product.name}</h1>
 
-            {/* Stats mini bar */}
+            {/* Stats bar */}
             <div className="pd-stats-bar">
               {product.type === 'SMM' && (
                 <>
@@ -246,34 +282,20 @@ export default function ProductDetailPage({ user, token }) {
               )}
               <div className="pd-stat-item">
                 <Zap size={14} style={{ color: 'var(--accent-primary)' }} />
-                <span>Pengiriman Otomatis</span>
+                <span>Proses Otomatis</span>
               </div>
-              {isVpsRdp && (
-                <>
-                  <div className="pd-stat-divider" />
-                  <div className="pd-stat-item">
-                    <Infinity size={14} style={{ color: 'var(--color-primary)' }} />
-                    <span>Stok Unlimited</span>
-                  </div>
-                </>
-              )}
               {product.type === 'PREMIUM' && !isVpsRdp && (
                 <>
                   <div className="pd-stat-divider" />
                   <div className="pd-stat-item">
                     <Tag size={14} />
-                    <span>
-                      {product.providerServiceId 
-                        ? 'Stok: Tersedia' 
-                        : `Stok: ${product.stockCount}`
-                      }
-                    </span>
+                    <span>{product.providerServiceId ? 'Stok: Tersedia' : `Stok: ${product.stockCount || 0}`}</span>
                   </div>
                 </>
               )}
             </div>
 
-            {/* Tab switcher */}
+            {/* Tab: Deskripsi / Ulasan */}
             <div className="pd-tabs">
               <button
                 className={`pd-tab ${activeTab === 'deskripsi' ? 'active' : ''}`}
@@ -285,27 +307,23 @@ export default function ProductDetailPage({ user, token }) {
                 className={`pd-tab ${activeTab === 'ulasan' ? 'active' : ''}`}
                 onClick={() => setActiveTab('ulasan')}
               >
-                <MessageSquare size={14} /> Ulasan ({reviews.length})
+                <MessageSquare size={14} /> Ulasan {reviews.length > 0 && `(${reviews.length})`}
               </button>
             </div>
 
-            {/* Tab: Deskripsi */}
             {activeTab === 'deskripsi' && (
               <div className="pd-description">
                 {product.description
                   ? product.description.split('\n').map((line, i) => (
                       line.trim() ? <p key={i}>{line}</p> : <br key={i} />
                     ))
-                  : <p style={{ color: 'var(--text-muted)' }}>Tidak ada deskripsi.</p>
+                  : <p style={{ color: 'var(--text-muted)', fontStyle: 'italic' }}>Tidak ada deskripsi untuk layanan ini.</p>
                 }
               </div>
             )}
 
-            {/* Tab: Ulasan */}
             {activeTab === 'ulasan' && (
               <div className="pd-reviews-section">
-
-                {/* Rata-rata rating */}
                 {reviews.length > 0 && (
                   <div className="pd-rating-summary">
                     <span className="pd-rating-big">{averageRating.toFixed(1)}</span>
@@ -322,7 +340,6 @@ export default function ProductDetailPage({ user, token }) {
                   </div>
                 )}
 
-                {/* Daftar ulasan */}
                 {reviews.length === 0 ? (
                   <p style={{ color: 'var(--text-muted)', fontSize: '14px', padding: '20px 0' }}>
                     Belum ada ulasan. Jadilah yang pertama!
@@ -332,9 +349,7 @@ export default function ProductDetailPage({ user, token }) {
                     {reviews.map(r => (
                       <div key={r.id} className="pd-review-item">
                         <div className="pd-review-header">
-                          <div className="pd-review-avatar">
-                            {r.user.name.charAt(0).toUpperCase()}
-                          </div>
+                          <div className="pd-review-avatar">{r.user.name.charAt(0).toUpperCase()}</div>
                           <div>
                             <span className="pd-review-name">{r.user.name}</span>
                             <div style={{ display: 'flex', gap: '2px', color: 'var(--color-warning)', marginTop: '3px' }}>
@@ -350,22 +365,16 @@ export default function ProductDetailPage({ user, token }) {
                   </div>
                 )}
 
-                {/* Form tulis ulasan */}
                 {user && (
                   <form onSubmit={handleReviewSubmit} className="pd-review-form">
                     <p className="pd-review-form-title">Tulis Ulasan Anda</p>
-
-                    {/* Star picker */}
                     <div className="pd-star-picker">
                       {[1,2,3,4,5].map(i => (
-                        <Star
-                          key={i}
-                          size={28}
+                        <Star key={i} size={28}
                           fill={(hoveredRating || userRating) >= i ? 'currentColor' : 'none'}
                           style={{
                             color: (hoveredRating || userRating) >= i ? 'var(--color-warning)' : 'var(--text-muted)',
-                            cursor: 'pointer',
-                            transition: 'color 0.15s, transform 0.15s',
+                            cursor: 'pointer', transition: 'color 0.15s, transform 0.15s',
                             transform: (hoveredRating || userRating) >= i ? 'scale(1.2)' : 'scale(1)',
                           }}
                           onMouseEnter={() => setHoveredRating(i)}
@@ -379,18 +388,12 @@ export default function ProductDetailPage({ user, token }) {
                         </span>
                       )}
                     </div>
-
-                    <textarea
-                      className="form-input pd-review-textarea"
+                    <textarea className="form-input pd-review-textarea"
                       placeholder="Ceritakan pengalaman Anda menggunakan layanan ini…"
-                      value={userReview}
-                      onChange={e => setUserReview(e.target.value)}
-                      rows={3}
+                      value={userReview} onChange={e => setUserReview(e.target.value)} rows={3}
                     />
-
                     {reviewError   && <p className="pd-alert pd-alert-error">{reviewError}</p>}
                     {reviewSuccess && <p className="pd-alert pd-alert-success">{reviewSuccess}</p>}
-
                     <button type="submit" className="btn btn-secondary" disabled={submittingReview} style={{ marginTop: '10px' }}>
                       {submittingReview ? 'Mengirim…' : 'Kirim Ulasan'}
                     </button>
@@ -417,47 +420,56 @@ export default function ProductDetailPage({ user, token }) {
           </div>
         </div>
 
-        {/* ══════════════ KOLOM KANAN — CHECKOUT ══════════════ */}
+        {/* ═══ KOLOM KANAN — CHECKOUT ═══ */}
         <div className="pd-right">
           <div className="glass-card pd-checkout-card">
 
             {orderSuccess ? (
-              /* ── Sukses ── */
               <div className="pd-success">
-                <div className="pd-success-icon">
-                  <CheckCircle2 size={48} />
-                </div>
+                <div className="pd-success-icon"><CheckCircle2 size={48} /></div>
                 <h3>Pesanan Berhasil!</h3>
-                <p>Pesanan Anda sedang diproses secara otomatis.</p>
+                <p style={{ color: 'var(--text-secondary)', marginBottom: '4px' }}>Pesanan #{orderSuccess.order?.id} sedang diproses.</p>
+                <div style={{
+                  background: 'var(--bg-page)', borderRadius: '12px', padding: '14px',
+                  margin: '16px 0', textAlign: 'left', fontSize: '13px', lineHeight: '1.8'
+                }}>
+                  <div><strong>Produk:</strong> {product.name}</div>
+                  <div><strong>Total:</strong> {formatRupiah(orderSuccess.order?.amount)}</div>
+                  <div><strong>Status:</strong> {orderSuccess.order?.status === 'COMPLETED' ? '✅ Selesai' : '⏳ Diproses'}</div>
+                  {orderSuccess.accountDetails && (
+                    <div style={{ marginTop: '10px', padding: '10px', background: 'var(--accent-primary-light)', borderRadius: '8px', border: '1px solid rgba(59,130,246,0.15)' }}>
+                      <div style={{ fontWeight: '700', marginBottom: '6px', fontSize: '12px', color: 'var(--text-muted)' }}>📋 Kredensial Akun:</div>
+                      <div>Email: <strong>{orderSuccess.accountDetails.email}</strong> <button onClick={() => { navigator.clipboard.writeText(orderSuccess.accountDetails.email); }} style={{ background:'none', border:'none', cursor:'pointer', color:'var(--accent-primary)', verticalAlign:'middle' }}><Copy size={12} /></button></div>
+                      <div>Password: <strong>{orderSuccess.accountDetails.password}</strong> <button onClick={() => { navigator.clipboard.writeText(orderSuccess.accountDetails.password); }} style={{ background:'none', border:'none', cursor:'pointer', color:'var(--accent-primary)', verticalAlign:'middle' }}><Copy size={12} /></button></div>
+                      {orderSuccess.accountDetails.extraInfo && <div style={{ marginTop:'4px', fontSize:'11px', color:'var(--text-muted)' }}>{orderSuccess.accountDetails.extraInfo}</div>}
+                    </div>
+                  )}
+                </div>
                 <button onClick={() => navigate('/dashboard')} className="btn btn-primary pd-checkout-btn">
-                  Lihat Pesanan di Dashboard
+                  Lihat di Dashboard <ExternalLink size={14} />
                 </button>
-                <button
-                  onClick={() => { setOrderSuccess(null); setOrderError(''); }}
-                  className="btn btn-secondary"
-                  style={{ width: '100%', marginTop: '10px' }}
-                >
+                <button onClick={() => { setOrderSuccess(null); setOrderError(''); }}
+                  className="btn btn-secondary" style={{ width: '100%', marginTop: '10px' }}>
                   Pesan Lagi
                 </button>
               </div>
             ) : (
               <>
-                {/* ── Dynamic Price Block ── */}
-                <div className="pd-price-block" style={{ borderRadius: '20px', background: 'linear-gradient(135deg, rgba(59, 130, 246,0.06) 0%, rgba(225,48,108,0.06) 100%)', border: '1px solid var(--accent-primary-light)', padding: '20px', marginBottom: '20px' }}>
+                {/* Price block */}
+                <div className="pd-price-block" style={{
+                  borderRadius: '20px',
+                  background: 'linear-gradient(135deg, rgba(59,130,246,0.06) 0%, rgba(225,48,108,0.06) 100%)',
+                  border: '1px solid var(--accent-primary-light)', padding: '22px', marginBottom: '20px'
+                }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                     <div>
                       <span className="pd-price-label" style={{ fontSize: '11px', textTransform: 'uppercase', letterSpacing: '1px', fontWeight: '700', color: 'var(--text-muted)' }}>
                         {durationOptions.length > 0 ? `Harga — ${selectedDuration}` : 'Harga Layanan'}
                       </span>
                       <div className="pd-price-main" style={{ fontSize: '32px', fontWeight: '900', fontFamily: 'var(--font-display)', background: 'linear-gradient(90deg, var(--color-primary), #e1306c)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', marginTop: '4px' }}>
-                        Rp {calculateTotal().toLocaleString('id-ID')}
+                        {formatRupiah(orderTotal)}
                         {product.type === 'SMM' && <span style={{ fontSize: '16px', fontWeight: '600', WebkitTextFillColor: 'var(--text-secondary)' }}> / 1k</span>}
                       </div>
-                      {durationOptions.length > 0 && calculateTotal() !== getBasePrice() && (
-                        <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '4px' }}>
-                          Harga dasar: Rp {getBasePrice().toLocaleString('id-ID')} <span style={{ color: 'var(--color-success)' }}>/ 7 hari</span>
-                        </div>
-                      )}
                     </div>
                     <div style={{ textAlign: 'right' }}>
                       {user?.role === 'RESELLER' && (
@@ -465,13 +477,13 @@ export default function ProductDetailPage({ user, token }) {
                           🏷️ Harga Reseller
                         </span>
                       )}
-                      {product.type === 'SMM' && (
-                        <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '8px' }}>
-                          Total: Rp {calculateTotal().toLocaleString('id-ID')}
-                        </div>
-                      )}
                     </div>
                   </div>
+                  {durationOptions.length > 0 && orderTotal !== getBasePrice() && (
+                    <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '6px' }}>
+                      Harga dasar: {formatRupiah(getBasePrice())}
+                    </div>
+                  )}
                 </div>
 
                 <form onSubmit={handleOrderSubmit} className="pd-form">
@@ -481,116 +493,81 @@ export default function ProductDetailPage({ user, token }) {
                     <>
                       <div className="form-group">
                         <label className="form-label">🔗 Link / URL Target</label>
-                        <input
-                          type="url"
-                          className="form-input"
+                        <input type="url" className="form-input"
                           placeholder="https://instagram.com/username"
-                          value={targetUrl}
-                          onChange={e => setTargetUrl(e.target.value)}
-                          required
-                        />
+                          value={targetUrl} onChange={e => setTargetUrl(e.target.value)} required />
                         <span className="pd-field-hint">Tempel link profil / postingan yang ingin di-boost</span>
                       </div>
                       <div className="form-group">
                         <label className="form-label">📦 Jumlah</label>
-                        <input
-                          type="number"
-                          className="form-input"
-                          min={product.minOrder}
-                          max={product.maxOrder}
-                          step={product.minOrder}
+                        <input type="number" className="form-input"
+                          min={product.minOrder} max={product.maxOrder}
+                          step={1}
                           value={quantity}
-                          onChange={e => setQuantity(e.target.value)}
-                          required
-                        />
-                        <span className="pd-field-hint">
-                          Min: {product.minOrder?.toLocaleString('id-ID')} — Max: {product.maxOrder?.toLocaleString('id-ID')}
-                        </span>
+                          onChange={e => {
+                            const v = parseInt(e.target.value) || product.minOrder;
+                            setQuantity(Math.max(product.minOrder, Math.min(product.maxOrder, v)));
+                          }} required />
+                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: 'var(--text-muted)', marginTop: '4px' }}>
+                          <span>Min: {product.minOrder?.toLocaleString('id-ID')}</span>
+                          <span>Max: {product.maxOrder?.toLocaleString('id-ID')}</span>
+                        </div>
                       </div>
                     </>
                   )}
 
-                  {/* ── Durasi (Premium) ── */}
+                  {/* Durasi (Premium) */}
                   {product.type === 'PREMIUM' && durationOptions.length > 0 && (() => {
-                    // Temukan harga tertinggi untuk kalkulasi savings
                     const prices = durationOptions.map(d => {
                       if (d.price && parseFloat(d.price) > 0) return parseFloat(d.price);
                       if (d.priceMultiplier && d.priceMultiplier !== 1) return getBasePrice() * d.priceMultiplier;
                       return getBasePrice();
                     });
-                    const maxPrice = Math.max(...prices);
-                    // Best value = harga per hari terendah
-                    const bestValueIdx = durationOptions.reduce((bestIdx, d, i) => {
-                      const p = prices[i];
-                      const months = d.months || 1;
-                      const perDay = p / (months * 30);
-                      const bestP = prices[bestIdx];
-                      const bestMonths = durationOptions[bestIdx].months || 1;
-                      const bestPerDay = bestP / (bestMonths * 30);
-                      return perDay < bestPerDay ? i : bestIdx;
+
+                    const bestValueIdx = durationOptions.reduce((best, d, i) => {
+                      const perDay = prices[i] / ((d.months || 1) * 30);
+                      const bestPerDay = prices[best] / ((durationOptions[best].months || 1) * 30);
+                      return perDay < bestPerDay ? i : best;
                     }, 0);
 
                     return (
                       <div className="form-group">
                         <label className="form-label" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                           <span>⏱️ Pilih Durasi</span>
-                          <span style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: '400' }}>Klik untuk memilih</span>
                         </label>
                         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '10px' }}>
                           {durationOptions.map((d, i) => {
                             const durPrice = prices[i];
                             const months = d.months || (i + 1) * 0.25;
                             const perDay = Math.ceil(durPrice / (months * 30));
-                            const savingsPct = i > 0 ? Math.round((1 - durPrice / (prices[0] * (months * 4))) * 100) : 0;
                             const isActive = selectedDuration === d.label;
                             const isBest = i === bestValueIdx && durationOptions.length > 1;
 
                             return (
-                              <button
-                                key={i}
-                                type="button"
-                                onClick={() => setSelectedDuration(d.label)}
+                              <button key={i} type="button" onClick={() => setSelectedDuration(d.label)}
                                 style={{
-                                  position: 'relative',
-                                  padding: '14px 12px',
-                                  borderRadius: '14px',
+                                  position: 'relative', padding: '16px 14px', borderRadius: '14px',
                                   border: isActive ? '2px solid var(--color-primary)' : '1px solid var(--border-default)',
                                   background: isActive ? 'var(--accent-primary-light)' : 'var(--bg-page)',
-                                  cursor: 'pointer',
-                                  textAlign: 'left',
-                                  transition: 'all 0.25s ease',
-                                  boxShadow: isActive ? '0 0 20px var(--accent-primary-light)' : 'none',
-                                }}
-                              >
+                                  cursor: 'pointer', textAlign: 'left', transition: 'all 0.2s',
+                                }}>
                                 {isBest && (
-                                  <span style={{
-                                    position: 'absolute', top: '-9px', right: '10px',
+                                  <span style={{ position: 'absolute', top: '-9px', right: '10px',
                                     background: 'linear-gradient(90deg, var(--color-primary), #06b6d4)',
-                                    color: 'var(--text-inverse)', fontSize: '9px', fontWeight: '900',
-                                    padding: '2px 8px', borderRadius: '20px', letterSpacing: '0.5px',
-                                  }}>
+                                    color: '#fff', fontSize: '9px', fontWeight: '900',
+                                    padding: '2px 8px', borderRadius: '20px', letterSpacing: '0.5px' }}>
                                     ★ TERBAIK
                                   </span>
                                 )}
-                                <div style={{ fontSize: '14px', fontWeight: '800', color: isActive ? 'var(--color-primary)' : '#fff', marginBottom: '4px' }}>
+                                <div style={{ fontSize: '14px', fontWeight: '800', color: isActive ? 'var(--color-primary)' : 'var(--text-primary)', marginBottom: '4px' }}>
                                   {d.label}
                                 </div>
-                                <div style={{ fontSize: '13px', fontWeight: '700', color: isActive ? 'var(--color-primary)' : 'var(--text-secondary)' }}>
-                                  Rp {durPrice.toLocaleString('id-ID')}
+                                <div style={{ fontSize: '14px', fontWeight: '700', color: isActive ? 'var(--color-primary)' : 'var(--text-secondary)' }}>
+                                  {formatRupiah(durPrice)}
                                 </div>
-                                <div style={{ fontSize: '10px', color: 'var(--text-muted)', marginTop: '2px' }}>
-                                  ≈ Rp {perDay.toLocaleString('id-ID')}/hari
+                                <div style={{ fontSize: '10px', color: 'var(--text-muted)', marginTop: '4px' }}>
+                                  ≈ {formatRupiah(perDay)}/hari
                                 </div>
-                                {savingsPct > 0 && (
-                                  <span style={{
-                                    display: 'inline-block', marginTop: '4px',
-                                    background: 'rgba(34,197,94,0.15)', color: 'var(--color-success)',
-                                    border: '1px solid rgba(34,197,94,0.2)',
-                                    borderRadius: '20px', padding: '1px 6px', fontSize: '10px', fontWeight: '700',
-                                  }}>
-                                    HEMAT {savingsPct}%
-                                  </span>
-                                )}
                               </button>
                             );
                           })}
@@ -599,7 +576,7 @@ export default function ProductDetailPage({ user, token }) {
                     );
                   })()}
 
-                  {/* Target Input (Premium H2H Products) */}
+                  {/* Target Input (Premium H2H) */}
                   {product.type === 'PREMIUM' && product.providerServiceId && (
                     <div className="form-group" style={{ marginTop: '15px' }}>
                       {(() => {
@@ -607,101 +584,72 @@ export default function ProductDetailPage({ user, token }) {
                         const isUpgrade = nameLower.includes('upgrade') || nameLower.includes('email pribadi') || nameLower.includes('invite');
                         const isOtpApp = nameLower.includes('hotstar') || nameLower.includes('otp');
 
-                        if (isUpgrade) {
-                          return (
-                            <>
-                              <label className="form-label">📧 Email Akun Anda (Untuk Upgrade/Invite)</label>
-                              <input
-                                type="email"
-                                className="form-input"
-                                placeholder="nama@gmail.com"
-                                value={targetUrl}
-                                onChange={e => setTargetUrl(e.target.value)}
-                                required
-                              />
-                              <span className="pd-field-hint">Masukkan email yang ingin didaftarkan/di-upgrade ke Premium</span>
-                            </>
-                          );
-                        } else if (isOtpApp) {
-                          return (
-                            <>
-                              <label className="form-label">📱 Nomor HP Disney+ Hotstar (Untuk OTP)</label>
-                              <input
-                                type="tel"
-                                className="form-input"
-                                placeholder="081234567890"
-                                value={targetUrl}
-                                onChange={e => setTargetUrl(e.target.value)}
-                                required
-                              />
-                              <span className="pd-field-hint">Nomor handphone aktif yang terdaftar di aplikasi Disney+ Hotstar</span>
-                            </>
-                          );
-                        } else {
-                          return (
-                            <>
-                              <label className="form-label">📞 Nomor WhatsApp Penerima</label>
-                              <input
-                                type="tel"
-                                className="form-input"
-                                placeholder="081234567890 (Opsional)"
-                                value={targetUrl}
-                                onChange={e => setTargetUrl(e.target.value)}
-                              />
-                              <span className="pd-field-hint">Nomor WhatsApp untuk menerima rincian kredensial/akun</span>
-                            </>
-                          );
-                        }
+                        if (isUpgrade) return (
+                          <>
+                            <label className="form-label">📧 Email Akun Anda</label>
+                            <input type="email" className="form-input" placeholder="nama@gmail.com" value={targetUrl} onChange={e => setTargetUrl(e.target.value)} required />
+                            <span className="pd-field-hint">Email yang ingin di-upgrade ke Premium</span>
+                          </>
+                        );
+                        if (isOtpApp) return (
+                          <>
+                            <label className="form-label">📱 Nomor HP (OTP)</label>
+                            <input type="tel" className="form-input" placeholder="081234567890" value={targetUrl} onChange={e => setTargetUrl(e.target.value)} required />
+                            <span className="pd-field-hint">Nomor HP aktif terdaftar di aplikasi</span>
+                          </>
+                        );
+                        return (
+                          <>
+                            <label className="form-label">📞 Nomor WhatsApp Penerima</label>
+                            <input type="tel" className="form-input" placeholder="081234567890 (Opsional)" value={targetUrl} onChange={e => setTargetUrl(e.target.value)} />
+                            <span className="pd-field-hint">Untuk menerima detail kredensial akun</span>
+                          </>
+                        );
                       })()}
                     </div>
                   )}
 
-                  {/* OS Options (VPS/RDP) */}
+                  {/* OS Options */}
                   {osOptions.length > 0 && (
                     <div className="form-group">
-                      <label className="form-label">🖥️ Pilih Sistem Operasi</label>
-                      <select
-                        className="form-input"
-                        value={selectedOs}
-                        onChange={e => setSelectedOs(e.target.value)}
-                        style={{ background: 'var(--bg-page)', border: '1px solid var(--border-default)', borderRadius: '12px' }}
-                      >
+                      <label className="form-label">🖥️ Pilih OS</label>
+                      <select className="form-input" value={selectedOs} onChange={e => setSelectedOs(e.target.value)}
+                        style={{ background: 'var(--bg-page)', border: '1px solid var(--border-default)', borderRadius: '12px' }}>
                         {osOptions.map((o, i) => <option key={i} value={o}>{o}</option>)}
                       </select>
                     </div>
                   )}
 
-                  {/* ── Total Box ── */}
+                  {/* Total */}
                   <div style={{ background: 'var(--bg-page)', borderRadius: '16px', padding: '16px', border: '1px solid var(--border-default)', marginBottom: '16px' }}>
                     {product.type === 'SMM' && (
                       <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', color: 'var(--text-muted)', paddingBottom: '10px', marginBottom: '10px', borderBottom: '1px solid var(--border-default)' }}>
-                        <span>Harga per 1k</span>
-                        <span>Rp {getBasePrice().toLocaleString('id-ID')} × {(quantity / 1000).toFixed(1)}k</span>
-                      </div>
-                    )}
-                    {product.type === 'PREMIUM' && durationOptions.length > 0 && (
-                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', color: 'var(--text-muted)', paddingBottom: '10px', marginBottom: '10px', borderBottom: '1px solid var(--border-default)' }}>
-                        <span>Durasi dipilih</span>
-                        <span style={{ fontWeight: '600', color: 'var(--color-primary)' }}>{selectedDuration || '—'}</span>
+                        <span>{formatRupiah(getBasePrice())} × {(quantity / 1000).toFixed(1)}k</span>
+                        <span>{formatRupiah(orderTotal)}</span>
                       </div>
                     )}
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                       <span style={{ fontWeight: '700', fontSize: '15px' }}>Total Bayar</span>
-                      <span style={{ fontWeight: '900', fontSize: '22px', fontFamily: 'var(--font-title)', color: 'var(--color-primary)' }}>
-                        Rp {calculateTotal().toLocaleString('id-ID')}
+                      <span style={{ fontWeight: '900', fontSize: '24px', fontFamily: 'var(--font-title)', color: 'var(--color-primary)' }}>
+                        {formatRupiah(orderTotal)}
                       </span>
                     </div>
                   </div>
 
-                  {product.providerStatus === 'Gangguan' && (
-                    <div className="pd-alert pd-alert-error" style={{ marginBottom: '15px', background: 'rgba(239, 68, 68, 0.1)', border: '1px solid rgba(239, 68, 68, 0.2)', padding: '14px', borderRadius: '12px', color: '#f87171' }}>
-                      ⚠️ Layanan ini sedang gangguan/pemeliharaan. Pemesanan tidak dapat dilakukan untuk sementara waktu.
+                  {/* Stock warnings */}
+                  {isOutOfStock && (
+                    <div className="pd-alert pd-alert-error" style={{ marginBottom: '15px' }}>
+                      ⚠️ Stok akun premium sedang kosong. Silakan hubungi admin atau coba lagi nanti.
                     </div>
                   )}
-
+                  {product.providerStatus === 'Gangguan' && (
+                    <div className="pd-alert pd-alert-error" style={{ marginBottom: '15px' }}>
+                      🔧 Layanan ini sedang dalam pemeliharaan.
+                    </div>
+                  )}
                   {orderError && (
                     <div className="pd-alert pd-alert-error" style={{ marginBottom: '15px' }}>
-                      ⚠️ {orderError}
+                      <AlertTriangle size={14} style={{ flexShrink: 0 }} /> {orderError}
                     </div>
                   )}
 
@@ -710,34 +658,28 @@ export default function ProductDetailPage({ user, token }) {
                       <ShoppingCart size={16} /> Masuk untuk Memesan
                     </Link>
                   ) : (
-                    <button type="submit" className="btn btn-primary pd-checkout-btn" disabled={submitting || product.providerStatus === 'Gangguan'} style={{ fontSize: '16px', padding: '16px', borderRadius: '16px', fontWeight: '800', opacity: product.providerStatus === 'Gangguan' ? 0.5 : 1, cursor: product.providerStatus === 'Gangguan' ? 'not-allowed' : 'pointer' }}>
-                      {product.providerStatus === 'Gangguan' ? (
-                        <>🔧 Layanan Sedang Gangguan</>
-                      ) : submitting ? (
-                        <><RefreshCw size={16} style={{ animation: 'spin 1s linear infinite' }} /> Memproses…</>
-                      ) : (
-                        <><ShoppingCart size={16} /> Beli Sekarang — Rp {calculateTotal().toLocaleString('id-ID')}</>
-                      )}
+                    <button type="submit" className="btn btn-primary pd-checkout-btn" disabled={submitting || product.providerStatus === 'Gangguan' || isOutOfStock}
+                      style={{ fontSize: '16px', padding: '16px', borderRadius: '16px', fontWeight: '800' }}>
+                      {product.providerStatus === 'Gangguan' ? '🔧 Layanan Gangguan' :
+                       isOutOfStock ? '⏳ Stok Kosong' :
+                       submitting ? <><RefreshCw size={16} className="spin" /> Memproses…</> :
+                       <><ShoppingCart size={16} /> Beli — {formatRupiah(orderTotal)}</>}
                     </button>
                   )}
 
-                  <p className="pd-checkout-note" style={{ textAlign: 'center', marginTop: '12px', fontSize: '12px' }}>
-                    <Clock size={12} /> Pesanan diproses otomatis dalam hitungan detik. <span style={{ color: 'var(--color-success)' }}>Garansi Penuh.</span>
+                  <p className="pd-checkout-note" style={{ textAlign: 'center', marginTop: '12px', fontSize: '12px', color: 'var(--text-muted)' }}>
+                    <Clock size={12} style={{ verticalAlign: 'middle', marginRight: '4px' }} />
+                    Pesanan diproses otomatis dalam hitungan detik. <span style={{ color: 'var(--color-success)', fontWeight: '600' }}>Garansi Penuh.</span>
                   </p>
                 </form>
               </>
             )}
           </div>
 
-          {/* Back to catalog */}
-          <button
-            onClick={() => navigate(getCatalogPath())}
-            className="btn btn-secondary pd-back-btn"
-          >
+          <button onClick={() => navigate(getCatalogPath())} className="btn btn-secondary pd-back-btn" style={{ marginTop: '12px' }}>
             <ArrowLeft size={15} /> Kembali ke {getCatalogLabel()}
           </button>
         </div>
-
       </div>
     </div>
   );
