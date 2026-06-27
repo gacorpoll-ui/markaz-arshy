@@ -20,6 +20,7 @@ import aiRouterWebhook from './routes/ai-router-webhook.js';
 import adminAIRouter from './routes/admin-ai.js';
 import proxyAIRouter from './routes/proxy-ai.js';
 import adminAgentsRouter from './routes/admin-agents.js';
+import addressesRouter from './routes/addresses.js';
 import prisma from './db.js';
 
 const app = express();
@@ -74,6 +75,7 @@ app.use('/api/ai-router', aiRouter);
 app.use('/api/ai-router-webhook', aiRouterWebhook);
 app.use('/api/admin', adminAIRouter);
 app.use('/api/admin', adminAgentsRouter);
+app.use('/api/addresses', addressesRouter);
 
 // Initialize Cron Jobs
 setupCronJobs();
