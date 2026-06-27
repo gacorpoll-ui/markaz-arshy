@@ -31,13 +31,62 @@ model User {
   aiApiKeys           AIApiKey[]
   aiUsages            AIUsage[]
   aiTransactions      AITransaction[]
+  addresses           UserAddress[]
+  cart                Cart?
+}
+
+model UserAddress {
+  id            Int      @id @default(autoincrement())
+  userId        Int
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  label         String // "Rumah", "Kantor", etc
+  recipientName String
+  phoneNumber   String
+  province      String
+  city          String
+  district      String
+  village       String
+  villageCode   String?
+  fullAddress   String
+  postalCode    String?
+  isDefault     Boolean  @default(false)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  orders Order[] @relation("ShippingAddress")
+
+  @@index([userId])
+}
+
+model Cart {
+  id        Int      @id @default(autoincrement())
+  userId    Int      @unique
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  items CartItem[]
+}
+
+model CartItem {
+  id              Int      @id @default(autoincrement())
+  cartId          Int
+  cart            Cart     @relation(fields: [cartId], references: [id], onDelete: Cascade)
+  productId       Int
+  product         Product  @relation(fields: [productId], references: [id])
+  quantity        Int      @default(1)
+  selectedVariant Json? // {"color": "Hitam", "size": "XL"}
+  createdAt       DateTime @default(now())
+
+  @@unique([cartId, productId])
+  @@index([cartId])
 }
 
 model Category {
   id        Int       @id @default(autoincrement())
   name      String
   slug      String    @unique
-  type      String    // SMM, PREMIUM
+  type      String // SMM, PREMIUM
   order     Int       @default(0)
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
@@ -45,89 +94,102 @@ model Category {
 }
 
 model Product {
-  id                Int       @id @default(autoincrement())
+  id                Int      @id @default(autoincrement())
   categoryId        Int
-  category          Category  @relation(fields: [categoryId], references: [id])
+  category          Category @relation(fields: [categoryId], references: [id])
   name              String
-  slug              String    @unique
+  slug              String   @unique
   description       String?
   priceUser         Int
   priceReseller     Int
-  type              String    // SMM, PREMIUM
+  type              String // SMM, PREMIUM, PHYSICAL
+  stock             Int      @default(0)
   providerServiceId String?
-  source            String?   // e.g., "jakmall", "rajaitem", "local"
-  jakmallProductId  String?   @unique // ID unik dari Jakmall
-  categoryJakmall   String?   // Kategori dari Jakmall
-  weight            Float?    // Berat produk
-  length            Float?    // Dimensi panjang
-  width             Float?    // Dimensi lebar
-  height            Float?    // Dimensi tinggi
-  variants          Json?     // Menyimpan varian produk dalam format JSON
-  imageUrl          String?   // Path gambar lokal
+  source            String? // e.g., "jakmall", "rajaitem", "local"
+  jakmallProductId  String?  @unique // ID unik dari Jakmall
+  categoryJakmall   String? // Kategori dari Jakmall
+  weight            Float? // Berat produk
+  length            Float? // Dimensi panjang
+  width             Float? // Dimensi lebar
+  height            Float? // Dimensi tinggi
+  variants          Json? // Menyimpan varian produk dalam format JSON
+  imageUrl          String? // Path gambar lokal
 
-  shippingInfo      Json?     // Informasi pengiriman terkait dari Jakmall (jika ada)   
-  minOrder          Int       @default(1)
-  maxOrder          Int       @default(10000)
-  isActive          Boolean   @default(true)
-  providerStatus    String    @default("Tersedia")
-  durationOptions   String?   // JSON: [{"label":"1 Bulan","months":1,"priceMultiplier":1},...]
-  osOptions         String?   // JSON: ["Windows","Linux"] — khusus VPS/RDP
-  createdAt         DateTime  @default(now())
-  updatedAt         DateTime  @updatedAt
-  accounts          Account[]
-  orders            Order[]
-  reviews           Review[]
+  shippingInfo    Json? // Informasi pengiriman terkait dari Jakmall (jika ada)   
+  minOrder        Int        @default(1)
+  maxOrder        Int        @default(10000)
+  isActive        Boolean    @default(true)
+  providerStatus  String     @default("Tersedia")
+  durationOptions String? // JSON: [{"label":"1 Bulan","months":1,"priceMultiplier":1},...]
+  osOptions       String? // JSON: ["Windows","Linux"] — khusus VPS/RDP
+  createdAt       DateTime   @default(now())
+  updatedAt       DateTime   @updatedAt
+  accounts        Account[]
+  orders          Order[]
+  reviews         Review[]
+  cartItems       CartItem[]
 }
 
 model Account {
-  id             Int       @id @default(autoincrement())
-  productId      Int
-  product        Product   @relation(fields: [productId], references: [id])
-  email          String
-  password       String
-  extraInfo      String?   
-  isSold         Boolean   @default(false)
-  soldToUserId   Int?
-  soldAt         DateTime?
-  createdAt      DateTime  @default(now())
-  updatedAt      DateTime  @updatedAt
-  orders         Order[]
+  id           Int       @id @default(autoincrement())
+  productId    Int
+  product      Product   @relation(fields: [productId], references: [id])
+  email        String
+  password     String
+  extraInfo    String?
+  isSold       Boolean   @default(false)
+  soldToUserId Int?
+  soldAt       DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  orders       Order[]
 }
 
 model Follower {
-  id             Int       @id @default(autoincrement())
+  id             Int      @id @default(autoincrement())
   userId         Int
-  user           User      @relation(fields: [userId], references: [id])
-  platform       String    
-  username       String    
-  followerCount  Int       @default(0) 
-  targetFollower Int       
-  status         String    @default("ACTIVE") 
-  lastUpdated    DateTime  @default(now())
-  createdAt      DateTime  @default(now())
-  updatedAt      DateTime  @updatedAt
+  user           User     @relation(fields: [userId], references: [id])
+  platform       String
+  username       String
+  followerCount  Int      @default(0)
+  targetFollower Int
+  status         String   @default("ACTIVE")
+  lastUpdated    DateTime @default(now())
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
 }
 
 model Order {
-  id              Int       @id @default(autoincrement())
-  userId          Int
-  user            User      @relation(fields: [userId], references: [id])
-  productId       Int
-  product         Product   @relation(fields: [productId], references: [id])
-  type            String    
-  targetUrl       String?   
-  quantity        Int?      
-  accountId       Int?      
-  account         Account?  @relation(fields: [accountId], references: [id])
-  amount          Int
-  status          String    @default("PENDING") 
-  providerOrderId String?   
-  providerStatus  String?   
-  notes           String?
-  selectedDuration String?  // "1 Bulan", "3 Bulan", dll.
-  selectedOs       String?  // "Windows", "Linux" — untuk VPS/RDP
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
+  id                 Int          @id @default(autoincrement())
+  userId             Int
+  user               User         @relation(fields: [userId], references: [id])
+  productId          Int
+  product            Product      @relation(fields: [productId], references: [id])
+  type               String
+  targetUrl          String?
+  quantity           Int?
+  accountId          Int?
+  account            Account?     @relation(fields: [accountId], references: [id])
+  amount             Int
+  status             String       @default("PENDING")
+  providerOrderId    String?
+  providerStatus     String?
+  notes              String?
+  selectedDuration   String? // "1 Bulan", "3 Bulan", dll.
+  selectedOs         String? // "Windows", "Linux" — untuk VPS/RDP
+  // PHYSICAL order fields
+  shippingAddressId  Int?
+  shippingAddress    UserAddress? @relation("ShippingAddress", fields: [shippingAddressId], references: [id])
+  shippingSnapshot   Json?
+  courier            String?
+  courierService     String?
+  courierServiceName String?
+  shippingCost       Int?
+  resi               String?
+  shippedAt          DateTime?
+  deliveredAt        DateTime?
+  createdAt          DateTime     @default(now())
+  updatedAt          DateTime     @updatedAt
 }
 
 model BalanceTransaction {
@@ -139,17 +201,17 @@ model BalanceTransaction {
   balanceBefore Int
   balanceAfter  Int
   description   String
-  referenceId   String?  
+  referenceId   String?
   createdAt     DateTime @default(now())
 }
 
 model PaymentMethod {
   id            Int       @id @default(autoincrement())
-  name          String    
-  accountName   String    
-  accountNumber String    
-  instructions  String?   
-  qrImage       String?   // BARU: URL gambar QRIS
+  name          String
+  accountName   String
+  accountNumber String
+  instructions  String?
+  qrImage       String? // BARU: URL gambar QRIS
   isActive      Boolean   @default(true)
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
@@ -161,12 +223,12 @@ model Deposit {
   userId            Int
   user              User           @relation("UserDeposits", fields: [userId], references: [id])
   amount            Int
-  paymentMethod     String         
-  paymentMethodId   Int?           
+  paymentMethod     String
+  paymentMethodId   Int?
   paymentMethodRef  PaymentMethod? @relation(fields: [paymentMethodId], references: [id])
-  paymentProof      String?        
+  paymentProof      String?
   midtransToken     String?
-  status            String         @default("PENDING") 
+  status            String         @default("PENDING")
   confirmedByUserId Int?
   confirmedByUser   User?          @relation("AdminConfirmedDeposits", fields: [confirmedByUserId], references: [id])
   confirmedAt       DateTime?
@@ -193,28 +255,28 @@ model SiteSetting {
 }
 
 model Review {
-  id          Int      @id @default(autoincrement())
-  userId      Int
-  user        User     @relation(fields: [userId], references: [id])
-  productId   Int?     // Opsional, jika review terkait produk tertentu
-  product     Product? @relation(fields: [productId], references: [id])
-  rating      Int      @default(5) // 1-5 stars
-  comment     String?
-  isApproved  Boolean  @default(false)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id         Int      @id @default(autoincrement())
+  userId     Int
+  user       User     @relation(fields: [userId], references: [id])
+  productId  Int? // Opsional, jika review terkait produk tertentu
+  product    Product? @relation(fields: [productId], references: [id])
+  rating     Int      @default(5) // 1-5 stars
+  comment    String?
+  isApproved Boolean  @default(false)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
 }
 
 model Notification {
-  id          Int      @id @default(autoincrement())
-  userId      Int
-  user        User     @relation(fields: [userId], references: [id])
-  type        String   // e.g., 'ORDER_STATUS', 'BALANCE_UPDATE', 'PROMOTION'
-  message     String
-  isRead      Boolean  @default(false)
-  link        String?  // Optional link for the notification
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  user      User     @relation(fields: [userId], references: [id])
+  type      String // e.g., 'ORDER_STATUS', 'BALANCE_UPDATE', 'PROMOTION'
+  message   String
+  isRead    Boolean  @default(false)
+  link      String? // Optional link for the notification
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -234,81 +296,81 @@ model AIProvider {
 }
 
 model AIModel {
-  id                  Int         @id @default(autoincrement())
-  providerId          Int
-  provider            AIProvider  @relation(fields: [providerId], references: [id])
-  name                String      // "GPT-4o", "Claude 3.5 Sonnet"
-  modelId             String      @unique // "gpt-4o", "claude-3-5-sonnet"
-  inputPricePer1K     Int       // Harga input per 1K tokens (Rp)
-  outputPricePer1K    Int       // Harga output per 1K tokens (Rp)
-  contextWindow       Int         // Max tokens (e.g. 128000)
-  isActive            Boolean     @default(true)
-  apiKeys             AIApiKey[]
-  usages              AIUsage[]
-  createdAt           DateTime    @default(now())
-  updatedAt           DateTime    @updatedAt
+  id               Int        @id @default(autoincrement())
+  providerId       Int
+  provider         AIProvider @relation(fields: [providerId], references: [id])
+  name             String // "GPT-4o", "Claude 3.5 Sonnet"
+  modelId          String     @unique // "gpt-4o", "claude-3-5-sonnet"
+  inputPricePer1K  Int // Harga input per 1K tokens (Rp)
+  outputPricePer1K Int // Harga output per 1K tokens (Rp)
+  contextWindow    Int // Max tokens (e.g. 128000)
+  isActive         Boolean    @default(true)
+  apiKeys          AIApiKey[]
+  usages           AIUsage[]
+  createdAt        DateTime   @default(now())
+  updatedAt        DateTime   @updatedAt
 }
 
 model AIApiKey {
-  id              Int             @id @default(autoincrement())
-  userId          Int
-  user            User            @relation(fields: [userId], references: [id])
-  modelId         Int?            // Null = all models
-  model           AIModel?        @relation(fields: [modelId], references: [id])
-  keyName         String          // User-defined name "My Dev Key"
-  apiKey          String          @unique // Generated key "sk-mrkarsh-xxx"
-  nineRouterKey   String?         // Internal 9router key mapped by Markaz Arshy
-  tier            String          // "BASIC" | "PRO" | "ENTERPRISE"
-  rateLimit       Int             // Requests per minute
-  monthlyQuota    Int?            // Max tokens per month (null = unlimited)
-  creditsBalance  Int           @default(0) // Prepaid credits
-  isActive        Boolean         @default(true)
-  expiresAt       DateTime?       // Null = no expiration
-  lastUsedAt      DateTime?
-  usages          AIUsage[]
-  transactions    AITransaction[]
-  createdAt       DateTime        @default(now())
-  updatedAt       DateTime        @updatedAt
+  id             Int             @id @default(autoincrement())
+  userId         Int
+  user           User            @relation(fields: [userId], references: [id])
+  modelId        Int? // Null = all models
+  model          AIModel?        @relation(fields: [modelId], references: [id])
+  keyName        String // User-defined name "My Dev Key"
+  apiKey         String          @unique // Generated key "sk-mrkarsh-xxx"
+  nineRouterKey  String? // Internal 9router key mapped by Markaz Arshy
+  tier           String // "BASIC" | "PRO" | "ENTERPRISE"
+  rateLimit      Int // Requests per minute
+  monthlyQuota   Int? // Max tokens per month (null = unlimited)
+  creditsBalance Int             @default(0) // Prepaid credits
+  isActive       Boolean         @default(true)
+  expiresAt      DateTime? // Null = no expiration
+  lastUsedAt     DateTime?
+  usages         AIUsage[]
+  transactions   AITransaction[]
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
 }
 
 model AIUsage {
-  id              Int       @id @default(autoincrement())
-  apiKeyId        Int
-  apiKey          AIApiKey  @relation(fields: [apiKeyId], references: [id])
-  userId          Int
-  user            User      @relation(fields: [userId], references: [id])
-  modelId         Int
-  model           AIModel   @relation(fields: [modelId], references: [id])
-  requestId       String    @unique // From 9router webhook
-  inputTokens     Int
-  outputTokens    Int
-  totalTokens     Int
-  inputCost       Int       // Calculated cost
-  outputCost      Int
-  totalCost       Int
-  inputPricePer1K Int       // Snapshot: harga input per 1K saat request
-  outputPricePer1K Int      // Snapshot: harga output per 1K saat request
-  endpoint        String    // "/v1/chat/completions"
-  statusCode      Int       // 200, 429, 500
-  latencyMs       Int       // Response time in ms
-  errorMessage    String?
-  metadata        String?   // JSON: {model, temperature, etc}
-  createdAt       DateTime  @default(now())
+  id               Int      @id @default(autoincrement())
+  apiKeyId         Int
+  apiKey           AIApiKey @relation(fields: [apiKeyId], references: [id])
+  userId           Int
+  user             User     @relation(fields: [userId], references: [id])
+  modelId          Int
+  model            AIModel  @relation(fields: [modelId], references: [id])
+  requestId        String   @unique // From 9router webhook
+  inputTokens      Int
+  outputTokens     Int
+  totalTokens      Int
+  inputCost        Int // Calculated cost
+  outputCost       Int
+  totalCost        Int
+  inputPricePer1K  Int // Snapshot: harga input per 1K saat request
+  outputPricePer1K Int // Snapshot: harga output per 1K saat request
+  endpoint         String // "/v1/chat/completions"
+  statusCode       Int // 200, 429, 500
+  latencyMs        Int // Response time in ms
+  errorMessage     String?
+  metadata         String? // JSON: {model, temperature, etc}
+  createdAt        DateTime @default(now())
 }
 
 model AITransaction {
-  id              Int       @id @default(autoincrement())
-  userId          Int
-  user            User      @relation(fields: [userId], references: [id])
-  apiKeyId        Int?
-  apiKey          AIApiKey? @relation(fields: [apiKeyId], references: [id])
-  amount          Int       // +100 (top-up) or -50 (usage)
-  type            String    // "TOP_UP" | "USAGE" | "REFUND"
-  description     String
-  balanceBefore   Int
-  balanceAfter    Int
-  relatedUsageId  Int?
-  createdAt       DateTime  @default(now())
+  id             Int       @id @default(autoincrement())
+  userId         Int
+  user           User      @relation(fields: [userId], references: [id])
+  apiKeyId       Int?
+  apiKey         AIApiKey? @relation(fields: [apiKeyId], references: [id])
+  amount         Int // +100 (top-up) or -50 (usage)
+  type           String // "TOP_UP" | "USAGE" | "REFUND"
+  description    String
+  balanceBefore  Int
+  balanceAfter   Int
+  relatedUsageId Int?
+  createdAt      DateTime  @default(now())
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -316,84 +378,84 @@ model AITransaction {
 // ═══════════════════════════════════════════════════════════
 
 model AgentTask {
-  id              Int       @id @default(autoincrement())
-  agentType       String    // "seo", "social_media", "email", "whatsapp", "competitor", "pricing", "analytics", "reseller", "retention", "upsell", "content_writer", "review_request"
-  taskName        String
-  status          String    @default("PENDING") // PENDING, RUNNING, COMPLETED, FAILED
-  input           String?   // JSON input parameters
-  output          String?   // JSON output/result
-  reportPath      String?
-  startedAt       DateTime?
-  completedAt     DateTime?
-  durationMs      Int?
-  llmTokensUsed   Int       @default(0)
-  llmCost         Int       @default(0) // In Rp
-  errorMessage    String?
-  triggeredBy     String    @default("cron") // "cron", "admin", "cli"
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
+  id            Int       @id @default(autoincrement())
+  agentType     String // "seo", "social_media", "email", "whatsapp", "competitor", "pricing", "analytics", "reseller", "retention", "upsell", "content_writer", "review_request"
+  taskName      String
+  status        String    @default("PENDING") // PENDING, RUNNING, COMPLETED, FAILED
+  input         String? // JSON input parameters
+  output        String? // JSON output/result
+  reportPath    String?
+  startedAt     DateTime?
+  completedAt   DateTime?
+  durationMs    Int?
+  llmTokensUsed Int       @default(0)
+  llmCost       Int       @default(0) // In Rp
+  errorMessage  String?
+  triggeredBy   String    @default("cron") // "cron", "admin", "cli"
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
 
-  reports         AgentReport[]
+  reports AgentReport[]
 
   @@index([agentType])
   @@index([status])
 }
 
 model AgentSchedule {
-  id              Int       @id @default(autoincrement())
-  agentType       String    @unique
-  agentName       String
-  cronExpression  String    // "0 9 * * *" format (UTC)
-  isActive        Boolean   @default(true)
-  lastRunAt       DateTime?
-  nextRunAt       DateTime?
-  config          String?   // JSON: agent-specific configuration
-  description     String?
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
+  id             Int       @id @default(autoincrement())
+  agentType      String    @unique
+  agentName      String
+  cronExpression String // "0 9 * * *" format (UTC)
+  isActive       Boolean   @default(true)
+  lastRunAt      DateTime?
+  nextRunAt      DateTime?
+  config         String? // JSON: agent-specific configuration
+  description    String?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
 }
 
 model AgentReport {
-  id              Int       @id @default(autoincrement())
-  agentTaskId     Int
-  agentTask       AgentTask @relation(fields: [agentTaskId], references: [id])
-  reportType      String    // "daily", "weekly", "campaign", "revenue_impact"
-  title           String
-  summary         String    // Markdown summary
-  metrics         String?   // JSON: { revenue_impact, orders_generated, users_reached }
-  periodStart     DateTime?
-  periodEnd       DateTime?
-  createdAt       DateTime  @default(now())
+  id          Int       @id @default(autoincrement())
+  agentTaskId Int
+  agentTask   AgentTask @relation(fields: [agentTaskId], references: [id])
+  reportType  String // "daily", "weekly", "campaign", "revenue_impact"
+  title       String
+  summary     String // Markdown summary
+  metrics     String? // JSON: { revenue_impact, orders_generated, users_reached }
+  periodStart DateTime?
+  periodEnd   DateTime?
+  createdAt   DateTime  @default(now())
 
   @@index([reportType])
 }
 
 model SocialPost {
-  id              Int       @id @default(autoincrement())
-  platform        String    // "instagram", "tiktok", "twitter", "facebook"
-  content         String
-  mediaUrl        String?
-  status          String    @default("DRAFT") // DRAFT, QUEUED, PUBLISHED, FAILED
-  scheduledAt     DateTime?
-  publishedAt     DateTime?
-  postId          String?   // External post ID
-  engagementData  String?   // JSON: { likes, comments, shares }
-  promoCode       String?   // For revenue attribution
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
+  id             Int       @id @default(autoincrement())
+  platform       String // "instagram", "tiktok", "twitter", "facebook"
+  content        String
+  mediaUrl       String?
+  status         String    @default("DRAFT") // DRAFT, QUEUED, PUBLISHED, FAILED
+  scheduledAt    DateTime?
+  publishedAt    DateTime?
+  postId         String? // External post ID
+  engagementData String? // JSON: { likes, comments, shares }
+  promoCode      String? // For revenue attribution
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
 
   @@index([platform, status])
 }
 
 model ContentItem {
   id              Int       @id @default(autoincrement())
-  contentType     String    // "blog_post", "product_desc", "faq", "tutorial", "landing_page"
+  contentType     String // "blog_post", "product_desc", "faq", "tutorial", "landing_page"
   title           String
   slug            String?   @unique
-  body            String    // Markdown or HTML
-  metaTitle       String?   // SEO meta title
-  metaDescription String?   // SEO meta description
-  keywords        String?   // Comma-separated SEO keywords
+  body            String // Markdown or HTML
+  metaTitle       String? // SEO meta title
+  metaDescription String? // SEO meta description
+  keywords        String? // Comma-separated SEO keywords
   status          String    @default("DRAFT") // DRAFT, REVIEW, PUBLISHED, ARCHIVED
   publishedAt     DateTime?
   createdAt       DateTime  @default(now())
@@ -403,30 +465,30 @@ model ContentItem {
 }
 
 model AgentConfig {
-  id              Int       @id @default(autoincrement())
-  agentType       String    @unique // "global", "seo", "email", etc.
-  baseUrl         String    @default("https://api.openai.com/v1")
-  apiKey          String?
-  model           String    @default("gpt-4o-mini")
-  maxTokens       Int       @default(4096)
-  temperature     Float     @default(0.7)
-  isActive        Boolean   @default(true)
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
+  id          Int      @id @default(autoincrement())
+  agentType   String   @unique // "global", "seo", "email", etc.
+  baseUrl     String   @default("https://api.openai.com/v1")
+  apiKey      String?
+  model       String   @default("gpt-4o-mini")
+  maxTokens   Int      @default(4096)
+  temperature Float    @default(0.7)
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 }
 
 model RevenueMetric {
-  id              Int       @id @default(autoincrement())
-  date            DateTime  @unique
-  totalRevenue    Int       @default(0)
-  orderCount      Int       @default(0)
-  newUsers        Int       @default(0)
-  activeResellers Int       @default(0)
-  depositTotal    Int       @default(0)
-  agentRevenue    String?   // JSON: { agent_type: revenue_attributed }
+  id              Int      @id @default(autoincrement())
+  date            DateTime @unique
+  totalRevenue    Int      @default(0)
+  orderCount      Int      @default(0)
+  newUsers        Int      @default(0)
+  activeResellers Int      @default(0)
+  depositTotal    Int      @default(0)
+  agentRevenue    String? // JSON: { agent_type: revenue_attributed }
   conversionRate  Float?
   notes           String?
-  createdAt       DateTime  @default(now())
+  createdAt       DateTime @default(now())
 
   @@index([date])
 }
