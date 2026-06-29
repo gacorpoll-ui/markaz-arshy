@@ -40,6 +40,30 @@ const NAV_ITEMS = [
   { to: '/admin/agents', end: false, icon: Bot, label: 'AI Agents', badge: null },
 ];
 
+/* ═══════════════════════════════════════
+   Toast Notification Component
+   ═══════════════════════════════════════ */
+function Toast({ toasts, removeToast }) {
+  if (toasts.length === 0) return null;
+  return (
+    <div style={{ position: 'fixed', top: 80, right: 20, zIndex: 9999, display: 'flex', flexDirection: 'column', gap: 8 }}>
+      {toasts.map(t => (
+        <div key={t.id} onClick={() => removeToast(t.id)} style={{
+          padding: '10px 20px', borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: 'pointer',
+          background: t.type === 'success' ? '#ECFDF5' : t.type === 'error' ? '#FEF2F2' : '#EFF6FF',
+          color: t.type === 'success' ? '#065F46' : t.type === 'error' ? '#991B1B' : '#1E40AF',
+          border: `1px solid ${t.type === 'success' ? '#A7F3D0' : t.type === 'error' ? '#FECACA' : '#BFDBFE'}`,
+          boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
+          animation: 'fadeIn 0.2s ease',
+          maxWidth: 360,
+        }}>
+          {t.message}
+        </div>
+      ))}
+    </div>
+  );
+}
+
 export default function AdminDashboard({ user, token }) {
   const [stats, setStats] = useState(null);
   const [pendingDeposits, setPendingDeposits] = useState([]);
