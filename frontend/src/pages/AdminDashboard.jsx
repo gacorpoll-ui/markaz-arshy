@@ -1,26 +1,27 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, Suspense } from 'react';
 import { useNavigate, NavLink, Routes, Route } from 'react-router-dom';
 import {
   Shield, RefreshCw, LayoutDashboard, Wallet, Settings,
   Tags, Package, PlusCircle, BarChart2, Users, Eye,
-  ChevronRight, LogOut, Bell, User, Bot
+  ChevronRight, Bell, User, Bot
 } from 'lucide-react';
 
-import AdminOverview from '../components/AdminOverview';
-import AdminDeposits from '../components/AdminDeposits';
-import AdminProducts from '../components/AdminProducts';
-import AdminProductStock from '../components/AdminProductStock';
-import AdminAllOrders from '../components/AdminAllOrders';
-import AdminManualBalance from '../components/AdminManualBalance';
-import AdminPaymentMethods from '../components/AdminPaymentMethods';
-import AdminCategories from '../components/AdminCategories';
-import AdminUsers from '../components/AdminUsers';
-import AdminReviews from '../components/AdminReviews';
-import AdminAIProviders from '../components/AdminAIProviders';
-import AdminAgents from '../components/AdminAgents';
+// ── Lazy-load all admin sub-pages (reduces initial bundle) ──
+const AdminOverview = React.lazy(() => import('../components/AdminOverview'));
+const AdminDeposits = React.lazy(() => import('../components/AdminDeposits'));
+const AdminProducts = React.lazy(() => import('../components/AdminProducts'));
+const AdminProductStock = React.lazy(() => import('../components/AdminProductStock'));
+const AdminAllOrders = React.lazy(() => import('../components/AdminAllOrders'));
+const AdminManualBalance = React.lazy(() => import('../components/AdminManualBalance'));
+const AdminPaymentMethods = React.lazy(() => import('../components/AdminPaymentMethods'));
+const AdminCategories = React.lazy(() => import('../components/AdminCategories'));
+const AdminUsers = React.lazy(() => import('../components/AdminUsers'));
+const AdminReviews = React.lazy(() => import('../components/AdminReviews'));
+const AdminAIProviders = React.lazy(() => import('../components/AdminAIProviders'));
+const AdminAgents = React.lazy(() => import('../components/AdminAgents'));
+const AdminPhysicalOrders = React.lazy(() => import('../components/AdminPhysicalOrders'));
+const AdminImport = React.lazy(() => import('../components/AdminImport'));
 import AdminSkeleton from '../components/AdminSkeleton';
-import AdminPhysicalOrders from '../components/AdminPhysicalOrders';
-import AdminImport from '../components/AdminImport';
 
 const NAV_ITEMS = [
   { to: '/admin', end: true, icon: LayoutDashboard, label: 'Overview', badge: null },
@@ -43,14 +44,22 @@ export default function AdminDashboard({ user, token }) {
   const [stats, setStats] = useState(null);
   const [pendingDeposits, setPendingDeposits] = useState([]);
   const [pendingReviews, setPendingReviews] = useState(0);
-  const [allOrders, setAllOrders] = useState([]);
-  const [products, setProducts] = useState([]);
-  const [categories, setCategories] = useState([]);
-  const [paymentMethods, setPaymentMethods] = useState([]);
   const [loading, setLoading] = useState(true);
   const [syncing, setSyncing] = useState(false);
+  const [toasts, setToasts] = useState([]);
 
   const navigate = useNavigate();
+
+  // ── Toast helpers ──
+  const showToast = useCallback((message, type = 'info') => {
+    const id = Date.now();
+    setToasts(prev => [...prev, { id, message, type }]);
+    setTimeout(() => setToasts(prev => prev.filter(t => t.id !== id)), 4000);
+  }, []);
+
+  const removeToast = useCallback((id) => {
+    setToasts(prev => prev.filter(t => t.id !== id));
+  }, []);
 
   useEffect(() => {
     if (!user || user.role !== 'ADMIN') { navigate('/'); return; }
@@ -63,7 +72,6 @@ export default function AdminDashboard({ user, token }) {
       setSyncing(true);
       const H = { 'Authorization': `Bearer ${token}` };
 
-      // Helper: fetch + validasi response.ok + auto-logout on 401
       const fetchJson = async (url, opts = {}) => {
         try {
           const res = await fetch(url, opts);
@@ -75,28 +83,20 @@ export default function AdminDashboard({ user, token }) {
           }
           const data = await res.json();
           return res.ok ? data : null;
-        } catch {
-          return null;
-        }
+        } catch { return null; }
       };
 
-      const [sD, pD, oD, cD, prD, pmD, revD] = await Promise.all([
+      // Only fetch overview essentials (3 requests instead of 7)
+      // Other pages fetch their own data on-demand
+      const [sD, pD, revD] = await Promise.all([
         fetchJson(`${import.meta.env.VITE_API_BASE_URL}/api/admin/stats`, { headers: H }),
         fetchJson(`${import.meta.env.VITE_API_BASE_URL}/api/admin/deposits/pending`, { headers: H }),
-        fetchJson(`${import.meta.env.VITE_API_BASE_URL}/api/admin/orders`, { headers: H }),
-        fetchJson(`${import.meta.env.VITE_API_BASE_URL}/api/catalog/categories`),
-        fetchJson(`${import.meta.env.VITE_API_BASE_URL}/api/catalog/products`),
-        fetchJson(`${import.meta.env.VITE_API_BASE_URL}/api/deposits/payment-methods`, { headers: H }),
         fetchJson(`${import.meta.env.VITE_API_BASE_URL}/api/reviews/admin`, { headers: H }),
       ]);
 
       setStats(sD?.stats || null);
       setPendingDeposits(pD?.deposits || []);
       setPendingReviews((revD?.reviews || []).filter(r => !r.isApproved).length);
-      setAllOrders(oD?.orders || []);
-      setCategories(cD?.categories || []);
-      setProducts(prD?.products || []);
-      setPaymentMethods(pmD?.paymentMethods || []);
     } catch (err) {
       console.error('Failed to fetch admin data:', err);
     } finally {
@@ -108,46 +108,59 @@ export default function AdminDashboard({ user, token }) {
   /* ── Handler helpers ── */
   const api = async (url, opts = {}) => {
     const res = await fetch(url, { headers: { 'Authorization': `Bearer ${token}`, ...opts.headers }, ...opts });
+    if (res.status === 401) {
+      localStorage.removeItem('user');
+      localStorage.removeItem('token');
+      navigate('/login');
+      return null;
+    }
     return res;
   };
 
-  const handleConfirmDeposit = async (id) => { const r = await api(`${import.meta.env.VITE_API_BASE_URL}/api/admin/deposits/${id}/confirm`, { method: 'POST' }); if (r.ok) fetchAdminData(); };
-  const handleRejectDeposit = async (id) => { const r = await api(`${import.meta.env.VITE_API_BASE_URL}/api/admin/deposits/${id}/reject`, { method: 'POST' }); if (r.ok) fetchAdminData(); };
+  const handleConfirmDeposit = async (id) => { const r = await api(`${import.meta.env.VITE_API_BASE_URL}/api/admin/deposits/${id}/confirm`, { method: 'POST' }); if (r?.ok) { showToast('Deposit berhasil dikonfirmasi!', 'success'); fetchAdminData(); } else { showToast('Gagal konfirmasi deposit.', 'error'); } };
+  const handleRejectDeposit = async (id) => { const r = await api(`${import.meta.env.VITE_API_BASE_URL}/api/admin/deposits/${id}/reject`, { method: 'POST' }); if (r?.ok) { showToast('Deposit ditolak.', 'success'); fetchAdminData(); } else { showToast('Gagal menolak deposit.', 'error'); } };
 
   const handleAddProduct = async (data) => {
     const r = await api(`${import.meta.env.VITE_API_BASE_URL}/api/admin/products`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
-    if (r.ok) { fetchAdminData(); return true; } return false;
+    if (r?.ok) { showToast('Produk berhasil ditambahkan!', 'success'); fetchAdminData(); return true; }
+    showToast('Gagal menambahkan produk.', 'error'); return false;
   };
 
   const handleUploadStock = async (productId, accounts) => {
     const r = await api(`${import.meta.env.VITE_API_BASE_URL}/api/admin/products/${productId}/accounts/bulk`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ accounts }) });
-    if (r.ok) { fetchAdminData(); return true; } return false;
+    if (r?.ok) { showToast(`${accounts.length} akun berhasil di-upload!`, 'success'); fetchAdminData(); return true; }
+    showToast('Gagal upload stok.', 'error'); return false;
   };
 
   const handleManualBalance = async (userId, amount, action) => {
     const r = await api(`${import.meta.env.VITE_API_BASE_URL}/api/admin/users/${userId}/balance`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ amount: parseFloat(amount), action }) });
-    if (r.ok) { fetchAdminData(); return true; } return false;
+    if (r?.ok) { showToast(`Saldo berhasil ${action === 'ADD' ? 'ditambahkan' : 'dikurangi'}!`, 'success'); fetchAdminData(); return true; }
+    showToast('Gagal update saldo.', 'error'); return false;
   };
 
   const handleAddPaymentMethod = async (formData) => {
     const r = await api(`${import.meta.env.VITE_API_BASE_URL}/api/admin/payment-methods`, { method: 'POST', body: formData });
-    if (r.ok) { fetchAdminData(); return true; } return false;
+    if (r?.ok) { showToast('Metode pembayaran ditambahkan!', 'success'); fetchAdminData(); return true; }
+    showToast('Gagal menambahkan metode pembayaran.', 'error'); return false;
   };
 
   const handleTogglePaymentMethod = async (id) => {
     await api(`${import.meta.env.VITE_API_BASE_URL}/api/admin/payment-methods/${id}/toggle`, { method: 'PATCH' });
+    showToast('Status metode pembayaran diubah.', 'success');
     fetchAdminData();
   };
 
   const handleAddCategory = async (name, slug, type) => {
     const r = await api(`${import.meta.env.VITE_API_BASE_URL}/api/admin/categories`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name, slug, type }) });
-    if (r.ok) { fetchAdminData(); return true; } return false;
+    if (r?.ok) { showToast('Kategori berhasil ditambahkan!', 'success'); fetchAdminData(); return true; }
+    showToast('Gagal menambahkan kategori.', 'error'); return false;
   };
 
   const handleDeleteCategory = async (id) => {
     if (!window.confirm('Yakin ingin menghapus kategori ini?')) return;
     const r = await api(`${import.meta.env.VITE_API_BASE_URL}/api/admin/categories/${id}`, { method: 'DELETE' });
-    if (r.ok) fetchAdminData();
+    if (r?.ok) { showToast('Kategori berhasil dihapus.', 'success'); fetchAdminData(); }
+    else { showToast('Gagal menghapus kategori.', 'error'); }
   };
 
   if (!user || user.role !== 'ADMIN') return null;
@@ -156,6 +169,7 @@ export default function AdminDashboard({ user, token }) {
 
   return (
     <div className="adm-layout animate-fade-in">
+      <Toast toasts={toasts} removeToast={removeToast} />
 
       {/* ══════════ SIDEBAR ══════════ */}
       <aside className="adm-sidebar">
@@ -243,22 +257,24 @@ export default function AdminDashboard({ user, token }) {
 
         {/* Route content */}
         <div className="adm-content-area">
-          <Routes>
-            <Route path="/" element={loading ? <AdminSkeleton /> : <AdminOverview stats={stats} loading={loading} onRetry={fetchAdminData} />} />
-            <Route path="/deposits" element={<AdminDeposits pendingDeposits={pendingDeposits} handleConfirmDeposit={handleConfirmDeposit} handleRejectDeposit={handleRejectDeposit} loading={loading} />} />
-            <Route path="/products" element={<AdminProducts products={products} categories={categories} handleAddProduct={handleAddProduct} loading={loading} />} />
-            <Route path="/categories" element={<AdminCategories categories={categories} handleAddCategory={handleAddCategory} handleDeleteCategory={handleDeleteCategory} loading={loading} />} />
-            <Route path="/stock" element={<AdminProductStock products={products} handleUploadStock={handleUploadStock} loading={loading} />} />
-            <Route path="/orders" element={<AdminAllOrders allOrders={allOrders} loading={loading} />} />
-            <Route path="/physical-orders" element={<AdminPhysicalOrders token={token} />} />
-            <Route path="/import" element={<AdminImport token={token} />} />
-            <Route path="/balance" element={<AdminManualBalance handleManualBalance={handleManualBalance} loading={loading} />} />
-            <Route path="/payment-methods" element={<AdminPaymentMethods paymentMethods={paymentMethods} handleAddPaymentMethod={handleAddPaymentMethod} handleTogglePaymentMethod={handleTogglePaymentMethod} loading={loading} />} />
-            <Route path="/users" element={<AdminUsers token={token} />} />
-            <Route path="/reviews" element={<AdminReviews token={token} />} />
-            <Route path="/ai-providers" element={<AdminAIProviders token={token} />} />
-            <Route path="/agents" element={<AdminAgents token={token} />} />
-          </Routes>
+          <Suspense fallback={<AdminSkeleton />}>
+            <Routes>
+              <Route path="/" element={<AdminOverview stats={stats} loading={loading} onRetry={fetchAdminData} token={token} />} />
+              <Route path="/deposits" element={<AdminDeposits pendingDeposits={pendingDeposits} handleConfirmDeposit={handleConfirmDeposit} handleRejectDeposit={handleRejectDeposit} loading={loading} />} />
+              <Route path="/products" element={<AdminProducts token={token} categories={[]} handleAddProduct={handleAddProduct} loading={loading} showToast={showToast} />} />
+              <Route path="/categories" element={<AdminCategories token={token} handleAddCategory={handleAddCategory} handleDeleteCategory={handleDeleteCategory} loading={loading} showToast={showToast} />} />
+              <Route path="/stock" element={<AdminProductStock token={token} handleUploadStock={handleUploadStock} loading={loading} showToast={showToast} />} />
+              <Route path="/orders" element={<AdminAllOrders token={token} showToast={showToast} />} />
+              <Route path="/physical-orders" element={<AdminPhysicalOrders token={token} />} />
+              <Route path="/import" element={<AdminImport token={token} />} />
+              <Route path="/balance" element={<AdminManualBalance handleManualBalance={handleManualBalance} loading={loading} showToast={showToast} />} />
+              <Route path="/payment-methods" element={<AdminPaymentMethods token={token} handleAddPaymentMethod={handleAddPaymentMethod} handleTogglePaymentMethod={handleTogglePaymentMethod} loading={loading} showToast={showToast} />} />
+              <Route path="/users" element={<AdminUsers token={token} showToast={showToast} />} />
+              <Route path="/reviews" element={<AdminReviews token={token} />} />
+              <Route path="/ai-providers" element={<AdminAIProviders token={token} />} />
+              <Route path="/agents" element={<AdminAgents token={token} />} />
+            </Routes>
+          </Suspense>
         </div>
       </main>
     </div>

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   LayoutDashboard, Users, Database, RefreshCw,
   ShoppingCart, TrendingUp, AlertCircle, BarChart2,
@@ -12,7 +12,80 @@ const STATUS_CONFIG = {
   FAILED:     { color: 'var(--accent-danger)',  bg: 'rgba(239,68,68,0.1)',   label: 'Gagal' },
 };
 
-export default function AdminOverview({ stats, loading, onRetry }) {
+function formatGrowth(growth) {
+  if (growth === 'N/A' || growth === null || growth === undefined) return 'Baru bulan ini';
+  const n = parseFloat(growth);
+  const prefix = n > 0 ? '+' : '';
+  return `${prefix}${n}% vs bulan lalu`;
+}
+
+function DynamicChart({ dailyData }) {
+  if (!dailyData || dailyData.length === 0) {
+    return (
+      <div style={{ height: 160, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-muted)', fontSize: 13 }}>
+        Memuat data grafik...
+      </div>
+    );
+  }
+
+  const maxRevenue = Math.max(...dailyData.map(d => d.revenue), 1);
+  const width = 400;
+  const height = 160;
+  const padding = 10;
+
+  const points = dailyData.map((d, i) => {
+    const x = padding + (i / (dailyData.length - 1)) * (width - 2 * padding);
+    const y = height - padding - (d.revenue / maxRevenue) * (height - 2 * padding);
+    return { x, y, label: d.label, revenue: d.revenue };
+  });
+
+  const linePoints = points.map(p => `${p.x},${p.y}`).join(' L');
+  const lineD = `M${linePoints}`;
+  const areaD = `${lineD} L${points[points.length - 1].x},${height} L${points[0].x},${height} Z`;
+
+  return (
+    <>
+      <svg width="100%" height={height} viewBox={`0 0 ${width} ${height}`} preserveAspectRatio="none">
+        <defs>
+          <linearGradient id="chartGrad1" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%"   stopColor="rgba(59,130,246,0.2)" />
+            <stop offset="100%" stopColor="rgba(59,130,246,0)" />
+          </linearGradient>
+        </defs>
+        <path d={areaD} fill="url(#chartGrad1)" />
+        <path d={lineD} fill="none" stroke="var(--accent-primary)" strokeWidth="2.5" strokeLinejoin="round" />
+        {points.map((p, i) => (
+          <circle key={i} cx={p.x} cy={p.y} r="4" fill="var(--accent-primary)" stroke="var(--bg-surface)" strokeWidth="2" />
+        ))}
+      </svg>
+      <div className="adm-chart-labels">
+        {points.map((p, i) => <span key={i}>{p.label}</span>)}
+      </div>
+    </>
+  );
+}
+
+export default function AdminOverview({ stats, loading, onRetry, token }) {
+  const [dailyData, setDailyData] = useState(null);
+  const [comparison, setComparison] = useState(null);
+
+  useEffect(() => {
+    if (!token) return;
+    const fetchChartData = async () => {
+      try {
+        const [dailyRes, compRes] = await Promise.all([
+          fetch(`${import.meta.env.VITE_API_BASE_URL}/api/admin/stats/daily-revenue?days=7`, { headers: { Authorization: `Bearer ${token}` } }),
+          fetch(`${import.meta.env.VITE_API_BASE_URL}/api/admin/stats/monthly-comparison`, { headers: { Authorization: `Bearer ${token}` } }),
+        ]);
+        if (dailyRes.ok) { const d = await dailyRes.json(); setDailyData(d.daily); }
+        if (compRes.ok) { const d = await compRes.json(); setComparison(d.comparison); }
+      } catch (err) {
+        console.error('Chart data fetch error:', err);
+      }
+    };
+    fetchChartData();
+  }, [token]);
+
   if (loading) return (
     <div className="adm-loading">
       <RefreshCw size={34} className="spin" />
@@ -35,10 +108,14 @@ export default function AdminOverview({ stats, loading, onRetry }) {
   const completedOrders = stats.ordersGroup.find(g => g.status === 'COMPLETED')?._count.id || 0;
   const successRate = totalOrders > 0 ? Math.round((completedOrders / totalOrders) * 100) : 0;
 
+  const revenueSub = comparison ? formatGrowth(comparison.revenue.growth) : 'Memuat...';
+  const ordersSub = comparison ? `${comparison.orders.current} bulan ini` : `${completedOrders} selesai`;
+  const usersSub = comparison ? formatGrowth(comparison.users.growth) : `${stats.totalResellers} reseller`;
+
   const PRIMARY_STATS = [
-    { icon: <TrendingUp size={22} />,  label: 'Total Omzet',     value: `Rp ${totalRevenue.toLocaleString('id-ID')}`,  sub: '+12.5% bulan ini',   accent: 'var(--accent-success)' },
-    { icon: <ShoppingCart size={22} />,label: 'Total Pesanan',   value: totalOrders.toLocaleString('id-ID'),            sub: `${completedOrders} selesai`, accent: 'var(--accent-primary)' },
-    { icon: <Users size={22} />,       label: 'Total Member',    value: (stats.totalUsers + stats.totalResellers).toLocaleString('id-ID'), sub: `${stats.totalResellers} reseller`, accent: '#a78bfa' },
+    { icon: <TrendingUp size={22} />,  label: 'Total Omzet',     value: `Rp ${totalRevenue.toLocaleString('id-ID')}`,  sub: revenueSub,   accent: 'var(--accent-success)' },
+    { icon: <ShoppingCart size={22} />,label: 'Total Pesanan',   value: totalOrders.toLocaleString('id-ID'),            sub: ordersSub, accent: 'var(--accent-primary)' },
+    { icon: <Users size={22} />,       label: 'Total Member',    value: (stats.totalUsers + stats.totalResellers).toLocaleString('id-ID'), sub: usersSub, accent: '#a78bfa' },
     { icon: <Zap size={22} />,         label: 'Success Rate',    value: `${successRate}%`,                               sub: 'Order completion rate', accent: 'var(--accent-warning)' },
   ];
 
@@ -79,7 +156,7 @@ export default function AdminOverview({ stats, loading, onRetry }) {
 
       {/* Middle row */}
       <div className="adm-mid-row">
-        {/* Trend chart */}
+        {/* Trend chart — NOW DYNAMIC */}
         <div className="adm-card-nest">
           <div className="adm-card-header-row">
             <div className="adm-card-header-left">
@@ -88,24 +165,7 @@ export default function AdminOverview({ stats, loading, onRetry }) {
             </div>
           </div>
           <div className="adm-chart-wrap">
-            <svg width="100%" height="160" viewBox="0 0 400 160" preserveAspectRatio="none">
-              <defs>
-                <linearGradient id="chartGrad1" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%"   stopColor="rgba(59,130,246,0.2)" />
-                  <stop offset="100%" stopColor="rgba(59,130,246,0)" />
-                </linearGradient>
-              </defs>
-              <path d="M0,150 L57,120 L114,130 L171,80 L228,90 L285,40 L342,55 L400,25 L400,160 L0,160 Z" fill="url(#chartGrad1)" />
-              <path d="M0,150 L57,120 L114,130 L171,80 L228,90 L285,40 L342,55 L400,25" fill="none" stroke="var(--accent-primary)" strokeWidth="2.5" strokeLinejoin="round" />
-              {[[0,150],[57,120],[114,130],[171,80],[228,90],[285,40],[342,55],[400,25]].map(([x,y],i)=>(
-                <circle key={i} cx={x} cy={y} r="4" fill="var(--accent-primary)" stroke="var(--bg-surface)" strokeWidth="2" />
-              ))}
-            </svg>
-          </div>
-          <div className="adm-chart-labels">
-            {['Sen','Sel','Rab','Kam','Jum','Sab','Min','Hari ini'].map((d,i)=>(
-              <span key={i}>{d}</span>
-            ))}
+            <DynamicChart dailyData={dailyData} />
           </div>
         </div>
 
