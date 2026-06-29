@@ -188,7 +188,7 @@ export default function Home({ user }) {
             <div className="mall-hero-tag">BARANG FISIK — IMPORTIR NO. 1</div>
             <h2 className="mall-hero-title">
               Importir Terpercaya<br />
-              <span style={{ background: 'linear-gradient(135deg, #7c3aed, #db2777)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>Tanpa Modal Stok</span>
+              <span style={{ background: 'linear-gradient(135deg, #c084fc, #f472b6, #fb923c)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>Tanpa Modal Stok</span>
             </h2>
             <p className="mall-hero-desc">
               Ratusan produk siap jual dengan margin 15–40%. Kami yang urus stok, pengiriman, dan garansi. Kamu tinggal fokus jualan!
@@ -200,47 +200,61 @@ export default function Home({ user }) {
               </div>
               <div className="mall-hero-stat">
                 <span className="mall-hero-stat-num">15–40%</span>
-                <span className="mall-hero-stat-label">Harga Importir</span>
+                <span className="mall-hero-stat-label">Margin Keuntungan</span>
               </div>
               <div className="mall-hero-stat">
-                <span className="mall-hero-stat-num">Jakbar</span>
-                <span className="mall-hero-stat-label">Gudang Kebon Jeruk</span>
+                <span className="mall-hero-stat-num">100%</span>
+                <span className="mall-hero-stat-label">Garansi Produk</span>
               </div>
             </div>
             <div className="mall-hero-pills">
               {[
-                { key:'dapur', label:'Peralatan Dapur', emoji:'🍳', bg:'#fef2f2' },
-                { key:'lampu', label:'Lampu & Elektronik', emoji:'💡', bg:'#fefce8' },
-                { key:'alat-kesehatan', label:'Alat Kesehatan', emoji:'🩺', bg:'#ecfdf5' },
-                { key:'olahraga', label:'Olahraga & Outdoor', emoji:'⚽', bg:'#eff6ff' },
-                { key:'kopi', label:'Kopi & Minuman', emoji:'☕', bg:'#fdf4ff' },
-                { key:'perkakas', label:'Perkakas', emoji:'🔧', bg:'#f5f3ff' },
-              ].map(({ key, label, emoji, bg }) => (
+                { key:'dapur', label:'Dapur', img:'/images/populer/dapur.jpg', bg:'rgba(239,68,68,0.12)' },
+                { key:'lampu', label:'Elektronik', img:'/images/populer/lampu.jpg', bg:'rgba(234,179,8,0.12)' },
+                { key:'alat-kesehatan', label:'Kesehatan', img:'/images/populer/alat-kesehatan.jpg', bg:'rgba(34,197,94,0.12)' },
+                { key:'olahraga', label:'Outdoor', img:'/images/populer/olahraga.jpg', bg:'rgba(59,130,246,0.12)' },
+                { key:'kopi', label:'Minuman', img:'/images/populer/kopi.jpg', bg:'rgba(168,85,247,0.12)' },
+                { key:'perkakas', label:'Perkakas', img:'/images/populer/perkakas.jpg', bg:'rgba(99,102,241,0.12)' },
+              ].map(({ key, label, img, bg }) => (
                 <Link key={key} to="/marketplace" className="mall-hero-pill" style={{ background: bg }}>
-                  <span className="mall-hero-pill-img" style={{ fontSize: 20, lineHeight: 1 }}>{emoji}</span> {label}
+                  <img src={img} alt={label} className="mall-hero-pill-img" /> {label}
                 </Link>
               ))}
             </div>
             <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
-              <Link to="/marketplace" className="btn btn-primary btn-lg" style={{ padding: '14px 36px', fontSize: '15px', fontWeight: '800', borderRadius: '12px' }}>
+              <Link to="/marketplace" className="btn btn-primary btn-lg" style={{ padding: '14px 36px', fontSize: '15px', fontWeight: '800', borderRadius: '12px', background: 'linear-gradient(135deg, #7c3aed, #db2777)', border: 'none', color: '#fff' }}>
                 <ShoppingBag size={18} /> Jelajahi Koleksi
               </Link>
-              <Link to="/register" className="btn btn-secondary btn-lg" style={{ padding: '14px 36px', fontSize: '15px', fontWeight: '700', borderRadius: '12px' }}>
+              <Link to="/register" className="btn btn-lg" style={{ padding: '14px 36px', fontSize: '15px', fontWeight: '700', borderRadius: '12px', background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.12)', color: 'rgba(255,255,255,0.8)' }}>
                 Hubungi Kami
               </Link>
             </div>
           </div>
-          <div className="mall-hero-visual" style={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%)', position: 'relative', overflow: 'hidden' }}>
-            <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 16 }}>
-              <div style={{ fontSize: 72, lineHeight: 1 }}>🛒</div>
-              <div style={{ color: 'white', fontSize: 20, fontWeight: 700, textAlign: 'center', padding: '0 20px' }}>240+ Produk Importir</div>
-              <div style={{ color: 'rgba(255,255,255,0.8)', fontSize: 14 }}>Siap Kirim Se-Indonesia</div>
+          <div className="mall-hero-visual">
+            <img src="/images/slides/hero-bg.jpg" alt="" className="mall-hero-bg-img" />
+            <div className="mall-hero-visual-grid" />
+            <div className="mall-hero-overlay" />
+            <div className="mall-hero-products">
+              {[
+                { img:'/images/populer/dapur.jpg', name:'Peralatan Dapur', price:'Rp 15rb' },
+                { img:'/images/populer/lampu.jpg', name:'Lampu LED', price:'Rp 25rb' },
+                { img:'/images/populer/kopi.jpg', name:'French Press', price:'Rp 45rb' },
+                { img:'/images/populer/perkakas.jpg', name:'Tool Kit Set', price:'Rp 89rb' },
+              ].map((p, i) => (
+                <Link key={i} to="/marketplace" className="mall-hero-product-card" style={{ textDecoration: 'none' }}>
+                  <img src={p.img} alt={p.name} style={{ width: '100%', height: 64, objectFit: 'cover', borderRadius: 10, marginBottom: 8 }} loading="lazy" />
+                  <div className="name">{p.name}</div>
+                  <div className="price">{p.price}</div>
+                </Link>
+              ))}
             </div>
-            <div className="mall-hero-badge top-left" style={{ position: 'absolute', top: 16, left: 16, background: 'rgba(255,255,255,0.95)', borderRadius: 12, padding: '8px 14px', display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, fontWeight: 600 }}>
-              <span>📦</span><span>Gudang Kebon Jeruk</span>
+            <div className="mall-hero-badge top-left">
+              <img src="/images/populer/perkakas.jpg" alt="" style={{ width: 22, height: 22, borderRadius: 6, objectFit: 'cover' }} />
+              <span>Gudang Kebon Jeruk</span>
             </div>
-            <div className="mall-hero-badge bottom-right" style={{ position: 'absolute', bottom: 16, right: 16, background: 'rgba(255,255,255,0.95)', borderRadius: 12, padding: '8px 14px', display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, fontWeight: 600 }}>
-              <span>🚚</span><span>Kirim Se-Indonesia</span>
+            <div className="mall-hero-badge bottom-right">
+              <img src="/images/populer/dapur.jpg" alt="" style={{ width: 22, height: 22, borderRadius: 6, objectFit: 'cover' }} />
+              <span>Kirim Se-Indonesia</span>
             </div>
           </div>
         </div>
