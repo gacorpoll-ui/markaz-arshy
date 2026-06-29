@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import ProductCardJakmall from '../components/ProductCardJakmall';
+import CategorySidebar from '../components/CategorySidebar';
 import { RefreshCw, Search, Package, LayoutGrid, List, ChevronRight, ChevronLeft } from 'lucide-react';
 
 const PROMOS = [
@@ -301,12 +302,17 @@ const JakmallMarketplace = () => {
         </div>
       </div>
 
-      {/* ═══ CONTENT: SIDEBAR + GRID ═══ */}
-      <div style={{ display: 'flex', gap: '24px', alignItems: 'flex-start' }}>
+      {/* ═══ 3-COLUMN LAYOUT ═══ */}
+      <div className="mkp-layout">
+        <CategorySidebar products={products} activeSlug={null} />
 
-        {/* Filter Sidebar (desktop only) */}
-        {!isMobile && showSidebar && (
-          <aside style={{ width: '220px', flexShrink: 0, position: 'sticky', top: '80px' }}>
+        <div style={{ minWidth: 0 }}>
+          {/* ═══ CONTENT: FILTER + GRID ═══ */}
+          <div style={{ display: 'flex', gap: '20px', alignItems: 'flex-start' }}>
+
+            {/* Filter Sidebar (desktop only) */}
+            {!isMobile && showSidebar && (
+              <aside style={{ width: '200px', flexShrink: 0, position: 'sticky', top: '80px' }}>
             <div style={{ background: 'var(--bg-surface, #fff)', borderRadius: '12px', border: '1px solid var(--border-default, #eee)', padding: '16px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
                 <h3 style={{ fontSize: '13px', fontWeight: '700', color: 'var(--text-primary, #333)', margin: 0 }}>Filter</h3>
@@ -386,6 +392,8 @@ const JakmallMarketplace = () => {
           )}
         </div>
 
+          </div>
+        </div>
       </div>
     </div>
   );
