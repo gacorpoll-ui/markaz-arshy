@@ -19,11 +19,15 @@ import AdminReviews from '../components/AdminReviews';
 import AdminAIProviders from '../components/AdminAIProviders';
 import AdminAgents from '../components/AdminAgents';
 import AdminSkeleton from '../components/AdminSkeleton';
+import AdminPhysicalOrders from '../components/AdminPhysicalOrders';
+import AdminImport from '../components/AdminImport';
 
 const NAV_ITEMS = [
   { to: '/admin', end: true, icon: LayoutDashboard, label: 'Overview', badge: null },
   { to: '/admin/deposits', end: false, icon: Wallet, label: 'Approval', badgeKey: 'deposits' },
   { to: '/admin/orders', end: false, icon: BarChart2, label: 'Pesanan', badge: null },
+  { to: '/admin/import', end: false, icon: Package, label: 'Import Jakmall', badge: null },
+  { to: '/admin/physical-orders', end: false, icon: Package, label: 'Pesanan Fisik', badge: null },
   { to: '/admin/products', end: false, icon: Package, label: 'Produk', badge: null },
   { to: '/admin/categories', end: false, icon: Tags, label: 'Kategori', badge: null },
   { to: '/admin/stock', end: false, icon: PlusCircle, label: 'Stok Premium', badge: null },
@@ -246,6 +250,8 @@ export default function AdminDashboard({ user, token }) {
             <Route path="/categories" element={<AdminCategories categories={categories} handleAddCategory={handleAddCategory} handleDeleteCategory={handleDeleteCategory} loading={loading} />} />
             <Route path="/stock" element={<AdminProductStock products={products} handleUploadStock={handleUploadStock} loading={loading} />} />
             <Route path="/orders" element={<AdminAllOrders allOrders={allOrders} loading={loading} />} />
+            <Route path="/physical-orders" element={<AdminPhysicalOrders token={token} />} />
+            <Route path="/import" element={<AdminImport token={token} />} />
             <Route path="/balance" element={<AdminManualBalance handleManualBalance={handleManualBalance} loading={loading} />} />
             <Route path="/payment-methods" element={<AdminPaymentMethods paymentMethods={paymentMethods} handleAddPaymentMethod={handleAddPaymentMethod} handleTogglePaymentMethod={handleTogglePaymentMethod} loading={loading} />} />
             <Route path="/users" element={<AdminUsers token={token} />} />

@@ -1,0 +1,257 @@
+/* ═══════════════════════════════════════
+   MARKAZ-ARSHY — Product Fisik Detail Page
+   ═══════════════════════════════════════ */
+
+/* ── Layout ── */
+.pf-container { max-width: 1080px; margin: 0 auto; padding: 16px 20px 60px; }
+.pf-container--mobile { padding: 0 0 80px; }
+.pf-grid-2col { display: grid; grid-template-columns: 1fr 1fr; gap: 28px; align-items: start; }
+.pf-sticky-right { position: sticky; top: 80px; }
+
+/* ── Breadcrumb ── */
+.pf-breadcrumb { display: flex; align-items: center; gap: 5px; font-size: 11px; color: #999; margin-bottom: 16px; flex-wrap: wrap; }
+.pf-breadcrumb a { color: #999; text-decoration: none; }
+.pf-breadcrumb a:hover { color: #e74c3c; }
+.pf-breadcrumb-current { color: #333; font-weight: 600; max-width: 300px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* ── Mobile Header ── */
+.pf-mobile-header { display: flex; align-items: center; gap: 8px; padding: 12px 16px; border-bottom: 1px solid #f0f0f0; background: #fff; position: sticky; top: 0; z-index: 10; }
+.pf-mobile-header button { background: none; border: none; padding: 4px; cursor: pointer; }
+.pf-mobile-breadcrumb { font-size: 11px; color: #999; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* ── Image ── */
+.pf-image-main { border-radius: 12px; overflow: hidden; border: 1px solid #eee; background: #fafafa; position: relative; width: 100%; aspect-ratio: 1/1; display: flex; align-items: center; justify-content: center; }
+.pf-image-main--mobile { border-radius: 0; border: none; }
+.pf-image-main img { width: 100%; height: 100%; object-fit: contain; padding: 20px; }
+.pf-image-main--mobile img { padding: 12px; }
+.pf-image-thumbs { display: flex; gap: 8px; margin-top: 10px; }
+.pf-image-thumb { width: 52px; height: 52px; border-radius: 8px; overflow: hidden; border: 1px solid #eee; background: #fff; padding: 0; cursor: pointer; flex-shrink: 0; transition: border-color 0.15s; }
+.pf-image-thumb:hover { border-color: #e74c3c; }
+.pf-image-thumb--active { border: 2px solid #e74c3c; }
+.pf-image-thumb img { width: 100%; height: 100%; object-fit: contain; }
+.pf-discount-badge { position: absolute; top: 10px; left: 10px; background: #e74c3c; color: #fff; font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 3px; }
+
+/* ── Product Info ── */
+.pf-category-label { font-size: 11px; color: #999; margin-bottom: 4px; display: flex; align-items: center; gap: 4px; }
+.pf-title { font-size: 20px; font-weight: 700; color: #1a1a1a; line-height: 1.35; margin: 0 0 8px; }
+.pf-title--mobile { font-size: 16px; }
+.pf-rating-row { display: flex; align-items: center; gap: 6px; margin-bottom: 10px; }
+.pf-rating-stars { display: flex; gap: 1px; }
+.pf-rating-value { font-size: 11px; font-weight: 700; color: #f59e0b; }
+.pf-rating-count { font-size: 11px; color: #999; }
+.pf-meta-badges { display: flex; gap: 16px; margin-bottom: 12px; font-size: 11px; flex-wrap: wrap; }
+.pf-meta-badge { background: #f5f5f5; padding: 3px 10px; border-radius: 4px; }
+.pf-meta-badge span { color: #999; }
+.pf-meta-badge strong { color: #333; }
+
+/* ── Price ── */
+.pf-price-row { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; margin-bottom: 14px; }
+.pf-price { font-size: 30px; font-weight: 900; color: #e74c3c; font-family: var(--font-display); }
+.pf-price--mobile { font-size: 24px; }
+.pf-price-original { font-size: 13px; color: #bbb; text-decoration: line-through; }
+.pf-discount-tag { font-size: 10px; font-weight: 700; color: #fff; background: #e74c3c; padding: 2px 6px; border-radius: 3px; }
+.pf-shipping-info { display: flex; align-items: center; gap: 12px; margin-top: 4px; font-size: 11px; }
+.pf-shipping-info strong { color: #e74c3c; }
+
+/* ── Variant ── */
+.pf-variant-label { font-size: 11px; font-weight: 700; color: #555; margin-bottom: 6px; display: flex; align-items: center; gap: 4px; }
+.pf-variant-label .pf-selected { font-weight: 400; color: #999; font-size: 10px; }
+.pf-variant-label .pf-selected strong { color: #e74c3c; }
+.pf-variant-options { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 12px; }
+.pf-variant-btn { padding: 7px 16px; border-radius: 8px; border: 1px solid #e0e0e0; background: #fff; color: #555; font-weight: 500; font-size: 12px; cursor: pointer; transition: all 0.15s; }
+.pf-variant-btn:hover { border-color: #e74c3c; }
+.pf-variant-btn--active { border: 1.5px solid #e74c3c; background: #fff5f5; color: #e74c3c; font-weight: 700; box-shadow: 0 2px 8px rgba(231,76,60,0.12); }
+
+/* ── Quantity ── */
+.pf-qty-label { font-size: 11px; font-weight: 700; color: #555; margin-bottom: 6px; }
+.pf-qty-row { display: flex; align-items: center; gap: 8px; margin-bottom: 14px; }
+.pf-qty-btn { width: 34px; height: 34px; border-radius: 6px; border: 1px solid #e0e0e0; background: #fff; display: flex; align-items: center; justify-content: center; color: #555; transition: opacity 0.15s; }
+.pf-qty-btn:disabled { cursor: not-allowed; opacity: 0.4; }
+.pf-qty-btn:not(:disabled) { cursor: pointer; }
+.pf-qty-btn--compact { width: 28px; height: 28px; }
+.pf-qty-input { width: 44px; text-align: center; font-weight: 700; font-size: 15px; border: 1px solid #e0e0e0; border-radius: 6px; padding: 6px; background: #fff; color: #333; }
+.pf-qty-input--compact { font-size: 13px; padding: 4px; }
+.pf-qty-stock { font-size: 11px; color: #999; }
+
+/* ── Add to Cart ── */
+.pf-cart-btn { width: 100%; padding: 14px; border-radius: 8px; border: none; background: #e74c3c; color: #fff; font-size: 14px; font-weight: 800; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; transition: all 0.2s; box-shadow: 0 2px 8px rgba(231,76,60,0.2); }
+.pf-cart-btn:hover { background: #c0392b; }
+.pf-cart-btn:disabled { background: #e0e0e0; color: #999; cursor: not-allowed; box-shadow: none; }
+.pf-cart-btn:disabled:hover { background: #e0e0e0; }
+.pf-cart-btn--compact { padding: 10px; font-size: 12px; }
+.pf-cart-btn--adding { opacity: 0.7; }
+
+/* ── Post-cart ── */
+.pf-post-cart { margin-top: 10px; display: flex; gap: 8px; }
+.pf-post-cart-btn { flex: 1; padding: 10px; border-radius: 8px; font-size: 13px; font-weight: 700; cursor: pointer; border: none; }
+.pf-post-cart-btn--primary { background: #e74c3c; color: #fff; }
+.pf-post-cart-btn--secondary { background: #fff; color: #e74c3c; border: 1px solid #e74c3c; }
+.pf-action-row { display: flex; gap: 10px; margin-top: 12px; }
+.pf-action-btn { flex: 1; padding: 8px; border-radius: 8px; border: 1px solid #e0e0e0; background: #fff; font-size: 11px; font-weight: 600; color: #666; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 4px; transition: all 0.15s; }
+.pf-action-btn:hover { border-color: #e74c3c; color: #e74c3c; }
+
+/* ── Seller Card ── */
+.pf-seller-card { margin: 16px 0 0; border-radius: 12px; border: 1px solid #eee; overflow: hidden; }
+.pf-seller-header { padding: 14px 16px; display: flex; align-items: center; justify-content: space-between; background: #fafafa; }
+.pf-seller-avatar { width: 38px; height: 38px; border-radius: 50%; background: linear-gradient(135deg, #e74c3c, #c0392b); display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 800; color: #fff; }
+.pf-seller-name { font-size: 13px; font-weight: 700; color: #333; }
+.pf-seller-loc { font-size: 11px; color: #999; }
+.pf-seller-chat-btn { padding: 6px 14px; border-radius: 6px; border: 1px solid #e74c3c; background: #fff; color: #e74c3c; font-size: 11px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 4px; }
+.pf-seller-stats { display: grid; grid-template-columns: 1fr 1fr; }
+.pf-seller-stat { padding: 10px 16px; border-top: 1px solid #eee; }
+.pf-seller-stat:first-child { border-right: 1px solid #eee; }
+.pf-seller-stat-label { font-size: 10px; color: #999; margin-bottom: 2px; }
+.pf-seller-stat-value { display: flex; align-items: center; gap: 4px; font-size: 12px; font-weight: 700; }
+.pf-seller-stat-value--green { color: #22c55e; }
+.pf-seller-stat-value--purple { color: #6366f1; }
+.pf-seller-location { padding: 10px 16px; border-top: 1px solid #eee; grid-column: 1 / -1; display: flex; align-items: center; gap: 4px; font-size: 11px; color: #666; }
+
+/* ── Info Cards ── */
+.pf-info-cards { display: flex; flex-direction: column; gap: 8px; margin: 12px 0 0; }
+.pf-info-card { border-radius: 10px; border: 1px solid #eee; padding: 12px 14px; display: flex; align-items: center; gap: 10px; background: #fff; font-size: 11px; color: #666; }
+.pf-info-card strong { color: #333; }
+.pf-info-card-sub { color: #999; margin-top: 1px; }
+
+/* ── Policy ── */
+.pf-policy { margin: 12px 0 0; border-radius: 12px; border: 1px solid #eee; overflow: hidden; }
+.pf-policy-item { border-bottom: 1px solid #eee; }
+.pf-policy-item:last-child { border-bottom: none; }
+.pf-policy-trigger { width: 100%; padding: 12px 16px; display: flex; align-items: center; justify-content: space-between; background: none; border: none; cursor: pointer; font-size: 12px; font-weight: 600; color: #555; }
+.pf-policy-content { padding: 0 16px 12px; font-size: 11px; color: #888; line-height: 1.6; }
+.pf-report-btn { margin-top: 12px; text-align: center; }
+.pf-report-btn button { background: none; border: none; font-size: 11px; color: #bbb; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; }
+
+/* ── Tabs ── */
+.pf-tabs { margin-top: 32px; border-bottom: 1px solid #eee; display: flex; gap: 0; overflow-x: auto; }
+.pf-tab { padding: 12px 16px; font-size: 12px; font-weight: 500; color: #888; background: none; border: none; border-bottom: 2px solid transparent; cursor: pointer; transition: all 0.2s; white-space: nowrap; }
+.pf-tab:hover { color: #e74c3c; }
+.pf-tab--active { font-weight: 700; color: #e74c3c; border-bottom-color: #e74c3c; }
+.pf-tab-content { padding: 24px 0; }
+.pf-tab-content--mobile { padding: 16px; }
+
+/* ── Features ── */
+.pf-features-title, .pf-desc-title { font-size: 14px; font-weight: 700; margin-bottom: 8px; color: #333; }
+.pf-features-list { display: flex; flex-direction: column; gap: 6px; margin-bottom: 20px; }
+.pf-feature-item { display: flex; align-items: flex-start; gap: 8px; padding: 9px 12px; border-radius: 8px; background: #fafafa; font-size: 12px; color: #555; line-height: 1.5; }
+
+/* ── Description ── */
+.pf-desc { font-size: 13px; color: #555; line-height: 1.8; white-space: pre-wrap; position: relative; }
+.pf-desc--collapsed { max-height: 180px; overflow: hidden; }
+.pf-desc-fade { position: absolute; bottom: 0; left: 0; right: 0; height: 50px; background: linear-gradient(transparent, #fff); }
+.pf-desc-toggle { margin-top: 6px; padding: 5px 12px; border-radius: 6px; border: 1px solid #ddd; background: #fff; font-size: 11px; font-weight: 600; color: #e74c3c; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; }
+
+/* ── Specs ── */
+.pf-specs-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+.pf-specs-table td { padding: 10px 14px; border-bottom: 1px solid #f0f0f0; }
+.pf-specs-table td:first-child { font-weight: 600; color: #666; width: 140px; background: #fafafa; font-size: 11px; }
+.pf-specs-table td:last-child { color: #333; }
+
+/* ── Empty Tab ── */
+.pf-empty-tab { padding: 30px 0; text-align: center; }
+.pf-empty-tab p { font-size: 13px; color: #999; }
+.pf-empty-tab p:last-child { font-size: 11px; color: #bbb; margin-top: 2px; }
+
+/* ── Mobile Sticky Bar ── */
+.pf-mobile-bar { position: fixed; bottom: 0; left: 0; right: 0; background: #fff; border-top: 1px solid #eee; padding: 10px 16px; display: flex; align-items: center; gap: 12px; z-index: 100; box-shadow: 0 -2px 12px rgba(0,0,0,0.06); }
+.pf-mobile-bar-price { font-size: 16px; font-weight: 900; color: #e74c3c; font-family: var(--font-display); }
+
+/* ── Favorite Button ── */
+.pf-fav-btn--active { border-color: #e74c3c !important; color: #e74c3c !important; }
+
+/* ── Toast ── */
+.pf-toast {
+  position: fixed;
+  bottom: 80px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #333;
+  color: #fff;
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  z-index: 200;
+  animation: pfToastIn 0.3s ease;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+@keyframes pfToastIn { from { opacity: 0; transform: translateX(-50%) translateY(10px); } to { opacity: 1; transform: translateX(-50%) translateY(0); } }
+
+/* ── Reviews ── */
+.pf-review-item {
+  padding: 14px 0;
+  border-bottom: 1px solid #f0f0f0;
+}
+.pf-review-header { display: flex; align-items: center; gap: 4px; font-size: 12px; color: #333; margin-bottom: 6px; }
+.pf-review-comment { font-size: 12px; color: #555; line-height: 1.6; margin: 0; }
+.pf-review-form {
+  margin-top: 16px;
+  padding: 16px;
+  border: 1px solid #eee;
+  border-radius: 10px;
+  background: #fafafa;
+}
+
+/* ── Discussions ── */
+.pf-discussion-form {
+  margin-bottom: 20px;
+  padding: 14px;
+  border: 1px solid #eee;
+  border-radius: 10px;
+  background: #fafafa;
+}
+.pf-discussion-input {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  font-size: 12px;
+  color: #333;
+  resize: vertical;
+  font-family: inherit;
+  background: #fff;
+}
+.pf-discussion-input:focus { outline: none; border-color: #e74c3c; }
+.pf-discussion-submit {
+  margin-top: 8px;
+  padding: 8px 18px;
+  border-radius: 6px;
+  border: none;
+  background: #e74c3c;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.pf-discussion-submit:disabled { background: #e0e0e0; cursor: not-allowed; }
+.pf-discussion-list { display: flex; flex-direction: column; gap: 0; }
+.pf-discussion-item {
+  padding: 14px 0;
+  border-bottom: 1px solid #f0f0f0;
+}
+.pf-discussion-header { display: flex; align-items: center; font-size: 12px; color: #333; margin-bottom: 4px; }
+.pf-discussion-message { font-size: 12px; color: #555; line-height: 1.6; margin: 4px 0; }
+.pf-discussion-reply-btn {
+  background: none;
+  border: none;
+  font-size: 11px;
+  color: #999;
+  cursor: pointer;
+  padding: 0;
+  font-weight: 600;
+}
+.pf-discussion-reply-btn:hover { color: #e74c3c; }
+.pf-discussion-replies { margin-left: 20px; border-left: 2px solid #f0f0f0; padding-left: 12px; }
+.pf-discussion-reply { padding: 10px 0; }
+
+/* ── Empty State ── */
+.pf-empty-state {
+  padding: 30px 0;
+  text-align: center;
+}
+.pf-empty-state p { font-size: 13px; color: #999; margin: 2px 0; }
+
+/* ── Responsive ── */
+@media (max-width: 767px) {
+  .pf-grid-2col { display: block; }
+  .pf-tabs { padding-left: 16px; }
+}

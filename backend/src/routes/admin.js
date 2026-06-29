@@ -2,6 +2,7 @@ import express from 'express';
 import prisma from '../db.js';
 import { requireAuth, requireAdmin } from '../middleware/auth.js';
 import { createNotification } from '../utils/notificationService.js';
+import { syncJakmallProducts } from '../../scripts/sync_jakmall_products.js';
 
 const router = express.Router();
 
@@ -528,6 +529,18 @@ router.patch('/users/:id/role', async (req, res) => {
   } catch (error) {
     console.error('Update user role error:', error);
     return res.status(500).json({ error: 'Failed to update user role.' });
+  }
+});
+
+// 10. Manual Jakmall product sync
+router.post('/sync-jakmall', async (req, res) => {
+  try {
+    console.log('Admin triggered Jakmall sync...');
+    const result = await syncJakmallProducts();
+    res.json({ message: 'Sinkronisasi Jakmall selesai.', result });
+  } catch (error) {
+    console.error('Jakmall sync error:', error);
+    res.status(500).json({ error: `Gagal sinkronisasi: ${error.message}` });
   }
 });
 

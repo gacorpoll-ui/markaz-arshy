@@ -1,30 +1,5 @@
 import prisma from '../../backend/src/db.js';
-
-// Agent runner registry - lazily loaded to avoid circular deps
-const RUNNER_MAP = {};
-
-function getRunner(agentType) {
-  if (RUNNER_MAP[agentType]) return RUNNER_MAP[agentType];
-
-  const runnerModules = {
-    seo: () => import('./runners/seo-content.js'),
-    email: () => import('./runners/email-campaign.js'),
-    competitor: () => import('./runners/competitor-intel.js'),
-    social_media: () => import('./runners/social-media.js'),
-    whatsapp: () => import('./runners/whatsapp-broadcast.js'),
-    dynamic_pricing: () => import('./runners/dynamic-pricing.js'),
-    analytics: () => import('./runners/analytics.js'),
-    reseller: () => import('./runners/reseller-recruitment.js'),
-    retention: () => import('./runners/customer-retention.js'),
-    upsell: () => import('./runners/upsell.js'),
-    content_writer: () => import('./runners/content-writer.js'),
-    review_request: () => import('./runners/review-request.js'),
-  };
-
-  const loader = runnerModules[agentType] || null;
-  if (loader) RUNNER_MAP[agentType] = loader;
-  return loader;
-}
+import { getRunner } from '../shared/runner-registry.js';
 
 // Active interval handles
 const activeIntervals = {};
@@ -186,6 +161,7 @@ async function seedDefaultSchedules() {
     { agentType: 'upsell', agentName: 'Upsell Agent', cronExpression: '0 4 * * *', description: 'Upsell campaigns daily at 11:00 WIB' },
     { agentType: 'content_writer', agentName: 'Content Writer Agent', cronExpression: '0 7 * * *', description: 'Content generation daily at 14:00 WIB (auto-rotate: product_desc/faq/tutorial)' },
     { agentType: 'review_request', agentName: 'Review Request Agent', cronExpression: '0 8 * * *', description: 'Review requests daily at 15:00 WIB' },
+    { agentType: 'video_ads', agentName: 'Video Ads Agent', cronExpression: '0 6 * * 1,3,5', description: 'Video ad scripts Mon/Wed/Fri at 13:00 WIB' },
   ];
 
   for (const s of defaults) {
@@ -198,4 +174,25 @@ async function seedDefaultSchedules() {
   console.log('[SCHEDULER] Default schedules seeded.');
 }
 
-export default { initAgentScheduler, triggerAgent, seedDefaultSchedules };
+/**
+ * Trigger a workflow by name.
+ */
+export async function triggerWorkflow(workflowName, options = {}) {
+  const { executeWorkflow } = await import('../shared/workflow-engine.js');
+
+  const workflowMap = {
+    'daily-marketing': () => import('../workflows/daily-marketing.js'),
+    'weekly-reseller': () => import('../workflows/weekly-reseller.js'),
+    'reactivation': () => import('../workflows/reactivation.js'),
+    'content-pipeline': () => import('../workflows/content-pipeline.js'),
+  };
+
+  const loader = workflowMap[workflowName];
+  if (!loader) throw new Error(`Unknown workflow: "${workflowName}". Available: ${Object.keys(workflowMap).join(', ')}`);
+
+  const mod = await loader();
+  const workflow = mod.default || mod;
+  return executeWorkflow(workflow, options);
+}
+
+export default { initAgentScheduler, triggerAgent, triggerWorkflow, seedDefaultSchedules };

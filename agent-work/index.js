@@ -23,7 +23,7 @@ const TEAMS = {
     name: 'Marketing Division',
     description: 'SEO, social media, email campaigns, content, pricing, analytics',
     entry: () => import('./agent-marketing/index.js'),
-    agents: ['seo', 'email', 'social_media', 'whatsapp', 'competitor', 'dynamic_pricing', 'analytics', 'reseller', 'retention', 'upsell', 'content_writer', 'review_request'],
+    agents: ['seo', 'email', 'social_media', 'whatsapp', 'competitor', 'dynamic_pricing', 'analytics', 'reseller', 'retention', 'upsell', 'content_writer', 'review_request', 'video_ads'],
   },
   developer: {
     name: 'Developer Division',

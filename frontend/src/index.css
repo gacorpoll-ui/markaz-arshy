@@ -23,6 +23,8 @@
 @import './styles/pages/catalog.css';
 @import './styles/pages/dashboard.css';
 @import './styles/pages/marketplace.css';
+@import './styles/pages/marketplace-v2.css';
+@import './styles/pages/product-fisik.css';
 
 /* ── Utilities ── */
 @import './styles/utilities/animations.css';

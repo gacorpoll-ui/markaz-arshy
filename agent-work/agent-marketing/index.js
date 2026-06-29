@@ -48,6 +48,7 @@ const RUNNERS = {
   'upsell':         () => import('./runners/upsell.js'),
   'content_writer': () => import('./runners/content-writer.js'),
   'review_request': () => import('./runners/review-request.js'),
+  'video_ads':      () => import('./runners/video-ads.js'),
 };
 
 // Parse CLI args

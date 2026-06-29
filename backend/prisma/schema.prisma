@@ -33,6 +33,8 @@ model User {
   aiTransactions      AITransaction[]
   addresses           UserAddress[]
   cart                Cart?
+  favorites           UserFavorite[]
+  discussions         ProductDiscussion[]
 }
 
 model UserAddress {
@@ -113,7 +115,8 @@ model Product {
   width             Float? // Dimensi lebar
   height            Float? // Dimensi tinggi
   variants          Json? // Menyimpan varian produk dalam format JSON
-  imageUrl          String? // Path gambar lokal
+  imageUrl          String? // Path/gambar utama
+  images            String? // JSON array — semua gambar produk (10 dari Jakmall)
 
   shippingInfo    Json? // Informasi pengiriman terkait dari Jakmall (jika ada)   
   minOrder        Int        @default(1)
@@ -128,6 +131,8 @@ model Product {
   orders          Order[]
   reviews         Review[]
   cartItems       CartItem[]
+  favorites       UserFavorite[]
+  discussions     ProductDiscussion[]
 }
 
 model Account {
@@ -177,6 +182,7 @@ model Order {
   notes              String?
   selectedDuration   String? // "1 Bulan", "3 Bulan", dll.
   selectedOs         String? // "Windows", "Linux" — untuk VPS/RDP
+  selectedVariant    String? // JSON — varian yang dipilih user saat checkout fisik
   // PHYSICAL order fields
   shippingAddressId  Int?
   shippingAddress    UserAddress? @relation("ShippingAddress", fields: [shippingAddressId], references: [id])
@@ -491,4 +497,39 @@ model RevenueMetric {
   createdAt       DateTime @default(now())
 
   @@index([date])
+}
+
+// ═══════════════════════════════════════════════════════════
+// PRODUCT ENGAGEMENT — Favorites & Discussions
+// ═══════════════════════════════════════════════════════════
+
+model UserFavorite {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  productId Int
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@unique([userId, productId])
+  @@index([userId])
+  @@index([productId])
+}
+
+model ProductDiscussion {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  productId Int
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  parentId  Int?
+  parent    ProductDiscussion? @relation("DiscussionReplies", fields: [parentId], references: [id])
+  replies   ProductDiscussion[] @relation("DiscussionReplies")
+  message   String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([productId])
+  @@index([userId])
+  @@index([parentId])
 }

@@ -113,7 +113,7 @@ export async function getAgentRevenueStats() {
   const agentTypes = [
     'seo', 'social_media', 'email', 'whatsapp', 'competitor',
     'dynamic_pricing', 'analytics', 'reseller', 'retention',
-    'upsell', 'content_writer', 'review_request',
+    'upsell', 'content_writer', 'review_request', 'video_ads',
   ];
 
   const stats = [];

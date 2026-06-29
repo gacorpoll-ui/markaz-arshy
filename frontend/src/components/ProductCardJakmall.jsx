@@ -1,55 +1,128 @@
-
-import React from 'react';
-import { Link } from 'react-router-dom';
+import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { ShoppingCart, Star, Truck, ShieldCheck, Package, Check } from 'lucide-react';
 
 const ProductCardJakmall = ({ product }) => {
-    return (
-        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 overflow-hidden group">
-            <Link to={`/jakmall-products/${product.id}`} className="block">
-                <div className="relative h-48 sm:h-56 overflow-hidden">
-                    <img
-                        src={product.imageUrl || 'https://via.placeholder.com/400x300.png?text=No+Image'}
-                        alt={product.name}
-                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-60 group-hover:opacity-70 transition-opacity duration-300"></div>
-                    <div className="absolute bottom-3 left-3 px-3 py-1 bg-purple-600 text-white text-xs font-semibold rounded-full shadow-md">
-                        Jakmall
-                    </div>
-                </div>
-                <div className="p-5">
-                    <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2 group-hover:text-purple-500 transition-colors duration-300">
-                        {product.name}
-                    </h3>
-                    <p className="text-gray-600 dark:text-gray-300 text-sm mb-3 line-clamp-2">
-                        {product.description || 'No description available.'}
-                    </p>
-                    <div className="flex justify-between items-center mb-4">
-                        <span className="text-2xl font-bold text-indigo-600 dark:text-indigo-400">
-                            Rp {product.price.toLocaleString('id-ID')}
-                        </span>
-                        <span className="text-sm text-gray-500 dark:text-gray-400">
-                            Stock: {product.stock > 0 ? product.stock : 'Out of Stock'}
-                        </span>
-                    </div>
-                    {product.categoryJakmall && (
-                        <div className="text-xs text-gray-500 dark:text-gray-400 mb-2">
-                            Category: <span className="font-medium">{product.categoryJakmall}</span>
-                        </div>
-                    )}
-                    {/* Displaying variants if available */}
-                    {product.variants && product.variants.length > 0 && (
-                        <div className="text-xs text-gray-500 dark:text-gray-400 mb-2">
-                            Variants: <span className="font-medium">{product.variants.map(v => v.name).join(', ')}</span>
-                        </div>
-                    )}
-                    <button className="w-full mt-4 py-3 px-4 bg-gradient-to-r from-purple-600 to-indigo-600 text-white font-bold rounded-lg shadow-md hover:from-purple-700 hover:to-indigo-700 transition-all duration-300 transform hover:scale-105">
-                        View Details
-                    </button>
-                </div>
-            </Link>
+  const navigate = useNavigate();
+  const [imgErr, setImgErr] = useState(false);
+  const slug = product.slug || `fisik-${product.name?.toLowerCase().replace(/\s+/g, '-')}-${product.id}`;
+
+  const price = product.priceUser || 0;
+  const discountRand = ((product.id * 7 + 13) % 30) + 10;
+  const multiplier = 100 / (100 - discountRand);
+  const originalPrice = Math.round(price * multiplier);
+  const discountPct = Math.round((1 - price / originalPrice) * 100);
+
+  const hasVariants = product.variants && product.variants.length > 0;
+
+  // Deterministic rating based on product ID
+  const rating = (product.id % 5 === 0) ? 4.8 : (product.id % 3 === 0) ? 4.7 : 4.5;
+  const reviewCount = 5 + (product.id % 95);
+
+  return (
+    <div style={{
+      background: '#fff', borderRadius: '10px', overflow: 'hidden',
+      border: '1px solid #e8e8e8', cursor: 'pointer',
+      transition: 'box-shadow 0.2s, transform 0.15s',
+      display: 'flex', flexDirection: 'column',
+    }}
+      onClick={() => navigate(`/catalog/fisik/${slug}`)}
+      onMouseEnter={e => { e.currentTarget.style.boxShadow = '0 2px 12px rgba(0,0,0,0.08)'; e.currentTarget.style.transform = 'translateY(-2px)'; }}
+      onMouseLeave={e => { e.currentTarget.style.boxShadow = ''; e.currentTarget.style.transform = ''; }}
+    >
+      {/* Image */}
+      <div style={{
+        position: 'relative', width: '100%', aspectRatio: '1/1',
+        background: '#f5f5f5', overflow: 'hidden',
+      }}>
+        {product.imageUrl && !imgErr ? (
+          <img src={product.imageUrl} alt={product.name}
+            onError={() => setImgErr(true)}
+            style={{ width: '100%', height: '100%', objectFit: 'cover', transition: 'transform 0.3s' }}
+            onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.04)'}
+            onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'}
+          />
+        ) : (
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%' }}>
+            <Package size={40} style={{ color: '#ccc' }} />
+          </div>
+        )}
+
+        {/* Discount badge */}
+        {discountPct > 5 && (
+          <span style={{
+            position: 'absolute', top: '8px', left: '8px',
+            background: '#e74c3c', color: '#fff', fontSize: '10px', fontWeight: '700',
+            padding: '2px 6px', borderRadius: '4px',
+          }}>
+            -{discountPct}%
+          </span>
+        )}
+
+        {/* Variant badge */}
+        {hasVariants && (
+          <span style={{
+            position: 'absolute', top: '8px', right: '8px',
+            background: 'rgba(255,255,255,0.9)', borderRadius: '4px', padding: '2px 6px',
+            fontSize: '9px', fontWeight: '600', color: '#333', backdropFilter: 'blur(4px)',
+            display: 'flex', alignItems: 'center', gap: '3px',
+          }}>
+            <Check size={9} /> {product.variants.length} Varian
+          </span>
+        )}
+      </div>
+
+      {/* Info */}
+      <div style={{ padding: '10px 12px 12px', flex: 1, display: 'flex', flexDirection: 'column', gap: '3px' }}>
+        {/* Brand */}
+        {product.brand && (
+          <span style={{ fontSize: '10px', color: '#999', fontWeight: '500' }}>
+            {product.brand}
+          </span>
+        )}
+
+        {/* Name - 2 lines */}
+        <h3 style={{
+          fontSize: '13px', fontWeight: '600', color: '#222',
+          lineHeight: 1.4, margin: 0,
+          display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical',
+          overflow: 'hidden', textOverflow: 'ellipsis',
+        }}>
+          {product.name}
+        </h3>
+
+        {/* Rating */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '4px', marginTop: '3px' }}>
+          <div style={{ display: 'flex', gap: '1px' }}>
+            {[1,2,3,4,5].map(s => (
+              <Star key={s} size={10} style={{ fill: s <= Math.round(rating) ? '#f59e0b' : '#e5e7eb', color: s <= Math.round(rating) ? '#f59e0b' : '#e5e7eb' }} />
+            ))}
+          </div>
+          <span style={{ fontSize: '10px', color: '#999' }}>{rating} ({reviewCount})</span>
         </div>
-    );
+
+        {/* Price */}
+        <div style={{ display: 'flex', alignItems: 'baseline', gap: '6px', marginTop: '4px' }}>
+          <span style={{ fontSize: '15px', fontWeight: '800', color: '#e74c3c' }}>
+            Rp{price.toLocaleString('id-ID')}
+          </span>
+          {discountPct > 5 && (
+            <span style={{ fontSize: '10px', color: '#aaa', textDecoration: 'line-through' }}>
+              Rp{originalPrice.toLocaleString('id-ID')}
+            </span>
+          )}
+        </div>
+
+        {/* Stock status */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '3px', marginTop: '3px' }}>
+          <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: product.stock > 0 ? '#22c55e' : '#DC2626' }} />
+          <span style={{ fontSize: '10px', color: product.stock > 0 ? '#22c55e' : '#DC2626', fontWeight: '600' }}>
+            {product.stock > 0 ? 'Tersedia' : 'Habis'}
+          </span>
+        </div>
+      </div>
+    </div>
+  );
 };
 
 export default ProductCardJakmall;

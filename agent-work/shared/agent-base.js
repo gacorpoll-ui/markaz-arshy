@@ -3,6 +3,7 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import prisma from '../../backend/src/db.js';
 import { callLLM } from './llm-client.js';
+import eventBus from './event-bus.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -40,6 +41,8 @@ export const AGENT_PROMPTS = {
   content_writer: `You are the Content Writer Agent for Markaz-Arshy. You write product descriptions, FAQ entries, and step-by-step tutorials. Clear, helpful, SEO-friendly. All in Indonesian.`,
 
   review_request: `You are the Review Request Agent for Markaz-Arshy. You create polite, engaging review request messages for customers with completed orders. All in Indonesian.`,
+
+  video_ads: `You are the Video Ads Agent for Markaz-Arshy. You create compelling short-form video ad scripts for TikTok, Instagram Reels, and YouTube Shorts. You specialize in hook-driven storytelling, scene-by-scene breakdowns with visual descriptions, text overlays, voiceover scripts, and trending hashtags. All content in Indonesian. Focus on SMM services, premium accounts, and digital products.`,
 };
 
 // ─── Core Task Management ─────────────────────────────
@@ -194,6 +197,111 @@ export async function getAgentStats(agentType = null) {
   };
 }
 
+// ─── Runner Wrapper ─────────────────────────────────
+
+/**
+ * createRunner — wraps business logic in standard task lifecycle + event emission.
+ * Reduces each runner from ~90 lines of boilerplate to ~30 lines of pure logic.
+ *
+ * Usage:
+ *   export default createRunner('seo', async (ctx) => {
+ *     const articles = await ctx.llm(prompt);
+ *     // ... save results ...
+ *     return { contentItemId: article.id };
+ *   });
+ */
+export function createRunner(agentType, businessLogic) {
+  return async function runAgent(options = {}) {
+    const taskName = options.taskName || `${agentType} run`;
+    const task = await createTask(agentType, taskName, options, options.triggeredBy || 'cron');
+
+    try {
+      await startTask(task.id);
+      log(agentType, `Starting: ${taskName}`);
+
+      // Context object passed to business logic
+      const ctx = {
+        taskId: task.id,
+        agentType,
+        options,
+        log: (msg) => log(agentType, msg),
+        llm: (systemPrompt, userPrompt, opts = {}) => callAgentLLM(task.id, agentType, systemPrompt, userPrompt, opts),
+        report: (type, title, summary, metrics) => generateReport(task.id, type, title, summary, metrics),
+        saveFile: (filename, content) => saveReportFile(filename, content),
+      };
+
+      const result = await businessLogic(ctx);
+
+      await completeTask(task.id, result);
+      log(agentType, `✅ Completed: ${taskName}`);
+
+      // Emit event for other agents
+      eventBus.emit(eventBus.EVENTS.AGENT_COMPLETED, {
+        agentType, taskId: task.id, output: result,
+      });
+
+      return result;
+    } catch (error) {
+      await failTask(task.id, error.message);
+      log(agentType, `❌ Failed: ${error.message}`);
+
+      eventBus.emit(eventBus.EVENTS.AGENT_FAILED, {
+        agentType, taskId: task.id, error: error.message,
+      });
+
+      throw error;
+    }
+  };
+}
+
+// ─── Health Monitoring ──────────────────────────────
+
+export async function getAgentHealth() {
+  const now = new Date();
+  const sevenDaysAgo = new Date(now.getTime() - 7 * 86400000);
+
+  const agentTypes = [
+    'seo', 'social_media', 'email', 'whatsapp', 'competitor',
+    'dynamic_pricing', 'analytics', 'reseller', 'retention',
+    'upsell', 'content_writer', 'review_request',
+  ];
+
+  const health = [];
+  for (const type of agentTypes) {
+    const [total, completed, failed, recentTasks, costAgg] = await Promise.all([
+      prisma.agentTask.count({ where: { agentType: type, createdAt: { gte: sevenDaysAgo } } }),
+      prisma.agentTask.count({ where: { agentType: type, status: 'COMPLETED', createdAt: { gte: sevenDaysAgo } } }),
+      prisma.agentTask.count({ where: { agentType: type, status: 'FAILED', createdAt: { gte: sevenDaysAgo } } }),
+      prisma.agentTask.findMany({
+        where: { agentType: type, createdAt: { gte: sevenDaysAgo } },
+        orderBy: { createdAt: 'desc' },
+        take: 5,
+        select: { status: true, durationMs: true, errorMessage: true, completedAt: true },
+      }),
+      prisma.agentTask.aggregate({
+        where: { agentType: type, createdAt: { gte: sevenDaysAgo } },
+        _sum: { llmCost: true, llmTokensUsed: true },
+        _avg: { durationMs: true },
+      }),
+    ]);
+
+    const lastRun = recentTasks[0];
+    health.push({
+      agentType: type,
+      runsWeek: total,
+      successRate: total > 0 ? ((completed / total) * 100).toFixed(1) : '0',
+      avgDurationMs: Math.round(costAgg._avg.durationMs || 0),
+      totalCost: costAgg._sum.llmCost || 0,
+      totalTokens: costAgg._sum.llmTokensUsed || 0,
+      lastStatus: lastRun?.status || 'NEVER',
+      lastError: lastRun?.errorMessage || null,
+      lastRunAt: lastRun?.completedAt || null,
+      isHealthy: total === 0 || (completed / total) >= 0.7,
+    });
+  }
+  return health;
+}
+
 export default {
   AGENT_PROMPTS,
   createTask,
@@ -205,4 +313,6 @@ export default {
   saveReportFile,
   log,
   getAgentStats,
+  createRunner,
+  getAgentHealth,
 };

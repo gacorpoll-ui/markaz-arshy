@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Link, Navigate, NavLink, useLocation } from 'react-router-dom';
-import { ShoppingBag, ShieldAlert, LogIn, LogOut, User, Menu, X } from 'lucide-react';
+import { ShoppingBag, ShoppingCart, ShieldAlert, LogIn, LogOut, User, Menu, X } from 'lucide-react';
 
 // Import Pages
 import Home from './pages/Home';
@@ -10,16 +10,21 @@ import Dashboard from './pages/Dashboard';
 import AdminDashboard from './pages/AdminDashboard';
 import CatalogPage from './pages/CatalogPage';
 import ProductDetailPage from './pages/ProductDetailPage';
+import ProductFisikPage from './pages/ProductFisikPage';
+import CartPage from './pages/CartPage';
+import CheckoutPage from './pages/CheckoutPage';
 import DepositPage from './pages/DepositPage';
 import VerifyEmail from './pages/VerifyEmail';
 import GoogleCallback from './pages/GoogleCallback';
 import AIRouterCatalog from './pages/AIRouterCatalog';
 import AIKeys from './pages/AIKeys';
+import AddressPage from './pages/AddressPage';
 import AIUsageAnalyticsPage from './pages/AIUsageAnalyticsPage';
 import AIDocs from './pages/AIDocs';
 import LiveChat from './components/LiveChat';
 import MarketplacePage from './pages/MarketplacePage';
 import JakmallMarketplace from './pages/JakmallMarketplace';
+import MarketplaceCategory from './pages/MarketplaceCategory';
 
 /* ═══════════════════════════════════════
    Mobile Menu Overlay
@@ -36,8 +41,7 @@ function MobileMenu({ isOpen, onClose, user, handleLogout }) {
     { to: '/catalog/premium', label: 'Akun Premium' },
     { to: '/catalog/vps-rdp', label: 'RDP/VPS' },
     { to: '/catalog/ai-router', label: 'AI Router' },
-    { to: '/docs/ai', label: 'Panduan AI' },
-    { to: '/jakmall-marketplace', label: 'Marketplace' },
+    { to: '/marketplace', label: 'Mall' },
   ];
 
   if (user) navItems.push({ to: '/dashboard', label: 'Dashboard' });
@@ -104,6 +108,7 @@ export default function App() {
   const [token, setToken] = useState('');
   const [loading, setLoading] = useState(true);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [cartCount, setCartCount] = useState(0);
 
   useEffect(() => {
     const savedUser = localStorage.getItem('user');
@@ -114,6 +119,27 @@ export default function App() {
     }
     setLoading(false);
   }, []);
+
+  const fetchCartCount = async () => {
+    if (!token) { setCartCount(0); return; }
+    try {
+      const r = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/cart`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      const d = await r.json();
+      setCartCount(d.cart?.items?.length || 0);
+    } catch {}
+  };
+
+  // Fetch cart count when user changes
+  useEffect(() => { fetchCartCount(); }, [token]);
+
+  // Listen for cart-update events (from CartPage, CheckoutPage, etc.)
+  useEffect(() => {
+    const handler = () => fetchCartCount();
+    window.addEventListener('cart-update', handler);
+    return () => window.removeEventListener('cart-update', handler);
+  }, [token]);
 
   const handleLogin = (newUser, newToken) => {
     setUser(newUser);
@@ -157,12 +183,24 @@ export default function App() {
               <li><NavLink to="/catalog/premium" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>Akun Premium</NavLink></li>
               <li><NavLink to="/catalog/vps-rdp" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>RDP/VPS</NavLink></li>
               <li><NavLink to="/catalog/ai-router" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>AI Router</NavLink></li>
-              <li><NavLink to="/docs/ai" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>Panduan AI</NavLink></li>
-              <li><NavLink to="/jakmall-marketplace" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>Marketplace</NavLink></li>
+              <li><NavLink to="/marketplace" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>Mall</NavLink></li>
               {user && <li><NavLink to="/dashboard" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>Dashboard</NavLink></li>}
             </ul>
 
             <div className="nav-auth" style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+              {user && (
+                <Link to="/cart" style={{ position: 'relative', display: 'flex', alignItems: 'center', color: 'var(--text-secondary)', textDecoration: 'none' }}>
+                  <ShoppingCart size={20} />
+                  {cartCount > 0 && (
+                    <span style={{
+                      position: 'absolute', top: '-8px', right: '-8px', background: 'var(--color-primary)',
+                      color: '#fff', fontSize: '10px', fontWeight: '700', minWidth: '18px', height: '18px',
+                      borderRadius: '9px', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      padding: '0 4px',
+                    }}>{cartCount}</span>
+                  )}
+                </Link>
+              )}
               {user ? (
                 <>
                   <span className={`badge ${user.role === 'ADMIN' ? 'badge-premium' : user.role === 'RESELLER' ? 'badge-smm' : 'badge-secondary'}`} style={{ fontSize: '10px', padding: '2px 8px' }}>{user.role}</span>
@@ -191,7 +229,11 @@ export default function App() {
           <Routes>
             <Route path="/" element={<Home user={user} />} />
             <Route path="/catalog/:categoryType" element={<CatalogPage user={user} token={token} />} />
+            <Route path="/catalog/fisik/:slug" element={<ProductFisikPage user={user} token={token} />} />
+            <Route path="/catalog/fisik" element={<Navigate to="/marketplace" />} />
             <Route path="/product/:slug" element={<ProductDetailPage user={user} token={token} />} />
+            <Route path="/cart" element={user ? <CartPage user={user} token={token} /> : <Navigate to="/login" />} />
+            <Route path="/checkout" element={user ? <CheckoutPage user={user} token={token} /> : <Navigate to="/login" />} />
             <Route path="/login" element={user ? <Navigate to="/dashboard" /> : <Login onLogin={handleLogin} />} />
             <Route path="/register" element={user ? <Navigate to="/dashboard" /> : <Register onLogin={handleLogin} />} />
             <Route path="/verify-email" element={<VerifyEmail onLogin={handleLogin} />} />
@@ -210,8 +252,10 @@ export default function App() {
                 : <Navigate to="/login" />
             } />
             <Route path="/deposit" element={user ? <DepositPage user={user} token={token} onUpdateUser={handleUpdateUser} /> : <Navigate to="/login" />} />
+            <Route path="/account/addresses" element={user ? <AddressPage user={user} token={token} /> : <Navigate to="/login" />} />
             <Route path="/admin/*" element={user && user.role === 'ADMIN' ? <AdminDashboard user={user} token={token} /> : <Navigate to="/" />} />
-            <Route path="/marketplace" element={<JakmallMarketplace user={user} token={token} />} />
+            <Route path="/marketplace" element={<JakmallMarketplace />} />
+            <Route path="/marketplace/:slug" element={<MarketplaceCategory />} />
             <Route path="*" element={<Navigate to="/" />} />
           </Routes>
         </main>

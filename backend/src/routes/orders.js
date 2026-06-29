@@ -235,6 +235,7 @@ router.post('/create', requireAuth, async (req, res) => {
               soldAt: new Date(),
             },
           });
+        } else {
           // External H2H fulfillment
           orderStatus = 'PROCESSING';
           const refId = `MRK-${Date.now()}-${Math.floor(1000 + Math.random() * 9000)}`;
@@ -393,9 +394,12 @@ router.get('/history', requireAuth, async (req, res) => {
     const limit = Math.min(parseInt(req.query.limit) || 20, 100);
     const offset = parseInt(req.query.offset) || 0;
 
+    const where = { userId: req.user.id };
+    if (req.query.type) where.type = req.query.type;
+
     const [orders, total] = await Promise.all([
       prisma.order.findMany({
-        where: { userId: req.user.id },
+        where,
         include: {
           product: {
             select: {
@@ -415,7 +419,7 @@ router.get('/history', requireAuth, async (req, res) => {
         take: limit,
         skip: offset,
       }),
-      prisma.order.count({ where: { userId: req.user.id } }),
+      prisma.order.count({ where }),
     ]);
 
     return res.json({ orders, total, limit, offset });
@@ -424,6 +428,196 @@ router.get('/history', requireAuth, async (req, res) => {
   } catch (error) {
     console.error('Fetch order history error:', error);
     return res.status(500).json({ error: 'Internal server error fetching orders.' });
+  }
+});
+
+// ── PHYSICAL CHECKOUT ──
+router.post('/physical-checkout', requireAuth, async (req, res) => {
+  const { cartId, addressId, courier, courierService, courierServiceName, shippingCost, paymentMethod, selectedVariant } = req.body;
+
+  if (!cartId || !addressId || !courier || !courierService || shippingCost === undefined) {
+    return res.status(400).json({ error: 'Semua field checkout wajib diisi.' });
+  }
+  const method = paymentMethod || 'wallet';
+
+  try {
+    // 1. Get cart with items
+    const cart = await prisma.cart.findUnique({
+      where: { id: cartId },
+      include: { items: { include: { product: true } } },
+    });
+    if (!cart || cart.userId !== req.user.id) {
+      return res.status(404).json({ error: 'Keranjang tidak ditemukan.' });
+    }
+    if (cart.items.length === 0) {
+      return res.status(400).json({ error: 'Keranjang kosong.' });
+    }
+
+    // 2. Validate address
+    const address = await prisma.userAddress.findFirst({
+      where: { id: addressId, userId: req.user.id },
+    });
+    if (!address) return res.status(404).json({ error: 'Alamat tidak ditemukan.' });
+
+    // 3. Validate stock and calculate total
+    let subtotal = 0;
+    for (const item of cart.items) {
+      if (item.product.type !== 'PHYSICAL') {
+        return res.status(400).json({ error: `Produk ${item.product.name} bukan produk fisik.` });
+      }
+      if (item.product.stock < item.quantity) {
+        return res.status(400).json({ error: `Stok ${item.product.name} tidak mencukupi. Tersedia: ${item.product.stock}` });
+      }
+      subtotal += item.product.priceUser * item.quantity;
+    }
+
+    const total = subtotal + shippingCost;
+
+    // 4. Payment logic
+    const user = await prisma.user.findUnique({ where: { id: req.user.id } });
+
+    if (method === 'wallet') {
+      // Wallet payment — deduct balance immediately
+      if (user.balance < total) {
+        return res.status(400).json({ error: `Saldo tidak mencukupi. Dibutuhkan Rp ${total.toLocaleString('id-ID')}, saldo Rp ${user.balance.toLocaleString('id-ID')}` });
+      }
+
+      await prisma.user.update({
+        where: { id: req.user.id },
+        data: { balance: user.balance - total },
+      });
+
+      await prisma.balanceTransaction.create({
+        data: {
+          userId: req.user.id,
+          type: 'PHYSICAL_ORDER',
+          amount: -total,
+          balanceBefore: user.balance,
+          balanceAfter: user.balance - total,
+          description: `Pembelian fisik (${cart.items.length} item) ongkir Rp ${shippingCost.toLocaleString('id-ID')}`,
+        },
+      });
+    }
+
+    // 5. Create orders (one per cart item)
+    const orders = [];
+    for (const item of cart.items) {
+      const order = await prisma.order.create({
+        data: {
+          userId: req.user.id,
+          productId: item.productId,
+          type: 'PHYSICAL',
+          quantity: item.quantity,
+          amount: item.product.priceUser * item.quantity + (item === cart.items[cart.items.length - 1] ? shippingCost : 0),
+          status: method === 'transfer' ? 'AWAITING_PAYMENT' : 'PENDING',
+          shippingAddressId: addressId,
+          shippingSnapshot: JSON.parse(JSON.stringify(address)),
+          courier,
+          courierService,
+          courierServiceName,
+          shippingCost: item === cart.items[cart.items.length - 1] ? shippingCost : 0,
+          notes: method === 'transfer' ? 'Menunggu pembayaran via transfer bank' : null,
+          selectedVariant: selectedVariant ? JSON.stringify(selectedVariant) : null,
+        },
+      });
+      orders.push(order);
+
+      // Decrement stock
+      await prisma.product.update({
+        where: { id: item.productId },
+        data: { stock: { decrement: item.quantity } },
+      });
+    }
+
+    // 6. Clear cart
+    await prisma.cartItem.deleteMany({ where: { cartId: cart.id } });
+
+    if (method === 'transfer') {
+      // Use the selected bank or fallback to random
+      let bank;
+      if (req.body.bankId) {
+        bank = await prisma.paymentMethod.findUnique({ where: { id: parseInt(req.body.bankId) } });
+      }
+      if (!bank) {
+        const activeMethods = await prisma.paymentMethod.findMany({ where: { isActive: true } });
+        bank = activeMethods.length > 0
+          ? activeMethods[Math.floor(Math.random() * activeMethods.length)]
+          : null;
+      }
+      if (!bank) bank = { name: 'BCA', accountNumber: '1234567890', accountName: 'CV Markaz Arshy' };
+
+      res.status(201).json({
+        message: 'Pesanan dibuat, menunggu pembayaran.',
+        orders,
+        paymentInfo: { bank: bank.name, accountNumber: bank.accountNumber, accountName: bank.accountName, qrisImage: bank.qrImage || null },
+      });
+    } else {
+      res.status(201).json({
+        message: 'Pesanan berhasil dibuat.',
+        orders,
+      });
+    }
+  } catch (error) {
+    console.error('Physical checkout error:', error);
+    res.status(500).json({ error: 'Gagal memproses checkout.' });
+  }
+});
+
+// ── POST /orders/:id/verify-payment — upload bukti bayar ──
+import multer from 'multer';
+import path from 'path';
+import fs from 'fs';
+
+const proofDir = path.join(process.cwd(), 'uploads', 'payment-proofs');
+if (!fs.existsSync(proofDir)) fs.mkdirSync(proofDir, { recursive: true });
+
+const proofStorage = multer.diskStorage({
+  destination: (req, file, cb) => cb(null, proofDir),
+  filename: (req, file, cb) => {
+    const ext = path.extname(file.originalname);
+    cb(null, `proof-${Date.now()}-${Math.round(Math.random() * 1e9)}${ext}`);
+  },
+});
+const uploadProof = multer({
+  storage: proofStorage,
+  limits: { fileSize: 5 * 1024 * 1024 },
+  fileFilter: (req, file, cb) => {
+    if (/jpeg|jpg|png|webp|gif/.test(path.extname(file.originalname).toLowerCase())) {
+      cb(null, true);
+    } else {
+      cb(new Error('Hanya gambar (JPG, PNG, WEBP) yang diperbolehkan'));
+    }
+  },
+});
+
+router.post('/:id/verify-payment', requireAuth, uploadProof.single('paymentProof'), async (req, res) => {
+  try {
+    const orderId = parseInt(req.params.id);
+    const order = await prisma.order.findFirst({ where: { id: orderId, userId: req.user.id, type: 'PHYSICAL' } });
+    if (!order) return res.status(404).json({ error: 'Pesanan tidak ditemukan.' });
+    if (!['AWAITING_PAYMENT', 'PAYMENT_SUBMITTED'].includes(order.status)) {
+      return res.status(400).json({ error: 'Pesanan tidak dalam status menunggu pembayaran.' });
+    }
+
+    const proofUrl = req.file ? `/uploads/payment-proofs/${req.file.filename}` : null;
+    const { bankName, accountName } = req.body;
+    const proofData = JSON.stringify({
+      paymentProof: proofUrl,
+      bankName: bankName || null,
+      accountName: accountName || null,
+      submittedAt: new Date().toISOString(),
+    });
+
+    // Update ALL orders from same user with AWAITING_PAYMENT status (same cart batch)
+    const updated = await prisma.order.updateMany({
+      where: { userId: req.user.id, type: 'PHYSICAL', status: 'AWAITING_PAYMENT' },
+      data: { notes: proofData, status: 'PAYMENT_SUBMITTED' },
+    });
+
+    res.json({ message: 'Bukti pembayaran terkirim. Menunggu verifikasi admin.', updatedCount: updated.count });
+  } catch (error) {
+    console.error('Verify payment error:', error);
+    res.status(500).json({ error: 'Gagal mengirim bukti pembayaran.' });
   }
 });
 

@@ -1,0 +1,87 @@
+/* ═══════════════════════════════════════
+   MARKAZ-ARSHY — Marketplace V2: Digital Boutique
+   ═══════════════════════════════════════ */
+
+/* ── Hero Section ── */
+.mp-hero {
+  position: relative;
+  padding: 48px 32px 40px;
+  border-radius: 20px;
+  margin-bottom: 28px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #e74c3c 100%);
+  overflow: hidden;
+  color: #fff;
+}
+.mp-hero::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(circle at 20% 80%, rgba(255,255,255,0.15) 0%, transparent 50%),
+    radial-gradient(circle at 80% 20%, rgba(255,255,255,0.1) 0%, transparent 50%);
+  pointer-events: none;
+}
+.mp-hero-title { font-size: 28px; font-weight: 800; margin: 0 0 8px; font-family: var(--font-display); position: relative; letter-spacing: -0.02em; }
+.mp-hero-sub { font-size: 14px; opacity: 0.85; margin: 0 0 24px; position: relative; font-weight: 400; }
+.mp-hero-search { position: relative; max-width: 520px; margin-bottom: 24px; }
+.mp-hero-search input { width: 100%; padding: 14px 18px 14px 44px; border-radius: 14px; border: none; font-size: 14px; background: rgba(255,255,255,0.95); color: #333; box-shadow: 0 4px 20px rgba(0,0,0,0.15); outline: none; transition: box-shadow 0.2s; }
+.mp-hero-search input:focus { box-shadow: 0 4px 24px rgba(0,0,0,0.2); }
+.mp-hero-search input::placeholder { color: #999; }
+.mp-hero-search-icon { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: #999; pointer-events: none; }
+.mp-hero-stats { display: flex; gap: 24px; position: relative; flex-wrap: wrap; }
+.mp-hero-stat { display: flex; flex-direction: column; gap: 2px; }
+.mp-hero-stat-value { font-size: 20px; font-weight: 800; font-family: var(--font-display); }
+.mp-hero-stat-label { font-size: 11px; opacity: 0.7; font-weight: 500; }
+
+/* ── Category Chips ── */
+.mp-chips { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px; margin-bottom: 20px; scrollbar-width: none; -ms-overflow-style: none; }
+.mp-chips::-webkit-scrollbar { display: none; }
+.mp-chip { flex-shrink: 0; padding: 8px 18px; border-radius: 100px; border: 1.5px solid var(--border-default, #e0e0e0); background: var(--bg-surface, #fff); color: var(--text-secondary, #555); font-size: 13px; font-weight: 500; cursor: pointer; transition: all 0.2s; white-space: nowrap; display: flex; align-items: center; gap: 6px; }
+.mp-chip:hover { border-color: #e74c3c; color: #e74c3c; box-shadow: 0 2px 8px rgba(231,76,60,0.1); }
+.mp-chip--active { background: linear-gradient(135deg, #e74c3c, #c0392b); color: #fff; border-color: transparent; font-weight: 600; box-shadow: 0 2px 12px rgba(231,76,60,0.25); }
+.mp-chip--active:hover { color: #fff; box-shadow: 0 4px 16px rgba(231,76,60,0.3); }
+.mp-chip-count { font-size: 10px; opacity: 0.7; font-weight: 600; }
+
+/* ── Toolbar ── */
+.mp-toolbar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; gap: 12px; flex-wrap: wrap; }
+.mp-toolbar-left { display: flex; align-items: center; gap: 12px; }
+.mp-toolbar-count { font-size: 13px; color: var(--text-muted, #999); font-weight: 500; }
+.mp-toolbar-count strong { color: var(--text-primary, #333); font-weight: 700; }
+.mp-toolbar-right { display: flex; align-items: center; gap: 8px; }
+.mp-sort-select { padding: 8px 32px 8px 12px; border-radius: 10px; border: 1.5px solid var(--border-default, #e0e0e0); background: var(--bg-surface, #fff); font-size: 12px; font-weight: 500; color: var(--text-secondary, #555); cursor: pointer; appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23999' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 10px center; transition: border-color 0.15s; }
+.mp-sort-select:hover { border-color: #e74c3c; }
+.mp-view-btn { width: 36px; height: 36px; border-radius: 10px; border: 1.5px solid var(--border-default, #e0e0e0); background: var(--bg-surface, #fff); display: flex; align-items: center; justify-content: center; cursor: pointer; color: var(--text-muted, #999); transition: all 0.15s; }
+.mp-view-btn:hover { border-color: #e74c3c; color: #e74c3c; }
+.mp-view-btn--active { background: #e74c3c; border-color: #e74c3c; color: #fff; }
+
+/* ── Product Grid ── */
+.mp-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 16px; }
+.mp-grid--list { grid-template-columns: 1fr; gap: 12px; }
+
+/* ── Skeleton ── */
+.mp-skeleton { background: #fff; border-radius: 12px; overflow: hidden; border: 1px solid #f0f0f0; }
+.mp-skeleton-img { width: 100%; aspect-ratio: 1/1; background: linear-gradient(90deg, #f0f0f0 25%, #e8e8e8 50%, #f0f0f0 75%); background-size: 200% 100%; animation: mp-shimmer 1.5s ease-in-out infinite; }
+.mp-skeleton-text { height: 14px; border-radius: 6px; background: linear-gradient(90deg, #f0f0f0 25%, #e8e8e8 50%, #f0f0f0 75%); background-size: 200% 100%; animation: mp-shimmer 1.5s ease-in-out infinite; margin: 8px 12px; }
+.mp-skeleton-text--short { width: 60%; }
+.mp-skeleton-text--price { width: 40%; height: 18px; margin-top: 12px; }
+@keyframes mp-shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+
+/* ── Empty State ── */
+.mp-empty { text-align: center; padding: 80px 20px; background: var(--bg-surface, #fff); border-radius: 16px; border: 1px solid var(--border-default, #eee); }
+.mp-empty-icon { color: #ddd; margin-bottom: 16px; }
+.mp-empty-title { font-size: 16px; font-weight: 700; color: var(--text-primary, #333); margin: 0 0 8px; }
+.mp-empty-desc { font-size: 13px; color: var(--text-muted, #999); margin: 0 0 20px; }
+.mp-empty-btn { padding: 10px 24px; border-radius: 10px; border: none; background: #e74c3c; color: #fff; font-size: 13px; font-weight: 600; cursor: pointer; transition: background 0.2s; }
+.mp-empty-btn:hover { background: #c0392b; }
+
+/* ── Responsive ── */
+@media (max-width: 767px) {
+  .mp-hero { padding: 28px 20px 24px; border-radius: 14px; margin-bottom: 20px; }
+  .mp-hero-title { font-size: 20px; }
+  .mp-hero-sub { font-size: 12px; margin-bottom: 16px; }
+  .mp-hero-stats { gap: 16px; }
+  .mp-hero-stat-value { font-size: 16px; }
+  .mp-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+  .mp-toolbar { flex-direction: column; align-items: stretch; }
+  .mp-toolbar-right { justify-content: flex-end; }
+}

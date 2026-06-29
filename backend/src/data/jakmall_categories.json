@@ -1,0 +1,151 @@
+{
+  "categories": [
+    {
+      "name": "Handphone & Tablet",
+      "slug": "handphone-tablet",
+      "icon": "smartphone",
+      "children": [
+        { "name": "Aksesoris Handphone", "slug": "aksesoris-handphone", "children": [
+          { "name": "Kabel Data & Charger", "slug": "kabel-data-charger" },
+          { "name": "Baterai Handphone", "slug": "baterai-handphone" },
+          { "name": "Casing & Cover", "slug": "casing-cover" },
+          { "name": "Screen Guard", "slug": "screen-guard" },
+          { "name": "Power Bank", "slug": "power-bank" },
+          { "name": "Stand & Holder", "slug": "stand-holder" },
+          { "name": "Memory Card", "slug": "memory-card" },
+          { "name": "Smartwatch", "slug": "smartwatch" }
+        ]},
+        { "name": "Handphone", "slug": "handphone" },
+        { "name": "Tablet", "slug": "tablet" }
+      ]
+    },
+    {
+      "name": "Komputer & Laptop",
+      "slug": "komputer-laptop",
+      "icon": "monitor",
+      "children": [
+        { "name": "Laptop & Notebook", "slug": "laptop-notebook" },
+        { "name": "Komponen Komputer", "slug": "komponen-komputer" },
+        { "name": "Aksesoris Komputer & Laptop", "slug": "aksesoris-komputer" },
+        { "name": "Storage Eksternal", "slug": "storage-eksternal" },
+        { "name": "Software", "slug": "software" }
+      ]
+    },
+    {
+      "name": "Elektronik",
+      "slug": "elektronik",
+      "icon": "tv",
+      "children": [
+        { "name": "Audio", "slug": "audio" },
+        { "name": "Baterai & Charger", "slug": "baterai-charger" },
+        { "name": "Kamera & Aksesoris", "slug": "kamera-aksesoris", "children": [
+          { "name": "Kamera Video & Handycam", "slug": "kamera-video-handycam" },
+          { "name": "Kamera Aksi & Aksesoris", "slug": "kamera-aksi-aksesoris" },
+          { "name": "Kamera Keamanan CCTV", "slug": "kamera-keamanan-cctv" },
+          { "name": "Aksesoris Kamera", "slug": "aksesoris-kamera" }
+        ]},
+        { "name": "Foto & Videografi", "slug": "foto-videografi" },
+        { "name": "Video", "slug": "video" },
+        { "name": "Smart Home", "slug": "smart-home" }
+      ]
+    },
+    {
+      "name": "Fashion & Perhiasan",
+      "slug": "fashion-perhiasan",
+      "icon": "shirt",
+      "children": [
+        { "name": "Pakaian Pria", "slug": "pakaian-pria" },
+        { "name": "Pakaian Wanita", "slug": "pakaian-wanita" },
+        { "name": "Aksesoris Fashion Pria", "slug": "aksesoris-fashion-pria" },
+        { "name": "Aksesoris Fashion Wanita", "slug": "aksesoris-fashion-wanita" },
+        { "name": "Tas & Dompet Pria", "slug": "tas-dompet-pria" },
+        { "name": "Tas & Dompet Wanita", "slug": "tas-dompet-wanita" },
+        { "name": "Sepatu & Sandal Pria", "slug": "sepatu-sandal-pria" },
+        { "name": "Sepatu & Sandal Wanita", "slug": "sepatu-sandal-wanita" },
+        { "name": "Jam Tangan Pria", "slug": "jam-tangan-pria" },
+        { "name": "Jam Tangan Wanita", "slug": "jam-tangan-wanita" },
+        { "name": "Perhiasan", "slug": "perhiasan" },
+        { "name": "Fashion Muslim", "slug": "fashion-muslim" }
+      ]
+    },
+    {
+      "name": "Ibu, Bayi & Anak",
+      "slug": "ibu-bayi-anak",
+      "icon": "baby",
+      "children": [
+        { "name": "Perlengkapan Bayi", "slug": "perlengkapan-bayi" },
+        { "name": "Mainan Anak", "slug": "mainan-anak" },
+        { "name": "Pakaian Anak", "slug": "pakaian-anak" },
+        { "name": "Makanan Bayi & Anak", "slug": "makanan-bayi-anak" },
+        { "name": "Perawatan Bayi & Anak", "slug": "perawatan-bayi-anak" }
+      ]
+    },
+    {
+      "name": "Kesehatan & Kecantikan",
+      "slug": "kesehatan-kecantikan",
+      "icon": "heart",
+      "children": [
+        { "name": "Perawatan Wajah", "slug": "perawatan-wajah" },
+        { "name": "Perawatan Tubuh", "slug": "perawatan-tubuh" },
+        { "name": "Makeup", "slug": "makeup" },
+        { "name": "Parfum", "slug": "parfum" },
+        { "name": "Suplemen & Vitamin", "slug": "suplemen-vitamin" },
+        { "name": "Alat Kesehatan", "slug": "alat-kesehatan" }
+      ]
+    },
+    {
+      "name": "Mainan & Video Games",
+      "slug": "mainan-video-games",
+      "icon": "gamepad",
+      "children": [
+        { "name": "Video Games", "slug": "video-games" },
+        { "name": "Mainan Edukasi", "slug": "mainan-edukasi" },
+        { "name": "Action Figure & Koleksi", "slug": "action-figure-koleksi" }
+      ]
+    },
+    {
+      "name": "Peralatan Rumah Tangga",
+      "slug": "peralatan-rumah-tangga",
+      "icon": "home",
+      "children": [
+        { "name": "Alat Dapur", "slug": "alat-dapur" },
+        { "name": "Alat Kebersihan", "slug": "alat-kebersihan" },
+        { "name": "Dekorasi Rumah", "slug": "dekorasi-rumah" },
+        { "name": "Peralatan Kamar Tidur", "slug": "peralatan-kamar-tidur" },
+        { "name": "Peralatan Kamar Mandi", "slug": "peralatan-kamar-mandi" }
+      ]
+    },
+    {
+      "name": "Hobi, Olahraga & Outdoor",
+      "slug": "hobi-olahraga-outdoor",
+      "icon": "activity",
+      "children": [
+        { "name": "Olahraga", "slug": "olahraga" },
+        { "name": "Sepeda & Aksesoris", "slug": "sepeda-aksesoris" },
+        { "name": "Camping & Hiking", "slug": "camping-hiking" },
+        { "name": "Memancing", "slug": "memancing" },
+        { "name": "Alat Musik", "slug": "alat-musik" }
+      ]
+    },
+    {
+      "name": "Makanan & Minuman",
+      "slug": "makanan-minuman",
+      "icon": "coffee",
+      "children": [
+        { "name": "Makanan Ringan", "slug": "makanan-ringan" },
+        { "name": "Minuman", "slug": "minuman" },
+        { "name": "Bahan Masakan", "slug": "bahan-masakan" },
+        { "name": "Makanan Kesehatan", "slug": "makanan-kesehatan" }
+      ]
+    },
+    {
+      "name": "Aksesoris Lainnya",
+      "slug": "aksesoris-lainnya",
+      "icon": "package",
+      "children": [
+        { "name": "Kartu Perdana & Voucher", "slug": "kartu-perdana" },
+        { "name": "Gadget Lainnya", "slug": "gadget" }
+      ]
+    }
+  ]
+}

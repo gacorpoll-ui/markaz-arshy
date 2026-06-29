@@ -1,9 +1,9 @@
 import express from 'express';
 import prisma from '../db.js';
 import { requireAuth, requireAdmin } from '../middleware/auth.js';
-import { triggerAgent } from '../../../agent-work/agent-marketing/scheduler.js';
+import { triggerAgent, triggerWorkflow } from '../../../agent-work/agent-marketing/scheduler.js';
 import { getCumulativeRevenue, getRevenueMetrics, getAgentRevenueStats } from '../../../agent-work/shared/revenue-tracker.js';
-import { getAgentStats } from '../../../agent-work/shared/agent-base.js';
+import { getAgentStats, getAgentHealth } from '../../../agent-work/shared/agent-base.js';
 import { resetConfigCache } from '../../../agent-work/shared/llm-client.js';
 
 const router = express.Router();
@@ -363,8 +363,8 @@ router.put('/agents/configs/:agentType', async (req, res) => {
     } else {
       // Insert new
       await prisma.$executeRawUnsafe(
-        `INSERT INTO AgentConfig (agentType, baseUrl, apiKey, model, maxTokens, temperature, isActive)
-         VALUES (?, ?, ?, ?, ?, ?, ?)`,
+        `INSERT INTO AgentConfig (agentType, baseUrl, apiKey, model, maxTokens, temperature, isActive, createdAt, updatedAt)
+         VALUES (?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)`,
         agentType,
         baseUrl || 'https://api.openai.com/v1',
         apiKey || null,
@@ -440,6 +440,48 @@ router.post('/agents/configs/test', async (req, res) => {
     return res.json({ success: true, model: data.model, response: content.slice(0, 100) });
   } catch (error) {
     return res.json({ success: false, error: error.message });
+  }
+});
+
+// ─── Workflow Triggers ───────────────────────────────
+
+const WORKFLOWS = ['daily-marketing', 'weekly-reseller', 'reactivation', 'content-pipeline'];
+
+router.get('/agents/workflows', (req, res) => {
+  return res.json({ workflows: WORKFLOWS });
+});
+
+router.post('/agents/workflows/:name', async (req, res) => {
+  try {
+    const { name } = req.params;
+    if (!WORKFLOWS.includes(name)) {
+      return res.status(400).json({ error: `Unknown workflow. Available: ${WORKFLOWS.join(', ')}` });
+    }
+    // Run workflow async — don't block the response
+    triggerWorkflow(name, { triggeredBy: 'admin' }).catch(err => {
+      console.error(`[WORKFLOW] ${name} failed:`, err.message);
+    });
+    return res.json({ message: `Workflow "${name}" started.`, workflow: name });
+  } catch (error) {
+    console.error('Workflow trigger error:', error);
+    return res.status(500).json({ error: 'Failed to trigger workflow.' });
+  }
+});
+
+// ─── Agent Health ────────────────────────────────────
+
+router.get('/agents/health', async (req, res) => {
+  try {
+    const health = await getAgentHealth();
+    const healthy = health.filter(h => h.isHealthy).length;
+    const unhealthy = health.filter(h => !h.isHealthy && h.runsWeek > 0).length;
+    return res.json({
+      agents: health,
+      summary: { total: health.length, healthy, unhealthy, idle: health.length - healthy - unhealthy },
+    });
+  } catch (error) {
+    console.error('Agent health error:', error);
+    return res.status(500).json({ error: 'Failed to fetch agent health.' });
   }
 });
 

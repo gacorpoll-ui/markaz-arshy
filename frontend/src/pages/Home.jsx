@@ -125,33 +125,33 @@ export default function Home({ user }) {
         <div className="container home-hero-inner">
           <div className="hero-badge">
             <span className="hero-badge-dot" />
-            Platform SMM & Akun Premium No. 1 di Indonesia
+            Layanan Digital Terpercaya No. 1 di Indonesia
           </div>
 
           <h1 className="hero-title">
-            Boost Sosmed &<br />
-            <span className="hero-title-gradient">Akun Premium</span><br />
-            Harga Kilat!
+            Satu Platform untuk<br />
+            <span className="hero-title-gradient">Kebutuhan Digitalmu</span>
           </h1>
 
           <p className="hero-subtitle">
-            Followers, likes, views, dan akun Netflix, Spotify, ChatGPT
-            dengan pengiriman otomatis dalam hitungan detik.
+            SMM, akun premium, VPS, dan API AI — semuanya dalam satu tempat.
+            Pengiriman instan, harga kompetitif, dan dukungan 24/7.
           </p>
 
           <div className="hero-ctas">
-            <Link to="/catalog/smm" className="btn btn-primary hero-cta-primary">
-              <Zap size={18} /> Mulai Boost Sekarang
+            <Link to="/marketplace" className="btn btn-primary hero-cta-primary">
+              <Zap size={18} /> Belanja Sekarang
             </Link>
-            <Link to="/catalog/premium" className="btn btn-secondary hero-cta-secondary">
-              Akun Premium <ArrowRight size={16} />
+            <Link to="/catalog/smm" className="btn btn-secondary hero-cta-secondary">
+              Layanan SMM <ArrowRight size={16} />
             </Link>
           </div>
 
           <div className="hero-trust-pills">
-            <span className="hero-pill"><CheckCircle size={13} /> Tanpa Biaya Pendaftaran</span>
+            <span className="hero-pill"><CheckCircle size={13} /> Gratis Daftar</span>
             <span className="hero-pill"><CheckCircle size={13} /> Garansi Uang Kembali</span>
-            <span className="hero-pill"><CheckCircle size={13} /> Proses Otomatis 24/7</span>
+            <span className="hero-pill"><CheckCircle size={13} /> Proses Instan 24/7</span>
+            <span className="hero-pill"><CheckCircle size={13} /> Dukungan WhatsApp</span>
           </div>
         </div>
       </section>
@@ -177,6 +177,65 @@ export default function Home({ user }) {
           <div className="home-stat-item">
             <span className="home-stat-number">99%</span>
             <span className="home-stat-label">Tingkat Kepuasan</span>
+          </div>
+        </div>
+      </section>
+
+      {/* ═══ MALL PROMO — Barang Fisik ═══ */}
+      <section className="container" style={{ marginTop: '32px', marginBottom: '48px' }}>
+        <div className="mall-hero-banner">
+          <div className="mall-hero-content">
+            <div className="mall-hero-tag">BARANG FISIK — IMPORTIR NO. 1</div>
+            <h2 className="mall-hero-title">
+              Importir Terpercaya<br />
+              <span style={{ background: 'linear-gradient(135deg, #7c3aed, #db2777)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>Tanpa Modal Stok</span>
+            </h2>
+            <p className="mall-hero-desc">
+              Ratusan produk siap jual dengan margin 15–40%. Kami yang urus stok, pengiriman, dan garansi. Kamu tinggal fokus jualan!
+            </p>
+            <div className="mall-hero-stats">
+              <div className="mall-hero-stat">
+                <span className="mall-hero-stat-num">240+</span>
+                <span className="mall-hero-stat-label">Produk Tersedia</span>
+              </div>
+              <div className="mall-hero-stat">
+                <span className="mall-hero-stat-num">15–40%</span>
+                <span className="mall-hero-stat-label">Harga Importir</span>
+              </div>
+              <div className="mall-hero-stat">
+                <span className="mall-hero-stat-num">Jakbar</span>
+                <span className="mall-hero-stat-label">Gudang Kebon Jeruk</span>
+              </div>
+            </div>
+            <div className="mall-hero-pills">
+              {['dapur','lampu','alat-kesehatan','olahraga','kopi','perkakas'].map((item, i) => {
+                const labels = {'dapur':'Peralatan Dapur','lampu':'Lampu & Elektronik','alat-kesehatan':'Alat Kesehatan','olahraga':'Olahraga & Outdoor','kopi':'Kopi & Minuman','perkakas':'Perkakas'};
+                const bgColors = ['#fef2f2','#fefce8','#ecfdf5','#eff6ff','#fdf4ff','#f5f3ff'];
+                return (
+                  <Link key={item} to="/marketplace" className="mall-hero-pill" style={{ background: bgColors[i] }}>
+                    <img src={`/images/populer/${item}.png`} alt="" className="mall-hero-pill-img" /> {labels[item]}
+                  </Link>
+                );
+              })}
+            </div>
+            <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+              <Link to="/marketplace" className="btn btn-primary btn-lg" style={{ padding: '14px 36px', fontSize: '15px', fontWeight: '800', borderRadius: '12px' }}>
+                <ShoppingBag size={18} /> Jelajahi Koleksi
+              </Link>
+              <Link to="/register" className="btn btn-secondary btn-lg" style={{ padding: '14px 36px', fontSize: '15px', fontWeight: '700', borderRadius: '12px' }}>
+                Hubungi Kami
+              </Link>
+            </div>
+          </div>
+          <div className="mall-hero-visual">
+            <img src="/images/slides/slide-cetakan-kue.jpg" alt="" className="mall-hero-bg-img" />
+            <div className="mall-hero-overlay" />
+            <div className="mall-hero-badge top-left">
+              <img src="/images/populer/dapur.png" alt="" /> <span>Gudang Kebon Jeruk</span>
+            </div>
+            <div className="mall-hero-badge bottom-right">
+              <img src="/images/populer/gelas-cangkir.png" alt="" /> <span>Kirim Se-Indonesia</span>
+            </div>
           </div>
         </div>
       </section>
@@ -308,6 +367,112 @@ export default function Home({ user }) {
         </div>
       </section>
 
+      {/* ═══ PRODUK PILIHAN ═══ */}
+      <section className="container" style={{ marginBottom: '48px' }}>
+        <div className="home-section-header">
+          <div>
+            <div className="home-section-eyebrow">Koleksi Spesial</div>
+            <h2 className="home-section-title">Produk Pilihan Bulan Ini</h2>
+            <p className="home-section-sub">Harga importir langsung dari gudang Kebon Jeruk</p>
+          </div>
+          <Link to="/marketplace" className="home-see-all">Lihat Semua <ArrowRight size={14} /></Link>
+        </div>
+        <div className="promo-cards-grid">
+          <Link to="/marketplace" className="promo-card">
+            <div className="promo-card-img" style={{ background: '#fef2f2' }}>
+              <img src="https://static.jakmall.id/2026/05/images/products/0f1eed/original/crownful-cetakan-waffle-maker-electric-mini-non-stick-coating-350w-wf-10.jpg" alt="" loading="lazy" />
+              <span className="promo-card-discount">-32%</span>
+            </div>
+            <div className="promo-card-body">
+              <span className="promo-card-cat">Cetakan Makanan</span>
+              <h3 className="promo-card-title">Cetakan Waffle Maker Electric Mini</h3>
+              <div className="promo-card-price">
+                <span className="promo-card-price-current">Rp91.400</span>
+                <span className="promo-card-price-old">Rp135.000</span>
+              </div>
+              <span className="promo-card-link">Lihat Detail →</span>
+            </div>
+          </Link>
+          <Link to="/marketplace" className="promo-card">
+            <div className="promo-card-img" style={{ background: '#fefce8' }}>
+              <img src="https://static.jakmall.id/2026/06/images/products/27c45d/original/one-two-cups-penggiling-kopi-manual-coffee-grinder-burr-stainless-jn60.png" alt="" loading="lazy" />
+              <span className="promo-card-discount">-25%</span>
+            </div>
+            <div className="promo-card-body">
+              <span className="promo-card-cat">Penggiling Kopi</span>
+              <h3 className="promo-card-title">Coffee Grinder Manual Stainless</h3>
+              <div className="promo-card-price">
+                <span className="promo-card-price-current">Rp278.950</span>
+                <span className="promo-card-price-old">Rp370.000</span>
+              </div>
+              <span className="promo-card-link">Lihat Detail →</span>
+            </div>
+          </Link>
+          <Link to="/marketplace" className="promo-card">
+            <div className="promo-card-img" style={{ background: '#ecfdf5' }}>
+              <img src="https://static.jakmall.id/2026/06/images/products/7d3b52/original/eviciv-tas-laptop-sleeve-case-bag-waterproof-for-macbook-13-inch-zk-20.png" alt="" loading="lazy" />
+              <span className="promo-card-discount">-18%</span>
+            </div>
+            <div className="promo-card-body">
+              <span className="promo-card-cat">Tas Laptop</span>
+              <h3 className="promo-card-title">Tas Laptop Waterproof 13 Inch</h3>
+              <div className="promo-card-price">
+                <span className="promo-card-price-current">Rp65.220</span>
+                <span className="promo-card-price-old">Rp79.000</span>
+              </div>
+              <span className="promo-card-link">Lihat Detail →</span>
+            </div>
+          </Link>
+          <Link to="/marketplace" className="promo-card">
+            <div className="promo-card-img" style={{ background: '#eff6ff' }}>
+              <img src="https://static.jakmall.id/2024/06/images/products/8e6987/original/burson-gelas-ukur-plastik-dapur-laboratorium-measuring-cup-b4.png" alt="" loading="lazy" />
+              <span className="promo-card-discount">-15%</span>
+            </div>
+            <div className="promo-card-body">
+              <span className="promo-card-cat">Gelas Ukur</span>
+              <h3 className="promo-card-title">Gelas Ukur Plastik Dapur 100ml</h3>
+              <div className="promo-card-price">
+                <span className="promo-card-price-current">Rp7.790</span>
+                <span className="promo-card-price-old">Rp9.200</span>
+              </div>
+              <span className="promo-card-link">Lihat Detail →</span>
+            </div>
+          </Link>
+          <Link to="/marketplace" className="promo-card">
+            <div className="promo-card-img" style={{ background: '#fdf4ff' }}>
+              <img src="https://static.jakmall.id/2023/12/images/products/a67d1a/original/soledi-sticker-dekorasi-dinding-reflection-mirror-pvc-50x100cm-sl02.png" alt="" loading="lazy" />
+              <span className="promo-card-discount">-22%</span>
+            </div>
+            <div className="promo-card-body">
+              <span className="promo-card-cat">Dekorasi Dinding</span>
+              <h3 className="promo-card-title">Stiker Dekorasi Mirror PVC</h3>
+              <div className="promo-card-price">
+                <span className="promo-card-price-current">Rp28.590</span>
+                <span className="promo-card-price-old">Rp36.500</span>
+              </div>
+              <span className="promo-card-link">Lihat Detail →</span>
+            </div>
+          </Link>
+          <Link to="/marketplace" className="promo-card">
+            <div className="promo-card-img" style={{ background: '#f0fdf4' }}>
+              <img src="https://static.jakmall.id/2025/12/images/products/8e81c6/original/one-two-cups-kantong-filter-saringan-teh-tea-bag-disposable-100-pcs-m100.png" alt="" loading="lazy" />
+              <span className="promo-card-discount">-20%</span>
+            </div>
+            <div className="promo-card-body">
+              <span className="promo-card-cat">Penyaring Teh</span>
+              <h3 className="promo-card-title">Kantong Teh Filter 100 Pcs</h3>
+              <div className="promo-card-price">
+                <span className="promo-card-price-current">Rp11.100</span>
+                <span className="promo-card-price-old">Rp13.800</span>
+              </div>
+              <span className="promo-card-link">Lihat Detail →</span>
+            </div>
+          </Link>
+        </div>
+      </section>
+
+      {/* ═══ TESTIMONIALS ═══ */}
+
       {/* ═══ TESTIMONIALS ═══ */}
       <section className="container home-section">
         <div className="home-section-header" style={{ marginBottom: '28px' }}>
@@ -363,7 +528,7 @@ export default function Home({ user }) {
           <div className="final-cta-eyebrow home-section-eyebrow">Mulai Sekarang</div>
           <h2 className="final-cta-title">Siap Viralkan Kontenmu?</h2>
           <p className="final-cta-sub">
-            Bergabung dengan {usersCount.toLocaleString('id-ID')}+ pengguna yang sudah merasakan manfaatnya.
+            Bergabung dengan {usersCount.toLocaleString('id-ID')}+ pengguna aktif dari seluruh Indonesia.
           </p>
           <div className="final-cta-buttons">
             <Link to="/catalog/smm" className="btn btn-primary btn-xl">
@@ -388,7 +553,7 @@ export default function Home({ user }) {
                 Markaz-Arshy
               </Link>
               <p className="footer-brand-desc">
-                Penyedia layanan booster media sosial (SMM) terlengkap dan penjualan akun premium, VPS, RDP, serta AI Router API Key tercepat dan otomatis 24/7 di Indonesia.
+                Platform digital terpercaya untuk kebutuhan SMM, akun premium, VPS/RDP, dan AI Router API Key di Indonesia.
               </p>
               <div className="footer-social">
                 <a href="https://instagram.com" target="_blank" rel="noreferrer"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="5"/></svg></a>
@@ -407,7 +572,6 @@ export default function Home({ user }) {
             <div>
               <h4 className="footer-heading">Dokumen</h4>
               <ul className="footer-links">
-                <li><Link to="/docs/ai"><BookOpen size={12} style={{ marginRight: '4px' }} />Panduan AI</Link></li>
                 <li><a href="https://wa.me/6285175450863" target="_blank" rel="noreferrer">Customer Service</a></li>
                 <li><Link to="/">Syarat &amp; Ketentuan</Link></li>
                 <li><Link to="/">Kebijakan Privasi</Link></li>
@@ -426,6 +590,29 @@ export default function Home({ user }) {
               <div className="footer-contact-item">
                 <Clock size={15} />
                 <span>Setiap Hari (24 Jam Non-stop)</span>
+              </div>
+            </div>
+          </div>
+          {/* Metode Pembayaran & Pengiriman */}
+          <div className="footer-partner">
+            <div className="footer-partner-section">
+              <div className="footer-partner-title">Metode Pembayaran</div>
+              <div className="footer-partner-imgs">
+                {['bca','mandiri','bni','bri','cimb','qris','klikbca','visa','mastercard','jcb','ovo','indomaret'].map(b => (
+                  <div key={b} className="footer-partner-img">
+                    <img src={`/images/partners/${b}.png`} alt={b} className="img-fit" loading="lazy" />
+                  </div>
+                ))}
+              </div>
+            </div>
+            <div className="footer-partner-section">
+              <div className="footer-partner-title">Metode Pengiriman</div>
+              <div className="footer-partner-imgs">
+                {[['jne','JNE'],['sicepat','SiCepat'],['gosend','Go-Send'],['jt','J&T'],['grab','Grab Express']].map(([file,label]) => (
+                  <div key={file} className="footer-partner-img">
+                    <img src={`/images/partners/${file}.png`} alt={label} className="img-fit" loading="lazy" />
+                  </div>
+                ))}
               </div>
             </div>
           </div>

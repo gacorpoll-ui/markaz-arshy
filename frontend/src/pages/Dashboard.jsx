@@ -1,13 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Wallet, History, Send, Shield, Key, ExternalLink, RefreshCw, CheckCircle, Clock, XCircle } from 'lucide-react';
+import { Wallet, History, Send, Shield, Key, ExternalLink, RefreshCw, CheckCircle, Clock, XCircle, Package, Truck } from 'lucide-react';
 
 export default function Dashboard({ user, token, onUpdateUser }) {
   const [orders, setOrders] = useState([]);
   const [deposits, setDeposits] = useState([]);
   const [topupAmount, setTopupAmount] = useState('');
+  const [physicalOrders, setPhysicalOrders] = useState([]);
   const [loadingOrders, setLoadingOrders] = useState(true);
   const [loadingDeposits, setLoadingDeposits] = useState(true);
+  const [loadingPhysical, setLoadingPhysical] = useState(true);
   const [topupSuccess, setTopupSuccess] = useState('');
   const [topupError, setTopupError] = useState('');
   const [submittingTopup, setSubmittingTopup] = useState(false);
@@ -27,6 +29,7 @@ export default function Dashboard({ user, token, onUpdateUser }) {
     try {
       setLoadingOrders(true);
       setLoadingDeposits(true);
+      setLoadingPhysical(true);
 
       // Refresh profile to get updated balance
       const meRes = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/auth/me`, {
@@ -52,6 +55,14 @@ export default function Dashboard({ user, token, onUpdateUser }) {
       const depData = await depRes.json();
       setDeposits(depData.deposits || []);
       setLoadingDeposits(false);
+
+      // Fetch physical orders
+      const physRes = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/orders/history?type=PHYSICAL`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      const physData = await physRes.json();
+      setPhysicalOrders(physData.orders || []);
+      setLoadingPhysical(false);
 
     } catch (err) {
       console.error('Failed to load dashboard data:', err);
@@ -196,6 +207,12 @@ export default function Dashboard({ user, token, onUpdateUser }) {
           >
             <Key size={15} /> My API Keys ↗
           </button>
+          <button
+            onClick={() => setActiveTab('fisik')}
+            style={{ padding: '8px 20px', borderRadius: '8px', border: 'none', cursor: 'pointer', fontWeight: '600', fontSize: '13px', transition: 'all 0.2s', display: 'flex', alignItems: 'center', gap: '6px', color: activeTab === 'fisik' ? 'var(--accent-primary)' : 'var(--text-secondary)', background: activeTab === 'fisik' ? 'var(--bg-surface)' : 'transparent', boxShadow: activeTab === 'fisik' ? 'var(--shadow-sm)' : 'none' }}
+          >
+            <Package size={15} /> Pesanan Fisik
+          </button>
         </div>
 
         {activeTab === 'orders' ? (
@@ -213,7 +230,6 @@ export default function Dashboard({ user, token, onUpdateUser }) {
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(400px, 1fr))', gap: '20px' }}>
                 {orders.map(order => (
                   <div key={order.id} className="glass-card" style={{ padding: '0', overflow: 'hidden' }}>
-                    {/* Card Header */}
                     <div style={{ padding: '18px', borderBottom: '1px solid var(--border-subtle)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                       <div>
                         <span style={{ fontSize: '11px', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: '700' }}>#{order.id} &bull; {new Date(order.createdAt).toLocaleDateString('id-ID')}</span>
@@ -221,8 +237,6 @@ export default function Dashboard({ user, token, onUpdateUser }) {
                       </div>
                       {getStatusBadge(order.status)}
                     </div>
-
-                    {/* Card Content */}
                     <div style={{ padding: '20px' }}>
                       {order.type === 'SMM' ? (
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
@@ -233,82 +247,23 @@ export default function Dashboard({ user, token, onUpdateUser }) {
                             </a>
                           </div>
                           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
-                            <div>
-                               <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Jumlah</div>
-                               <div style={{ fontSize: '15px', fontWeight: '700' }}>{order.quantity.toLocaleString('id-ID')} Unit</div>
-                            </div>
-                            <div>
-                               <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Biaya</div>
-                               <div style={{ fontSize: '15px', fontWeight: '700', color: 'var(--accent-primary)' }}>Rp {order.amount.toLocaleString('id-ID')}</div>
-                            </div>
+                            <div><div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Jumlah</div><div style={{ fontSize: '15px', fontWeight: '700' }}>{order.quantity.toLocaleString('id-ID')} Unit</div></div>
+                            <div><div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Biaya</div><div style={{ fontSize: '15px', fontWeight: '700', color: 'var(--accent-primary)' }}>Rp {order.amount.toLocaleString('id-ID')}</div></div>
                           </div>
-                          {order.notes && (
-                            <div style={{ fontSize: '12px', color: 'var(--text-secondary)', fontStyle: 'italic', padding: '10px', background: 'var(--bg-muted)', borderRadius: '8px' }}>
-                               💡 {order.notes}
-                            </div>
-                          )}
                         </div>
                       ) : (
-                        /* PREMIUM LAYOUT */
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
                            {order.account ? (
                              <div style={{ background: 'var(--accent-primary-light)', borderRadius: '16px', padding: '20px', border: '1px solid rgba(59, 130, 246, 0.1)' }}>
-                                <div style={{ marginBottom: '15px' }}>
-                                   <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginBottom: '5px' }}>Email / Username</div>
-                                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                      <span style={{ fontWeight: '700', color: 'var(--text-primary)', fontSize: '15px' }}>{order.account.email}</span>
-                                      <button onClick={() => { navigator.clipboard.writeText(order.account.email); alert('Email disalin!'); }} style={{ background: 'transparent', border: 'none', color: 'var(--color-primary)', cursor: 'pointer' }}><Key size={16} /></button>
-                                   </div>
-                                </div>
-                                <div style={{ marginBottom: '15px' }}>
-                                   <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginBottom: '5px' }}>Password</div>
-                                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                      <span style={{ fontWeight: '700', color: 'var(--text-primary)', fontSize: '15px' }}>{order.account.password}</span>
-                                      <button onClick={() => { navigator.clipboard.writeText(order.account.password); alert('Password disalin!'); }} style={{ background: 'transparent', border: 'none', color: 'var(--color-primary)', cursor: 'pointer' }}><Key size={16} /></button>
-                                   </div>
-                                </div>
-                                {order.account.extraInfo && (
-                                   <div style={{ marginTop: '15px', paddingTop: '15px', borderTop: '1px solid var(--border-subtle)' }}>
-                                      <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginBottom: '5px' }}>Informasi Tambahan / Catatan</div>
-                                      <div style={{ color: 'var(--text-secondary)', fontSize: '13px', whiteSpace: 'pre-wrap', wordBreak: 'break-all' }}>
-                                         {order.account.extraInfo}
-                                      </div>
-                                   </div>
-                                )}
-                             </div>
-                           ) : order.notes && order.status === 'COMPLETED' ? (
-                             <div style={{ background: 'var(--accent-primary-light)', borderRadius: '16px', padding: '20px', border: '1px solid rgba(59, 130, 246, 0.1)' }}>
-                                <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginBottom: '5px' }}>Detail Akun / Kode SN</div>
-                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '10px' }}>
-                                   <span style={{ fontWeight: '700', color: 'var(--text-primary)', fontSize: '15px', whiteSpace: 'pre-wrap', wordBreak: 'break-all', flex: 1 }}>{order.notes}</span>
-                                   <button onClick={() => { navigator.clipboard.writeText(order.notes); alert('Detail akun disalin!'); }} style={{ background: 'transparent', border: 'none', color: 'var(--color-primary)', cursor: 'pointer', flexShrink: 0 }}><Key size={16} /></button>
-                                </div>
+                                <div><div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Email</div><span style={{ fontWeight: '700' }}>{order.account.email}</span></div>
+                                <div style={{ marginTop: '10px' }}><div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Password</div><span style={{ fontWeight: '700' }}>{order.account.password}</span></div>
                              </div>
                            ) : (
                              <div style={{ textAlign: 'center', padding: '20px', background: 'var(--bg-page)', borderRadius: '16px', border: '1px dashed var(--border-default)' }}>
                                 <Clock size={24} style={{ color: 'var(--text-muted)', marginBottom: '10px' }} />
-                                <div style={{ fontSize: '13px', color: 'var(--text-muted)' }}>Akun sedang disiapkan oleh sistem...</div>
-                                {order.notes && (
-                                  <div style={{ fontSize: '11px', color: 'var(--text-secondary)', marginTop: '8px', fontStyle: 'italic', background: 'var(--bg-muted)', padding: '5px 10px', borderRadius: '6px' }}>
-                                    {order.notes}
-                                  </div>
-                                )}
+                                <div style={{ fontSize: '13px', color: 'var(--text-muted)' }}>Akun sedang disiapkan...</div>
                              </div>
                            )}
-                           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
-                              {order.selectedDuration && (
-                                <div>
-                                  <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Durasi</div>
-                                  <div style={{ fontSize: '14px', fontWeight: '700' }}>{order.selectedDuration}</div>
-                                </div>
-                              )}
-                              {order.selectedOs && (
-                                <div>
-                                  <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>OS</div>
-                                  <div style={{ fontSize: '14px', fontWeight: '700' }}>{order.selectedOs}</div>
-                                </div>
-                              )}
-                           </div>
                         </div>
                       )}
                     </div>
@@ -317,7 +272,7 @@ export default function Dashboard({ user, token, onUpdateUser }) {
               </div>
             )}
           </div>
-        ) : (
+        ) : activeTab === 'deposits' ? (
           /* DEPOSIT HISTORY TAB */
           <div className="animate-fade-in glass-card" style={{ padding: '0', overflow: 'hidden' }}>
              <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
@@ -344,6 +299,85 @@ export default function Dashboard({ user, token, onUpdateUser }) {
                   ))}
                 </tbody>
              </table>
+          </div>
+        ) : (
+          /* PHYSICAL ORDERS TAB */
+          <div className="animate-fade-in">
+            {loadingPhysical ? (
+              <div style={{ textAlign: 'center', padding: '100px 0' }}><RefreshCw className="animate-spin" size={32} /></div>
+            ) : physicalOrders.length === 0 ? (
+              <div className="glass-card" style={{ textAlign: 'center', padding: '80px 20px' }}>
+                <Package size={48} style={{ color: 'var(--text-muted)', marginBottom: '20px' }} />
+                <h3 style={{ fontSize: '20px', fontWeight: '700', marginBottom: '10px' }}>Belum Ada Pesanan Fisik</h3>
+                <p style={{ color: 'var(--text-secondary)', marginBottom: '30px' }}>Anda belum memesan barang fisik.</p>
+                <button onClick={() => navigate('/catalog/fisik')} className="btn btn-primary"><Package size={16} /> Belanja Barang Fisik</button>
+              </div>
+            ) : (
+              <div style={{ display: 'grid', gap: '16px' }}>
+                {physicalOrders.map(order => {
+                  const ship = order.shippingSnapshot || {};
+                  const statusStyles = {
+                    PENDING: { color: 'var(--accent-warning)', bg: 'rgba(245,158,11,0.1)', label: 'Menunggu' },
+                    PROCESSING: { color: 'var(--accent-primary)', bg: 'var(--accent-primary-light)', label: 'Diproses' },
+                    SHIPPING: { color: '#06b6d4', bg: 'rgba(6,182,212,0.1)', label: 'Dikirim' },
+                    DELIVERED: { color: 'var(--accent-success)', bg: 'rgba(16,185,129,0.1)', label: 'Selesai' },
+                  };
+                  const st = statusStyles[order.status] || statusStyles.PENDING;
+                  return (
+                    <div key={order.id} className="glass-card" style={{ padding: '18px' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+                        <div style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: '700' }}>
+                          Pesanan #{order.id} &bull; {new Date(order.createdAt).toLocaleDateString('id-ID')}
+                        </div>
+                        <span style={{ padding: '4px 12px', borderRadius: '20px', fontSize: '12px', fontWeight: '700', background: st.bg, color: st.color }}>{st.label}</span>
+                      </div>
+                      <h4 style={{ fontSize: '14px', fontWeight: '700', marginBottom: '6px' }}>{order.product.name}</h4>
+
+                      {/* variant display */}
+                      {(() => {
+                        try {
+                          if (order.selectedVariant) {
+                            const v = JSON.parse(order.selectedVariant);
+                            return Object.entries(v).map(([k, val]) => (
+                              <span key={k} style={{ display: 'inline-block', padding: '1px 8px', borderRadius: '4px', background: '#f5f5f5', fontSize: '11px', color: '#666', marginRight: '6px', marginBottom: '6px' }}>
+                                {k}: <strong>{String(val)}</strong>
+                              </span>
+                            ));
+                          }
+                        } catch {}
+                        return null;
+                      })()}
+
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px', fontSize: '13px', color: 'var(--text-secondary)', marginTop: '6px' }}>
+                        <div>Jumlah: <strong>{order.quantity}</strong></div>
+                        <div>Total: <strong style={{ color: 'var(--accent-primary)' }}>Rp {order.amount.toLocaleString('id-ID')}</strong></div>
+                        {order.courier && <div>Kurir: <strong>{order.courierServiceName || order.courier}</strong></div>}
+                        {order.shippingCost > 0 && <div>Ongkir: <strong>Rp {order.shippingCost.toLocaleString('id-ID')}</strong></div>}
+                        {order.resi && <div style={{ gridColumn: '1 / -1', background: '#f0fdf4', padding: '8px 12px', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                          <span style={{ fontSize: '12px', color: '#166534' }}>No. Resi: <strong style={{ fontFamily: 'monospace', letterSpacing: '0.5px' }}>{order.resi}</strong></span>
+                          {order.courierServiceName && <span style={{ fontSize: '11px', color: '#16a34a' }}>({order.courierServiceName})</span>}
+                        </div>}
+                      </div>
+
+                      {/* Shipping timeline */}
+                      <div style={{ marginTop: '10px', display: 'flex', alignItems: 'center', gap: '6px', fontSize: '10px', color: '#bbb' }}>
+                        <span style={{ color: order.status !== 'PENDING' ? '#22c55e' : '#bbb' }}>✓ Diproses</span>
+                        <span style={{ color: '#ddd' }}>—</span>
+                        <span style={{ color: order.status === 'SHIPPING' || order.status === 'DELIVERED' ? '#22c55e' : '#bbb' }}>📦 Dikirim{order.shippedAt ? ` ${new Date(order.shippedAt).toLocaleDateString('id-ID')}` : ''}</span>
+                        <span style={{ color: '#ddd' }}>—</span>
+                        <span style={{ color: order.status === 'DELIVERED' ? '#22c55e' : '#bbb' }}>✅ Selesai</span>
+                      </div>
+
+                      {ship.recipientName && (
+                        <div style={{ marginTop: '8px', paddingTop: '8px', borderTop: '1px solid var(--border-subtle)', fontSize: '12px', color: 'var(--text-muted)' }}>
+                          Kirim ke: {ship.recipientName} — {ship.fullAddress}, {ship.province}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            )}
           </div>
         )}
       </div>

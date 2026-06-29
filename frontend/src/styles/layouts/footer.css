@@ -113,6 +113,62 @@
 
 .footer-bottom p { margin-bottom: 6px; }
 
+/* ═══ Partner — 2 column grid ═══ */
+.footer-partner {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+  padding: 24px 0;
+  border-top: 1px solid var(--border-subtle);
+  margin-bottom: 16px;
+}
+
+.footer-partner-section {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.footer-partner-title {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.footer-partner-imgs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.footer-partner-img {
+  width: 46px;
+  height: 28px;
+  border-radius: 4px;
+  overflow: hidden;
+  border: 1px solid var(--border-subtle);
+  background: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2px 3px;
+}
+
+.footer-partner-img img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+}
+
+@media (max-width: 600px) {
+  .footer-partner {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+}
+
 /* ── Responsive ── */
 @media (max-width: 900px) {
   .footer-grid {

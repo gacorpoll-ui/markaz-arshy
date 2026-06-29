@@ -3,6 +3,11 @@
    MARKAZ-ARSHY — Marketplace Page Styles
    ═══════════════════════════════════════════ */
 
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
 .marketplace-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));

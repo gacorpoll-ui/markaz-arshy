@@ -15,11 +15,12 @@ router.get('/categories', async (req, res) => {
 });
 
 router.get('/products', async (req, res) => {
-    const { type, categorySlug } = req.query;
+    const { type, categorySlug, source } = req.query;
     try {
         const where = { isActive: true };
         if (type) where.type = type.toUpperCase();
         if (categorySlug) where.category = { slug: categorySlug };
+        if (source) where.source = source;
 
         const products = await prisma.product.findMany({
             where,
@@ -32,7 +33,7 @@ router.get('/products', async (req, res) => {
 
         const productsWithStock = products.map(p => ({
             ...p,
-            stockCount: p.accounts.length
+            stockCount: p.type === 'PHYSICAL' ? (p.stock || 0) : p.accounts.length
         }));
 
         res.json({ products: productsWithStock });
