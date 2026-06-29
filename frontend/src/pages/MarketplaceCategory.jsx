@@ -17,12 +17,14 @@ export default function MarketplaceCategory() {
   const [sortBy, setSortBy] = useState('newest');
   const [viewMode, setViewMode] = useState('grid');
   const [searchQuery, setSearchQuery] = useState('');
+  const [activeSubCat, setActiveSubCat] = useState(null);
 
   const category = getCategoryBySlug(slug);
 
   useEffect(() => {
     setPage(1);
     setSearchQuery('');
+    setActiveSubCat(null);
     const fetchProducts = async () => {
       try {
         setLoading(true);
@@ -42,6 +44,10 @@ export default function MarketplaceCategory() {
 
   const filtered = useMemo(() => {
     let result = products.filter(p => p.category?.slug === dbSlug);
+    // Sub-category filter
+    if (activeSubCat) {
+      result = result.filter(p => p.categoryJakmall === activeSubCat);
+    }
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase();
       result = result.filter(p => p.name?.toLowerCase().includes(q) || p.brand?.toLowerCase().includes(q));
@@ -50,7 +56,7 @@ export default function MarketplaceCategory() {
     else if (sortBy === 'price-high') result = [...result].sort((a, b) => (b.priceUser || 0) - (a.priceUser || 0));
     else if (sortBy === 'name') result = [...result].sort((a, b) => (a.name || '').localeCompare(b.name || ''));
     return result;
-  }, [products, dbSlug, sortBy, searchQuery]);
+  }, [products, dbSlug, sortBy, searchQuery, activeSubCat]);
 
   const totalPages = Math.ceil(filtered.length / ITEMS_PER_PAGE);
   const paginatedProducts = filtered.slice((page - 1) * ITEMS_PER_PAGE, page * ITEMS_PER_PAGE);
@@ -108,7 +114,7 @@ export default function MarketplaceCategory() {
 
       {/* 2-Column Layout: Category Sidebar + Product Grid */}
       <div className="mkp-layout">
-        <CategorySidebar products={products} activeSlug={slug} showAll={false} />
+        <CategorySidebar products={products} activeSlug={slug} showAll={false} mode="sub" activeSubCat={activeSubCat} onSubCatChange={sub => { setActiveSubCat(sub); setPage(1); }} />
 
         <div style={{ minWidth: 0 }}>
           {/* Toolbar */}
