@@ -604,22 +604,9 @@ export default function Home({ user }) {
             <div className="footer-partner-section">
               <div className="footer-partner-title">Metode Pembayaran</div>
               <div className="footer-partner-imgs">
-                {[
-                  { name: 'BCA', color: '#003DA5' },
-                  { name: 'Mandiri', color: '#0066B2' },
-                  { name: 'BNI', color: '#EB6125' },
-                  { name: 'BRI', color: '#E31837' },
-                  { name: 'CIMB', color: '#6D2B8F' },
-                  { name: 'QRIS', color: '#0066CC' },
-                  { name: 'KlikBCA', color: '#0066B2' },
-                  { name: 'VISA', color: '#1A1F71' },
-                  { name: 'Mastercard', color: '#EB001B' },
-                  { name: 'JCB', color: '#0E4C96' },
-                  { name: 'OVO', color: '#4C3494' },
-                  { name: 'Indomaret', color: '#009944' },
-                ].map(b => (
-                  <div key={b.name} className="footer-partner-img" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'white', border: '1px solid #E5E7EB', borderRadius: 8, padding: '8px 14px' }}>
-                    <span style={{ fontSize: 12, fontWeight: 700, color: b.color, whiteSpace: 'nowrap' }}>{b.name}</span>
+                {['bca','mandiri','bni','bri','cimb','qris','klikbca','visa','mastercard','jcb','ovo','indomaret'].map(b => (
+                  <div key={b} className="footer-partner-img">
+                    <img src={`/images/partners/${b}.png`} alt={b.toUpperCase()} className="img-fit" loading="lazy" />
                   </div>
                 ))}
               </div>
@@ -628,14 +615,14 @@ export default function Home({ user }) {
               <div className="footer-partner-title">Metode Pengiriman</div>
               <div className="footer-partner-imgs">
                 {[
-                  { name: 'JNE', color: '#E31837' },
-                  { name: 'SiCepat', color: '#FF6B00' },
-                  { name: 'Go-Send', color: '#00AA13' },
-                  { name: 'J&T', color: '#E31837' },
-                  { name: 'Grab Express', color: '#00B14F' },
-                ].map(s => (
-                  <div key={s.name} className="footer-partner-img" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'white', border: '1px solid #E5E7EB', borderRadius: 8, padding: '8px 14px' }}>
-                    <span style={{ fontSize: 12, fontWeight: 700, color: s.color, whiteSpace: 'nowrap' }}>{s.name}</span>
+                  { file: 'jne', label: 'JNE' },
+                  { file: 'sicepat', label: 'SiCepat' },
+                  { file: 'go-send', label: 'Go-Send' },
+                  { file: 'jt', label: 'J&T' },
+                  { file: 'grab-express', label: 'Grab Express' },
+                ].map(({ file, label }) => (
+                  <div key={file} className="footer-partner-img">
+                    <img src={`/images/partners/${file}.png`} alt={label} className="img-fit" loading="lazy" />
                   </div>
                 ))}
               </div>
