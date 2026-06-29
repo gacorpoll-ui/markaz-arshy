@@ -89,20 +89,20 @@ export default function MarketplaceCategory() {
         <span style={{ color: '#333', fontWeight: '600' }}>{category?.name || slug}</span>
       </nav>
 
-      {/* Hero Banner */}
+      {/* Hero Banner — Full Image */}
       {category && (
-        <div className="mkp-cat-hero">
-          <div className="mkp-cat-hero-bg" style={{ background: category.gradient }} />
-          <div className="mkp-cat-hero-content">
-            <h1 className="mkp-cat-hero-name">{category.name}</h1>
-            <p className="mkp-cat-hero-desc">{category.description}</p>
-            <div className="mkp-cat-hero-count">
-              <Package size={12} /> {filtered.length} produk tersedia
-            </div>
-          </div>
-          <div className="mkp-cat-hero-img">
-            <img src={category.image} alt={category.name} />
-          </div>
+        <div className="mkp-cat-hero" style={{ minHeight: '180px', marginBottom: '28px', borderRadius: '16px', overflow: 'hidden' }}>
+          <img
+            src={category.image}
+            alt={category.name}
+            style={{
+              width: '100%',
+              height: '100%',
+              objectFit: 'cover',
+              display: 'block',
+              borderRadius: '16px',
+            }}
+          />
         </div>
       )}
 
