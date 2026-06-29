@@ -75,18 +75,18 @@
 .mp-empty-btn:hover { background: #c0392b; }
 
 /* ═══ Category Sidebar ═══ */
-.mkp-layout { display: grid; grid-template-columns: 200px 1fr; gap: 24px; }
+.mkp-layout { display: grid; grid-template-columns: 190px 1fr; gap: 20px; }
 .mkp-cat-sidebar { position: sticky; top: 76px; height: fit-content; }
-.mkp-cat-nav { background: var(--bg-surface, #fff); border-radius: 16px; border: 1px solid var(--border-default, #eee); padding: 16px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.04); }
-.mkp-cat-title { font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-muted, #999); padding: 2px 12px 10px; }
-.mkp-cat-link { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 12px; font-size: 13px; font-weight: 500; color: var(--text-secondary, #555); text-decoration: none; transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1); cursor: pointer; border: none; background: none; width: 100%; text-align: left; position: relative; }
-.mkp-cat-link:hover { background: rgba(231,76,60,0.06); color: #e74c3c; transform: translateX(2px); }
-.mkp-cat-link--active { background: linear-gradient(135deg, #e74c3c, #c0392b); color: #fff !important; font-weight: 600; box-shadow: 0 2px 8px rgba(231,76,60,0.25); transform: translateX(0); }
-.mkp-cat-link--active:hover { background: linear-gradient(135deg, #c0392b, #a93226); color: #fff !important; transform: translateX(2px); }
-.mkp-cat-link-label { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.mkp-cat-count { font-size: 10px; font-weight: 700; color: var(--text-muted, #999); background: var(--bg-muted, #f3f4f6); padding: 2px 7px; border-radius: 8px; flex-shrink: 0; min-width: 22px; text-align: center; }
+.mkp-cat-nav { background: var(--bg-surface, #fff); border-radius: 14px; border: 1px solid var(--border-default, #eee); padding: 12px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.04); }
+.mkp-cat-title { font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-muted, #999); padding: 2px 10px 8px; }
+.mkp-cat-link { display: flex; align-items: center; gap: 6px; padding: 8px 10px; border-radius: 10px; font-size: 11.5px; font-weight: 500; color: var(--text-secondary, #555); text-decoration: none; transition: all 0.2s ease; cursor: pointer; border: none; background: none; width: 100%; text-align: left; line-height: 1.35; }
+.mkp-cat-link:hover { background: rgba(231,76,60,0.06); color: #e74c3c; }
+.mkp-cat-link--active { background: linear-gradient(135deg, #e74c3c, #c0392b); color: #fff !important; font-weight: 600; box-shadow: 0 2px 8px rgba(231,76,60,0.25); }
+.mkp-cat-link--active:hover { background: linear-gradient(135deg, #c0392b, #a93226); color: #fff !important; }
+.mkp-cat-link-label { flex: 1; }
+.mkp-cat-count { font-size: 9px; font-weight: 700; color: var(--text-muted, #999); background: var(--bg-muted, #f3f4f6); padding: 1px 5px; border-radius: 6px; flex-shrink: 0; min-width: 18px; text-align: center; line-height: 1.4; }
 .mkp-cat-link--active .mkp-cat-count { background: rgba(255,255,255,0.25); color: #fff; }
-.mkp-cat-divider { height: 1px; background: var(--border-default, #eee); margin: 6px 12px; }
+.mkp-cat-divider { height: 1px; background: var(--border-default, #eee); margin: 4px 10px; }
 
 /* ═══ Category Hero Banner ═══ */
 .mkp-cat-hero { position: relative; border-radius: 16px; overflow: hidden; margin-bottom: 24px; display: flex; align-items: stretch; min-height: 140px; }
