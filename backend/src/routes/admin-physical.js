@@ -191,7 +191,7 @@ async function ensureParentCategory(slug) {
   return cat;
 }
 
-router.post('/import-jakmall', requireAuth, requireAdmin, upload.single('file'), async (req, res) => {
+router.post('/import-jakmall', upload.single('file'), async (req, res) => {
   const f = req.file;
   if (!f) return res.status(400).json({ error: 'File XLSX diperlukan.' });
   if (!f.originalname.match(/\.(xlsx|xls)$/i)) {
@@ -297,7 +297,7 @@ print(json.dumps(rows, ensure_ascii=False))`;
 });
 
 // ── POST /api/admin/sync-jakmall-stock — Download inventory export + update stock ──
-router.post('/sync-jakmall-stock', requireAuth, requireAdmin, async (req, res) => {
+router.post('/sync-jakmall-stock', async (req, res) => {
   const { mitraEmail, mitraPassword } = req.body;
   if (!mitraEmail || !mitraPassword) {
     return res.status(400).json({ error: 'Email dan password Jakmall mitra diperlukan.' });

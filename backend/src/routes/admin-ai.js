@@ -4,10 +4,14 @@ import { requireAuth, requireAdmin } from '../middleware/auth.js';
 
 const router = express.Router();
 
+// Apply admin protection to all routes
+router.use(requireAuth);
+router.use(requireAdmin);
+
 /* ═══════════════════════════════════════
    GET ALL AI PROVIDERS (Admin)
    ═══════════════════════════════════════ */
-router.get('/ai-providers', requireAuth, requireAdmin, async (req, res) => {
+router.get('/ai-providers', async (req, res) => {
   try {
     const providers = await prisma.aIProvider.findMany({
       include: {
@@ -25,7 +29,7 @@ router.get('/ai-providers', requireAuth, requireAdmin, async (req, res) => {
 /* ═══════════════════════════════════════
    CREATE AI PROVIDER (Admin)
    ═══════════════════════════════════════ */
-router.post('/ai-providers', requireAuth, requireAdmin, async (req, res) => {
+router.post('/ai-providers', async (req, res) => {
   try {
     const { name, slug, description, logoUrl, isActive } = req.body;
 
@@ -53,7 +57,7 @@ router.post('/ai-providers', requireAuth, requireAdmin, async (req, res) => {
 /* ═══════════════════════════════════════
    UPDATE AI PROVIDER (Admin)
    ═══════════════════════════════════════ */
-router.put('/ai-providers/:id', requireAuth, requireAdmin, async (req, res) => {
+router.put('/ai-providers/:id', async (req, res) => {
   try {
     const { id } = req.params;
     const { name, slug, description, logoUrl, isActive } = req.body;
@@ -79,7 +83,7 @@ router.put('/ai-providers/:id', requireAuth, requireAdmin, async (req, res) => {
 /* ═══════════════════════════════════════
    DELETE AI PROVIDER (Admin)
    ═══════════════════════════════════════ */
-router.delete('/ai-providers/:id', requireAuth, requireAdmin, async (req, res) => {
+router.delete('/ai-providers/:id', async (req, res) => {
   try {
     const { id } = req.params;
 
@@ -108,7 +112,7 @@ router.delete('/ai-providers/:id', requireAuth, requireAdmin, async (req, res) =
 /* ═══════════════════════════════════════
    CREATE AI MODEL (Admin)
    ═══════════════════════════════════════ */
-router.post('/ai-models', requireAuth, requireAdmin, async (req, res) => {
+router.post('/ai-models', async (req, res) => {
   try {
     const {
       providerId,
@@ -152,7 +156,7 @@ router.post('/ai-models', requireAuth, requireAdmin, async (req, res) => {
 /* ═══════════════════════════════════════
    UPDATE AI MODEL (Admin)
    ═══════════════════════════════════════ */
-router.put('/ai-models/:id', requireAuth, requireAdmin, async (req, res) => {
+router.put('/ai-models/:id', async (req, res) => {
   try {
     const { id } = req.params;
     const {
@@ -204,7 +208,7 @@ router.put('/ai-models/:id', requireAuth, requireAdmin, async (req, res) => {
 /* ═══════════════════════════════════════
    AI ROUTER STATISTICS (Admin)
    ═══════════════════════════════════════ */
-router.get('/ai-stats', requireAuth, requireAdmin, async (req, res) => {
+router.get('/ai-stats', async (req, res) => {
   try {
     // Total API keys created
     const totalKeys = await prisma.aIApiKey.count();
@@ -247,7 +251,7 @@ router.get('/ai-stats', requireAuth, requireAdmin, async (req, res) => {
 /* ═══════════════════════════════════════
    SYNC PROVIDERS & MODELS FROM 9ROUTER (Admin)
    ═══════════════════════════════════════ */
-router.post('/ai-sync-9router', requireAuth, requireAdmin, async (req, res) => {
+router.post('/ai-sync-9router', async (req, res) => {
   try {
     // SECURITY: Only use env-configured URL to prevent SSRF
     const targetUrl = process.env.AI_ROUTER_URL || 'http://localhost:20128';
@@ -383,7 +387,7 @@ router.post('/ai-sync-9router', requireAuth, requireAdmin, async (req, res) => {
 /* ═══════════════════════════════════════
    DELETE AI MODEL (Admin)
    ═══════════════════════════════════════ */
-router.delete('/ai-models/:id', requireAuth, requireAdmin, async (req, res) => {
+router.delete('/ai-models/:id', async (req, res) => {
   try {
     const { id } = req.params;
     const existing = await prisma.aIModel.findUnique({ where: { id: parseInt(id) } });
@@ -401,7 +405,7 @@ router.delete('/ai-models/:id', requireAuth, requireAdmin, async (req, res) => {
 /* ═══════════════════════════════════════
    GET ALL AI COMBOS (Admin)
    ═══════════════════════════════════════ */
-router.get('/ai-combos', requireAuth, requireAdmin, async (req, res) => {
+router.get('/ai-combos', async (req, res) => {
   try {
     const combos = await prisma.aICombo.findMany({ orderBy: { createdAt: 'desc' } });
     const parsed = combos.map(c => ({ ...c, models: JSON.parse(c.models || '[]') }));
@@ -415,7 +419,7 @@ router.get('/ai-combos', requireAuth, requireAdmin, async (req, res) => {
 /* ═══════════════════════════════════════
    CREATE AI COMBO (Admin)
    ═══════════════════════════════════════ */
-router.post('/ai-combos', requireAuth, requireAdmin, async (req, res) => {
+router.post('/ai-combos', async (req, res) => {
   try {
     const { name, displayName, description, models } = req.body;
     if (!name || !name.trim()) {
@@ -447,7 +451,7 @@ router.post('/ai-combos', requireAuth, requireAdmin, async (req, res) => {
 /* ═══════════════════════════════════════
    UPDATE AI COMBO (Admin)
    ═══════════════════════════════════════ */
-router.put('/ai-combos/:id', requireAuth, requireAdmin, async (req, res) => {
+router.put('/ai-combos/:id', async (req, res) => {
   try {
     const { id } = req.params;
     const { name, displayName, description, models, isActive } = req.body;
@@ -484,7 +488,7 @@ router.put('/ai-combos/:id', requireAuth, requireAdmin, async (req, res) => {
 /* ═══════════════════════════════════════
    DELETE AI COMBO (Admin)
    ═══════════════════════════════════════ */
-router.delete('/ai-combos/:id', requireAuth, requireAdmin, async (req, res) => {
+router.delete('/ai-combos/:id', async (req, res) => {
   try {
     const { id } = req.params;
     const existing = await prisma.aICombo.findUnique({ where: { id: parseInt(id) } });
