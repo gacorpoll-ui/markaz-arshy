@@ -208,15 +208,18 @@ export default function Home({ user }) {
               </div>
             </div>
             <div className="mall-hero-pills">
-              {['dapur','lampu','alat-kesehatan','olahraga','kopi','perkakas'].map((item, i) => {
-                const labels = {'dapur':'Peralatan Dapur','lampu':'Lampu & Elektronik','alat-kesehatan':'Alat Kesehatan','olahraga':'Olahraga & Outdoor','kopi':'Kopi & Minuman','perkakas':'Perkakas'};
-                const bgColors = ['#fef2f2','#fefce8','#ecfdf5','#eff6ff','#fdf4ff','#f5f3ff'];
-                return (
-                  <Link key={item} to="/marketplace" className="mall-hero-pill" style={{ background: bgColors[i] }}>
-                    <img src={`/images/populer/${item}.png`} alt="" className="mall-hero-pill-img" /> {labels[item]}
-                  </Link>
-                );
-              })}
+              {[
+                { key:'dapur', label:'Peralatan Dapur', emoji:'🍳', bg:'#fef2f2' },
+                { key:'lampu', label:'Lampu & Elektronik', emoji:'💡', bg:'#fefce8' },
+                { key:'alat-kesehatan', label:'Alat Kesehatan', emoji:'🩺', bg:'#ecfdf5' },
+                { key:'olahraga', label:'Olahraga & Outdoor', emoji:'⚽', bg:'#eff6ff' },
+                { key:'kopi', label:'Kopi & Minuman', emoji:'☕', bg:'#fdf4ff' },
+                { key:'perkakas', label:'Perkakas', emoji:'🔧', bg:'#f5f3ff' },
+              ].map(({ key, label, emoji, bg }) => (
+                <Link key={key} to="/marketplace" className="mall-hero-pill" style={{ background: bg }}>
+                  <span className="mall-hero-pill-img" style={{ fontSize: 20, lineHeight: 1 }}>{emoji}</span> {label}
+                </Link>
+              ))}
             </div>
             <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
               <Link to="/marketplace" className="btn btn-primary btn-lg" style={{ padding: '14px 36px', fontSize: '15px', fontWeight: '800', borderRadius: '12px' }}>
@@ -227,14 +230,17 @@ export default function Home({ user }) {
               </Link>
             </div>
           </div>
-          <div className="mall-hero-visual">
-            <img src="/images/slides/slide-cetakan-kue.jpg" alt="" className="mall-hero-bg-img" />
-            <div className="mall-hero-overlay" />
-            <div className="mall-hero-badge top-left">
-              <img src="/images/populer/dapur.png" alt="" /> <span>Gudang Kebon Jeruk</span>
+          <div className="mall-hero-visual" style={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%)', position: 'relative', overflow: 'hidden' }}>
+            <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 16 }}>
+              <div style={{ fontSize: 72, lineHeight: 1 }}>🛒</div>
+              <div style={{ color: 'white', fontSize: 20, fontWeight: 700, textAlign: 'center', padding: '0 20px' }}>240+ Produk Importir</div>
+              <div style={{ color: 'rgba(255,255,255,0.8)', fontSize: 14 }}>Siap Kirim Se-Indonesia</div>
             </div>
-            <div className="mall-hero-badge bottom-right">
-              <img src="/images/populer/gelas-cangkir.png" alt="" /> <span>Kirim Se-Indonesia</span>
+            <div className="mall-hero-badge top-left" style={{ position: 'absolute', top: 16, left: 16, background: 'rgba(255,255,255,0.95)', borderRadius: 12, padding: '8px 14px', display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, fontWeight: 600 }}>
+              <span>📦</span><span>Gudang Kebon Jeruk</span>
+            </div>
+            <div className="mall-hero-badge bottom-right" style={{ position: 'absolute', bottom: 16, right: 16, background: 'rgba(255,255,255,0.95)', borderRadius: 12, padding: '8px 14px', display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, fontWeight: 600 }}>
+              <span>🚚</span><span>Kirim Se-Indonesia</span>
             </div>
           </div>
         </div>
@@ -598,9 +604,22 @@ export default function Home({ user }) {
             <div className="footer-partner-section">
               <div className="footer-partner-title">Metode Pembayaran</div>
               <div className="footer-partner-imgs">
-                {['bca','mandiri','bni','bri','cimb','qris','klikbca','visa','mastercard','jcb','ovo','indomaret'].map(b => (
-                  <div key={b} className="footer-partner-img">
-                    <img src={`/images/partners/${b}.png`} alt={b} className="img-fit" loading="lazy" />
+                {[
+                  { name: 'BCA', color: '#003DA5' },
+                  { name: 'Mandiri', color: '#0066B2' },
+                  { name: 'BNI', color: '#EB6125' },
+                  { name: 'BRI', color: '#E31837' },
+                  { name: 'CIMB', color: '#6D2B8F' },
+                  { name: 'QRIS', color: '#0066CC' },
+                  { name: 'KlikBCA', color: '#0066B2' },
+                  { name: 'VISA', color: '#1A1F71' },
+                  { name: 'Mastercard', color: '#EB001B' },
+                  { name: 'JCB', color: '#0E4C96' },
+                  { name: 'OVO', color: '#4C3494' },
+                  { name: 'Indomaret', color: '#009944' },
+                ].map(b => (
+                  <div key={b.name} className="footer-partner-img" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'white', border: '1px solid #E5E7EB', borderRadius: 8, padding: '8px 14px' }}>
+                    <span style={{ fontSize: 12, fontWeight: 700, color: b.color, whiteSpace: 'nowrap' }}>{b.name}</span>
                   </div>
                 ))}
               </div>
@@ -608,9 +627,15 @@ export default function Home({ user }) {
             <div className="footer-partner-section">
               <div className="footer-partner-title">Metode Pengiriman</div>
               <div className="footer-partner-imgs">
-                {[['jne','JNE'],['sicepat','SiCepat'],['gosend','Go-Send'],['jt','J&T'],['grab','Grab Express']].map(([file,label]) => (
-                  <div key={file} className="footer-partner-img">
-                    <img src={`/images/partners/${file}.png`} alt={label} className="img-fit" loading="lazy" />
+                {[
+                  { name: 'JNE', color: '#E31837' },
+                  { name: 'SiCepat', color: '#FF6B00' },
+                  { name: 'Go-Send', color: '#00AA13' },
+                  { name: 'J&T', color: '#E31837' },
+                  { name: 'Grab Express', color: '#00B14F' },
+                ].map(s => (
+                  <div key={s.name} className="footer-partner-img" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'white', border: '1px solid #E5E7EB', borderRadius: 8, padding: '8px 14px' }}>
+                    <span style={{ fontSize: 12, fontWeight: 700, color: s.color, whiteSpace: 'nowrap' }}>{s.name}</span>
                   </div>
                 ))}
               </div>
