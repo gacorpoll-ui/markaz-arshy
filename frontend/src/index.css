@@ -29,3 +29,6 @@
 /* ── Utilities ── */
 @import './styles/utilities/animations.css';
 @import './styles/utilities/responsive.css';
+
+/* ── Not Found & Mobile Menu ── */
+@import './styles/pages/not-found.css';

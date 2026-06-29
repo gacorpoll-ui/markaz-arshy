@@ -25,6 +25,8 @@ import LiveChat from './components/LiveChat';
 import MarketplacePage from './pages/MarketplacePage';
 import JakmallMarketplace from './pages/JakmallMarketplace';
 import MarketplaceCategory from './pages/MarketplaceCategory';
+import NotFound from './pages/NotFound';
+import ErrorBoundary from './components/ErrorBoundary';
 
 /* ═══════════════════════════════════════
    Mobile Menu Overlay
@@ -48,50 +50,41 @@ function MobileMenu({ isOpen, onClose, user, handleLogout }) {
 
   return (
     <>
-      <div onClick={onClose} style={{ position: 'fixed', inset: 0, zIndex: 998, background: 'rgba(0,0,0,0.3)' }} />
-      <div style={{
-        position: 'fixed', top: 0, left: 0, bottom: 0, width: '280px', maxWidth: '85vw',
-        background: '#FFFFFF', borderRight: '1px solid #E5E7EB',
-        zIndex: 999, display: 'flex', flexDirection: 'column',
-      }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 20px', borderBottom: '1px solid #E5E7EB' }}>
-          <Link to="/" style={{ display: 'flex', alignItems: 'center', gap: '8px', textDecoration: 'none' }}>
-            <ShoppingBag size={20} style={{ color: '#3B82F6' }} />
-            <span style={{ fontSize: '17px', fontWeight: '800', fontFamily: 'var(--font-display)', color: '#111827' }}>Markaz-Arshy</span>
+      <div onClick={onClose} className="mobile-menu-overlay" />
+      <div className="mobile-menu-panel">
+        <div className="mobile-menu-header">
+          <Link to="/" className="mobile-menu-logo">
+            <ShoppingBag size={20} className="mobile-menu-logo-icon" />
+            <span className="mobile-menu-logo-text">Markaz-Arshy</span>
           </Link>
-          <button onClick={onClose} style={{ background: '#F3F4F6', border: '1px solid #E5E7EB', borderRadius: '6px', padding: '6px', cursor: 'pointer', color: '#6B7280', display: 'flex' }}>
+          <button onClick={onClose} className="mobile-menu-close">
             <X size={16} />
           </button>
         </div>
 
-        <div style={{ flex: 1, padding: '8px 0', overflowY: 'auto' }}>
+        <div className="mobile-menu-body">
           {navItems.map((item) => (
-            <NavLink key={item.to} to={item.to} style={({ isActive }) => ({
-              display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 20px', textDecoration: 'none',
-              color: isActive ? '#3B82F6' : '#6B7280', background: isActive ? '#EFF6FF' : 'transparent',
-              borderLeft: isActive ? '3px solid #3B82F6' : '3px solid transparent',
-              fontSize: '14px', fontWeight: isActive ? '600' : '500',
-            })}>{item.label}</NavLink>
+            <NavLink key={item.to} to={item.to} className={({ isActive }) => `mobile-menu-link ${isActive ? 'active' : ''}`}>
+              {item.label}
+            </NavLink>
           ))}
         </div>
 
-        <div style={{ padding: '16px 20px', borderTop: '1px solid #E5E7EB' }}>
+        <div className="mobile-menu-footer">
           {user ? (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <div>
+              <div className="mobile-menu-user-info">
                 <span className={`badge ${user.role === 'ADMIN' ? 'badge-premium' : user.role === 'RESELLER' ? 'badge-smm' : 'badge-secondary'}`} style={{ fontSize: '10px', padding: '2px 8px' }}>{user.role}</span>
-                <span style={{ fontSize: '13px', color: '#6B7280', fontWeight: '500' }}>Rp {user.balance.toLocaleString('id-ID')}</span>
+                <span style={{ fontSize: '13px', color: 'var(--text-secondary)', fontWeight: '500' }}>Rp {user.balance.toLocaleString('id-ID')}</span>
               </div>
-              <button onClick={handleLogout} style={{
-                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px',
-                padding: '9px', borderRadius: '8px', background: '#FEF2F2', border: '1px solid rgba(239,68,68,0.15)',
-                color: '#DC2626', fontSize: '13px', fontWeight: '600', cursor: 'pointer', width: '100%',
-              }}><LogOut size={14} /> Keluar</button>
+              <button onClick={handleLogout} className="mobile-menu-logout-btn">
+                <LogOut size={14} /> Keluar
+              </button>
             </div>
           ) : (
-            <div style={{ display: 'flex', gap: '8px' }}>
-              <Link to="/login" onClick={onClose} style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', padding: '9px', borderRadius: '8px', background: '#FFFFFF', border: '1px solid #E5E7EB', color: '#6B7280', fontSize: '13px', fontWeight: '600', textDecoration: 'none' }}><LogIn size={14} /> Masuk</Link>
-              <Link to="/register" onClick={onClose} style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '9px', borderRadius: '8px', background: '#3B82F6', color: '#FFFFFF', fontSize: '13px', fontWeight: '700', textDecoration: 'none' }}>Daftar</Link>
+            <div className="mobile-menu-auth-row">
+              <Link to="/login" onClick={onClose} className="mobile-menu-login-btn"><LogIn size={14} /> Masuk</Link>
+              <Link to="/register" onClick={onClose} className="mobile-menu-register-btn">Daftar</Link>
             </div>
           )}
         </div>
@@ -166,6 +159,7 @@ export default function App() {
   }
 
   return (
+    <ErrorBoundary>
     <Router>
       <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
         <MobileMenu isOpen={mobileMenuOpen} onClose={() => setMobileMenuOpen(false)} user={user} handleLogout={handleLogout} />
@@ -256,11 +250,13 @@ export default function App() {
             <Route path="/admin/*" element={user && user.role === 'ADMIN' ? <AdminDashboard user={user} token={token} /> : <Navigate to="/" />} />
             <Route path="/marketplace" element={<JakmallMarketplace />} />
             <Route path="/marketplace/:slug" element={<MarketplaceCategory />} />
-            <Route path="*" element={<Navigate to="/" />} />
+            <Route path="/404" element={<NotFound />} />
+            <Route path="*" element={<NotFound />} />
           </Routes>
         </main>
         <LiveChat />
       </div>
     </Router>
+    </ErrorBoundary>
   );
 }
