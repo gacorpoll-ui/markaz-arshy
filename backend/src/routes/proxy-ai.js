@@ -7,7 +7,10 @@ import eventBus from '../sse/EventBus.js';
 const router = express.Router();
 const NINE_ROUTER_URL = process.env.AI_ROUTER_URL || 'http://localhost:20128';
 
-// Rate limiting
+// ═══════════════════════════════════════
+// SHARED UTILITIES
+// ═══════════════════════════════════════
+
 const proxyLimiter = rateLimit({
   windowMs: 60 * 1000,
   max: 30,
@@ -19,6 +22,10 @@ const proxyLimiter = rateLimit({
 function maskKey(key) {
   if (!key || key.length < 8) return '***';
   return key.slice(0, 4) + '...' + key.slice(-4);
+}
+
+function extractApiKey(req) {
+  return (req.headers['x-api-key'] || req.headers['authorization'] || '').replace('Bearer ', '');
 }
 
 // ═══════════════════════════════════════
@@ -44,6 +51,21 @@ function getDefaultPricing(modelId) {
 }
 
 // ═══════════════════════════════════════
+// FORWARD TO 9ROUTER (DRY helper)
+// ═══════════════════════════════════════
+async function forwardToRouter(apiKey, body, requestId) {
+  return fetch(`${NINE_ROUTER_URL}/v1/chat/completions`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${apiKey}`,
+      'X-Request-Id': requestId,
+    },
+    body: JSON.stringify(body),
+  });
+}
+
+// ═══════════════════════════════════════
 // RECORD USAGE (Proxy-side) — fallback if webhook isn't configured/sent
 // ═══════════════════════════════════════
 async function recordUsage({ apiKey, requestId, endpoint, body, responseStatus, latencyMs, inputTokens, outputTokens, modelId }) {
@@ -52,7 +74,6 @@ async function recordUsage({ apiKey, requestId, endpoint, body, responseStatus, 
     if (!keyData) return;
 
     // Use REQUESTED model for display/lookup (not 9router's resolved model)
-    // e.g. user requests "claude-opus-4-7" but 9router resolves to "code"
     const requestedModel = body?.model || modelId;
     let aiModel = await prisma.aIModel.findUnique({ where: { modelId: requestedModel } });
     if (!aiModel) {
@@ -112,7 +133,7 @@ async function recordUsage({ apiKey, requestId, endpoint, body, responseStatus, 
       // 3. Read current User.balance for balance check + deduction
       const user = await tx.user.findUnique({ where: { id: keyData.userId } });
       if (!user) throw new Error('User not found');
-      if (totalCost > 0 && user.balance < -50000) { // Allow temporary negative balance but cap at -50000
+      if (totalCost > 0 && user.balance < -50000) {
         throw new Error('INSUFFICIENT_BALANCE');
       }
 
@@ -160,80 +181,155 @@ async function recordUsage({ apiKey, requestId, endpoint, body, responseStatus, 
 
     console.log(`[PROXY] Recorded: requestId=${requestId} model=${modelId} tokens=${totalTokens} cost=Rp${Math.ceil(totalCost)} balance=Rp${result.newBalance}`);
   } catch (err) {
+    // BUG FIX: Don't rethrow — the HTTP response is already sent to the client.
+    // Billing errors (quota/balance) are logged server-side for admin review.
     console.error('[PROXY] Record usage failed:', maskKey(apiKey), err.message);
-    if (err.message === 'MONTHLY_QUOTA_EXCEEDED') throw new Error('Monthly token quota exceeded');
-    if (err.message === 'INSUFFICIENT_BALANCE') throw new Error('Insufficient balance');
-    // Don't rethrow other errors, just log and allow proxy to continue
   }
 }
 
 // ═══════════════════════════════════════
-// POST /chat/completions
+// STREAMING HELPERS
 // ═══════════════════════════════════════
+
+/**
+ * Pipe OpenAI SSE stream to client as-is (pass-through).
+ * Used by /chat/completions — transparent proxy.
+ * Returns { fullContent, totalInputTokens, totalOutputTokens } for usage recording.
+ */
+async function pipeOpenAIStream(upstream, clientRes) {
+  clientRes.setHeader('Content-Type', 'text/event-stream');
+  clientRes.setHeader('Cache-Control', 'no-cache');
+  clientRes.setHeader('Connection', 'keep-alive');
+  clientRes.status(upstream.status);
+
+  let fullContent = '';
+  let totalInputTokens = 0;
+  let totalOutputTokens = 0;
+  const reader = upstream.body.getReader();
+  const decoder = new TextDecoder();
+  let buf = '';
+
+  try {
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      buf += decoder.decode(value, { stream: true });
+      const lines = buf.split('\n');
+      buf = lines.pop();
+      for (const l of lines) {
+        clientRes.write(l + '\n');
+        if (l.startsWith('data: ')) {
+          try {
+            const chunk = JSON.parse(l.slice(6));
+            if (chunk.choices?.[0]?.delta?.content) fullContent += chunk.choices[0].delta.content;
+            if (chunk.usage) {
+              const t = extractTokens(chunk);
+              totalInputTokens += t.inputTokens;
+              totalOutputTokens += t.outputTokens;
+            }
+          } catch {}
+        }
+      }
+    }
+  } catch (e) {
+    console.error('[PROXY] OpenAI stream error:', e.message);
+  }
+  if (buf) clientRes.write(buf);
+  clientRes.end();
+
+  return { fullContent, totalInputTokens, totalOutputTokens };
+}
+
+/**
+ * Pipe OpenAI SSE stream as Anthropic Messages SSE format.
+ * Used by /messages — translates OpenAI chunks into Anthropic event protocol.
+ * Returns { fullContent, totalInputTokens, totalOutputTokens } for usage recording.
+ */
+async function pipeAsAnthropicStream(upstream, clientRes, model) {
+  clientRes.setHeader('Content-Type', 'text/event-stream');
+  clientRes.setHeader('Cache-Control', 'no-cache');
+  clientRes.setHeader('Connection', 'keep-alive');
+  clientRes.status(upstream.status);
+
+  const msgId = `msg_${crypto.randomBytes(12).toString('hex')}`;
+  clientRes.write(`event: message_start\ndata: ${JSON.stringify({ type: 'message_start', message: { id: msgId, type: 'message', role: 'assistant', content: [], model: model || 'code', stop_reason: null, usage: { input_tokens: 0, output_tokens: 0 } } })}\n\n`);
+  clientRes.write(`event: content_block_start\ndata: ${JSON.stringify({ type: 'content_block_start', index: 0, content_block: { type: 'text', text: '' } })}\n\n`);
+
+  let fullContent = '';
+  let totalInputTokens = 0;
+  let totalOutputTokens = 0;
+  const reader = upstream.body.getReader();
+  const decoder = new TextDecoder();
+  let buf = '';
+
+  try {
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      buf += decoder.decode(value, { stream: true });
+      const lines = buf.split('\n');
+      buf = lines.pop();
+      for (const line of lines) {
+        if (!line.startsWith('data: ')) continue;
+        const d = line.slice(6).trim();
+        if (d === '[DONE]') continue;
+        try {
+          const chunk = JSON.parse(d);
+          if (chunk.choices?.[0]?.delta?.content) fullContent += chunk.choices[0].delta.content;
+          if (chunk.usage) {
+            const t = extractTokens(chunk);
+            totalInputTokens += t.inputTokens;
+            totalOutputTokens += t.outputTokens;
+          }
+          // Translate to Anthropic-style stream events
+          if (chunk.choices?.[0]?.delta?.content) {
+            clientRes.write(`event: content_block_delta\ndata: ${JSON.stringify({ type: 'content_block_delta', index: 0, delta: { type: 'text_delta', text: chunk.choices[0].delta.content } })}\n\n`);
+          }
+          if (chunk.choices?.[0]?.finish_reason) {
+            const sr = chunk.choices[0].finish_reason === 'length' ? 'max_tokens' : 'end_turn';
+            clientRes.write(`event: content_block_stop\ndata: ${JSON.stringify({ type: 'content_block_stop', index: 0 })}\n\n`);
+            clientRes.write(`event: message_delta\ndata: ${JSON.stringify({ type: 'message_delta', delta: { stop_reason: sr, stop_sequence: null }, usage: { output_tokens: chunk.usage?.completion_tokens || 0 } })}\n\n`);
+            clientRes.write(`event: message_stop\ndata: ${JSON.stringify({ type: 'message_stop' })}\n\n`);
+          }
+        } catch {}
+      }
+    }
+  } catch (e) {
+    console.error('[PROXY] Anthropic stream error:', e.message);
+  }
+  clientRes.end();
+
+  return { fullContent, totalInputTokens, totalOutputTokens };
+}
+
+// ═══════════════════════════════════════
+// ROUTES
+// ═══════════════════════════════════════
+
+// POST /chat/completions — OpenAI-compatible endpoint
 router.post('/chat/completions', proxyLimiter, async (req, res) => {
   const startTime = Date.now();
   const requestId = `req_${crypto.randomBytes(8).toString('hex')}`;
   try {
-    const apiKey = (req.headers['authorization'] || '').replace('Bearer ', '');
+    const apiKey = extractApiKey(req);
     if (!apiKey) return res.status(401).json({ error: { message: 'API key required', type: 'authentication_error' } });
 
-    const response = await fetch(`${NINE_ROUTER_URL}/v1/chat/completions`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}`, 'X-Request-Id': requestId },
-      body: JSON.stringify(req.body),
-    });
-
+    const response = await forwardToRouter(apiKey, req.body, requestId);
     const ct = response.headers.get('content-type') || '';
     const actualModel = response.headers.get('x-openai-model') || req.body.model || 'unknown';
 
     if (ct.includes('text/event-stream')) {
-      // ═══ STREAMING ═══
-      res.setHeader('Content-Type', 'text/event-stream');
-      res.setHeader('Cache-Control', 'no-cache');
-      res.setHeader('Connection', 'keep-alive');
-      res.status(response.status);
-
-      let fullContent = '';
-      let totalInputTokens = 0;
-      let totalOutputTokens = 0;
-
-      const reader = response.body.getReader();
-      const decoder = new TextDecoder();
-      let buf = '';
-
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        buf += decoder.decode(value, { stream: true });
-        const lines = buf.split('\n');
-        buf = lines.pop();
-        for (const l of lines) {
-          res.write(l + '\n');
-          if (l.startsWith('data: ')) {
-            try {
-              const chunk = JSON.parse(l.slice(6));
-              if (chunk.choices?.[0]?.delta?.content) fullContent += chunk.choices[0].delta.content;
-              if (chunk.usage) {
-                const tokens = extractTokens(chunk);
-                totalInputTokens += tokens.inputTokens;
-                totalOutputTokens += tokens.outputTokens;
-              }
-            } catch {}
-          }
-        }
-      }
-      if (buf) res.write(buf);
-      res.end();
+      // ═══ STREAMING — pipe SSE through as-is ═══
+      const { fullContent, totalInputTokens, totalOutputTokens } = await pipeOpenAIStream(response, res);
 
       // Record usage after stream ends
       await recordUsage({
         apiKey, requestId, endpoint: '/v1/chat/completions',
         body: req.body, responseStatus: response.status, latencyMs: Date.now() - startTime,
-        inputTokens: totalInputTokens || Math.ceil(fullContent.length / 4) || 1, // Fallback token estimation
+        inputTokens: totalInputTokens || Math.ceil(fullContent.length / 4) || 1,
         outputTokens: totalOutputTokens || Math.ceil(fullContent.length / 4) || 1,
         modelId: actualModel,
       });
-
     } else {
       // ═══ NON-STREAMING ═══
       const data = await response.json();
@@ -253,19 +349,16 @@ router.post('/chat/completions', proxyLimiter, async (req, res) => {
     console.log(`[PROXY] chat: ${maskKey(apiKey)} model=${actualModel}`);
   } catch (error) {
     console.error('[PROXY] chat error:', error.message);
-    if (error.message === 'MONTHLY_QUOTA_EXCEEDED' || error.message === 'INSUFFICIENT_BALANCE') {
-      return res.status(400).json({ error: { message: error.message, type: 'billing_error' } });
+    if (!res.headersSent) {
+      res.status(500).json({ error: { message: 'Internal proxy error.' } });
     }
-    res.status(500).json({ error: { message: 'Internal proxy error.' } });
   }
 });
 
-// ═══════════════════════════════════════
 // GET /models
-// ═══════════════════════════════════════
 router.get('/models', async (req, res) => {
   try {
-    const apiKey = (req.headers['x-api-key'] || req.headers['authorization'] || '').replace('Bearer ', '');
+    const apiKey = extractApiKey(req);
     const response = await fetch(`${NINE_ROUTER_URL}/v1/models`, {
       headers: { 'Authorization': `Bearer ${apiKey}` },
     });
@@ -276,19 +369,17 @@ router.get('/models', async (req, res) => {
   }
 });
 
-// ═══════════════════════════════════════
-// POST /messages — Anthropic Messages API
-// ═══════════════════════════════════════
+// POST /messages — Anthropic Messages API (converts to/from OpenAI format)
 router.post('/messages', proxyLimiter, async (req, res) => {
   const startTime = Date.now();
   const requestId = `req_${crypto.randomBytes(8).toString('hex')}`;
   try {
-    const apiKey = req.headers['x-api-key'] || (req.headers['authorization'] || '').replace('Bearer ', '');
+    const apiKey = extractApiKey(req);
     if (!apiKey) return res.status(401).json({ type: 'error', error: { type: 'authentication_error', message: 'API key required' } });
 
     const { model, messages, max_tokens, system, stream, temperature } = req.body;
 
-    // Anthropic → OpenAI format
+    // ── Anthropic → OpenAI format conversion ──
     const openaiMessages = [];
     if (system) {
       const t = typeof system === 'string' ? system : Array.isArray(system) ? system.map(s => s.text || '').join('\n') : String(system);
@@ -305,70 +396,14 @@ router.post('/messages', proxyLimiter, async (req, res) => {
     const body = { model: model || 'code', messages: openaiMessages, max_tokens: max_tokens || 4096, stream: !!stream };
     if (temperature !== undefined) body.temperature = temperature;
 
-    const response = await fetch(`${NINE_ROUTER_URL}/v1/chat/completions`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}`, 'X-Request-Id': requestId },
-      body: JSON.stringify(body),
-    });
-
+    const response = await forwardToRouter(apiKey, body, requestId);
     const ct = response.headers.get('content-type') || '';
     const actualModel = response.headers.get('x-openai-model') || model || 'unknown';
 
     if (stream && ct.includes('text/event-stream')) {
-      // ═══ STREAMING ═══
-      res.setHeader('Content-Type', 'text/event-stream');
-      res.setHeader('Cache-Control', 'no-cache');
-      res.setHeader('Connection', 'keep-alive');
-      res.status(response.status);
+      // ═══ STREAMING — translate OpenAI SSE → Anthropic SSE ═══
+      const { fullContent, totalInputTokens, totalOutputTokens } = await pipeAsAnthropicStream(response, res, model);
 
-      const msgId = `msg_${crypto.randomBytes(12).toString('hex')}`;
-      res.write(`event: message_start\ndata: ${JSON.stringify({ type: 'message_start', message: { id: msgId, type: 'message', role: 'assistant', content: [], model: model || 'code', stop_reason: null, usage: { input_tokens: 0, output_tokens: 0 } } })}\n\n`);
-      res.write(`event: content_block_start\ndata: ${JSON.stringify({ type: 'content_block_start', index: 0, content_block: { type: 'text', text: '' } })}\n\n`);
-
-      let fullContent = '';
-      let totalInputTokens = 0;
-      let totalOutputTokens = 0;
-
-      const reader = response.body.getReader();
-      const decoder = new TextDecoder();
-      let buf = '';
-
-      try {
-        while (true) {
-          const { done, value } = await reader.read();
-          if (done) break;
-          buf += decoder.decode(value, { stream: true });
-          const lines = buf.split('\n');
-          buf = lines.pop();
-          for (const line of lines) {
-            if (!line.startsWith('data: ')) continue;
-            const d = line.slice(6).trim();
-            if (d === '[DONE]') continue;
-            try {
-              const chunk = JSON.parse(d);
-              if (chunk.choices?.[0]?.delta?.content) fullContent += chunk.choices[0].delta.content;
-              if (chunk.usage) {
-                const tokens = extractTokens(chunk);
-                totalInputTokens += tokens.inputTokens;
-                totalOutputTokens += tokens.outputTokens;
-              }
-              // Send Anthropic-style stream events
-              if (chunk.choices?.[0]?.delta?.content) {
-                res.write(`event: content_block_delta\ndata: ${JSON.stringify({ type: 'content_block_delta', index: 0, delta: { type: 'text_delta', text: chunk.choices[0].delta.content } })}\n\n`);
-              }
-              if (chunk.choices?.[0]?.finish_reason) {
-                const sr = chunk.choices[0].finish_reason === 'length' ? 'max_tokens' : 'end_turn';
-                res.write(`event: content_block_stop\ndata: ${JSON.stringify({ type: 'content_block_stop', index: 0 })}\n\n`);
-                res.write(`event: message_delta\ndata: ${JSON.stringify({ type: 'message_delta', delta: { stop_reason: sr, stop_sequence: null }, usage: { output_tokens: chunk.usage?.completion_tokens || 0 } })}\n\n`);
-                res.write(`event: message_stop\ndata: ${JSON.stringify({ type: 'message_stop' })}\n\n`);
-              }
-            } catch {}
-          }
-        }
-      } catch (e) { console.error('[PROXY] Anthropic Stream error:', e.message); }
-      res.end();
-
-      // Record usage after stream ends
       await recordUsage({
         apiKey, requestId, endpoint: '/v1/messages',
         body: req.body, responseStatus: response.status, latencyMs: Date.now() - startTime,
@@ -376,7 +411,6 @@ router.post('/messages', proxyLimiter, async (req, res) => {
         outputTokens: totalOutputTokens || Math.ceil(fullContent.length / 4) || 1,
         modelId: actualModel,
       });
-
     } else {
       // ═══ NON-STREAMING ═══
       const data = await response.json();
@@ -396,10 +430,9 @@ router.post('/messages', proxyLimiter, async (req, res) => {
     console.log(`[PROXY] messages: ${maskKey(apiKey)} model=${actualModel} stream=${!!stream}`);
   } catch (error) {
     console.error('[PROXY] messages error:', error.message);
-    if (error.message === 'MONTHLY_QUOTA_EXCEEDED' || error.message === 'INSUFFICIENT_BALANCE') {
-      return res.status(400).json({ type: 'error', error: { type: 'billing_error', message: error.message } });
+    if (!res.headersSent) {
+      res.status(500).json({ type: 'error', error: { type: 'api_error', message: 'Internal proxy error.' } });
     }
-    res.status(500).json({ type: 'error', error: { type: 'api_error', message: 'Internal proxy error.' } });
   }
 });
 

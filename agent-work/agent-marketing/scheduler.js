@@ -89,15 +89,25 @@ function scheduleAgent(schedule) {
   function scheduleNext() {
     const nextDelay = msUntilNextRun(schedule.cronExpression) || 86400000;
     activeIntervals[schedule.agentType] = setTimeout(async () => {
-      await runAgent(schedule.agentType);
-      scheduleNext();
+      try {
+        await runAgent(schedule.agentType);
+      } catch (err) {
+        console.error(`[SCHEDULER] Agent "${schedule.agentType}" crashed:`, err.message);
+      } finally {
+        scheduleNext(); // Always reschedule — prevents permanent agent death
+      }
     }, nextDelay);
   }
 
   // Set initial timeout
   activeIntervals[schedule.agentType] = setTimeout(async () => {
-    await runAgent(schedule.agentType);
-    scheduleNext();
+    try {
+      await runAgent(schedule.agentType);
+    } catch (err) {
+      console.error(`[SCHEDULER] Agent "${schedule.agentType}" crashed:`, err.message);
+    } finally {
+      scheduleNext();
+    }
   }, delayMs);
 
   const nextRun = new Date(Date.now() + delayMs);

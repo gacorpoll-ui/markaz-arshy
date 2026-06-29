@@ -106,13 +106,24 @@ function checkDailyBudget() {
   return true;
 }
 
-function addDailyCost(estimatedTokens) {
+// Model-aware pricing (Rp per 1K tokens — matching proxy-ai.js defaults)
+function getModelPricing(model) {
+  const m = (model || '').toLowerCase();
+  if (m.includes('opus') || m.includes('o1') || m.includes('o3') || m.includes('pro')) return { input: 500, output: 2500 };
+  if (m.includes('sonnet') || m.includes('gpt-4o') || m.includes('gemini-1.5-pro') || m.includes('gemini-2')) return { input: 250, output: 1250 };
+  if (m.includes('haiku') || m.includes('mini') || m.includes('flash') || m.includes('nano')) return { input: 40, output: 200 };
+  return { input: 150, output: 450 };
+}
+
+function addDailyCost(inputTokens, outputTokens, model) {
   const today = new Date().toDateString();
   if (dailyCostDate !== today) {
     dailyCost = 0;
     dailyCostDate = today;
   }
-  dailyCost += Math.ceil(estimatedTokens * 0.02);
+  const pricing = getModelPricing(model);
+  const cost = Math.floor((inputTokens * pricing.input + outputTokens * pricing.output) / 1000);
+  dailyCost += cost;
 }
 
 /**
@@ -179,8 +190,9 @@ export async function callLLM(agentKey, systemPrompt, userPrompt, options = {}) 
       }
 
       const rawText = await response.text();
-      const estimatedTokens = Math.ceil((systemPrompt.length + userPrompt.length) / 4);
-      addDailyCost(estimatedTokens);
+      const systemTokens = Math.ceil(systemPrompt.length / 4);
+      const outputTokens = Math.ceil((userPrompt.length + rawText.length) / 4);
+      addDailyCost(systemTokens, outputTokens, model);
       return parseLLMResponse(rawText);
     } catch (error) {
       lastError = error;

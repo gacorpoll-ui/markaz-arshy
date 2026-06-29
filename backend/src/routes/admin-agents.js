@@ -1,4 +1,5 @@
 import express from 'express';
+import rateLimit from 'express-rate-limit';
 import prisma from '../db.js';
 import { requireAuth, requireAdmin } from '../middleware/auth.js';
 import { triggerAgent, triggerWorkflow } from '../../../agent-work/agent-marketing/scheduler.js';
@@ -9,6 +10,28 @@ import { resetConfigCache } from '../../../agent-work/shared/llm-client.js';
 const router = express.Router();
 router.use(requireAuth);
 router.use(requireAdmin);
+
+// ─── SQL Injection Guard — whitelist allowed column names for AgentConfig ──
+const VALID_CONFIG_FIELDS = new Set(['baseUrl', 'apiKey', 'model', 'maxTokens', 'temperature', 'isActive']);
+
+// Rate limit: max 5 agent triggers per minute per IP (prevents budget abuse)
+const agentRunLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 5,
+  message: { error: 'Terlalu banyak trigger agent. Tunggu 1 menit.' },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+// Rate limit: max 10 workflow triggers per minute
+const workflowRunLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 10,
+  message: { error: 'Terlalu banyak trigger workflow. Tunggu 1 menit.' },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
 
 // ─── Agent Dashboard Stats ────────────────────────────
 
@@ -85,7 +108,7 @@ router.get('/agents/:id', async (req, res) => {
 
 // ─── Manual Agent Trigger ─────────────────────────────
 
-router.post('/agents/run/:agentType', async (req, res) => {
+router.post('/agents/run/:agentType', agentRunLimiter, async (req, res) => {
   const { agentType } = req.params;
   const options = { ...req.body, triggeredBy: 'admin' };
 
@@ -343,15 +366,15 @@ router.put('/agents/configs/:agentType', async (req, res) => {
     );
 
     if (existing && existing.length > 0) {
-      // Update — only set fields that are provided
+      // Update — only set fields that are provided AND whitelisted
       const sets = [];
       const values = [];
-      if (baseUrl !== undefined) { sets.push('baseUrl = ?'); values.push(baseUrl); }
-      if (apiKey !== undefined && apiKey !== '••••••••') { sets.push('apiKey = ?'); values.push(apiKey); }
-      if (model !== undefined) { sets.push('model = ?'); values.push(model); }
-      if (maxTokens !== undefined) { sets.push('maxTokens = ?'); values.push(parseInt(maxTokens)); }
-      if (temperature !== undefined) { sets.push('temperature = ?'); values.push(parseFloat(temperature)); }
-      if (isActive !== undefined) { sets.push('isActive = ?'); values.push(isActive ? 1 : 0); }
+      if (baseUrl !== undefined && VALID_CONFIG_FIELDS.has('baseUrl')) { sets.push('baseUrl = ?'); values.push(baseUrl); }
+      if (apiKey !== undefined && apiKey !== '••••••••' && VALID_CONFIG_FIELDS.has('apiKey')) { sets.push('apiKey = ?'); values.push(apiKey); }
+      if (model !== undefined && VALID_CONFIG_FIELDS.has('model')) { sets.push('model = ?'); values.push(model); }
+      if (maxTokens !== undefined && VALID_CONFIG_FIELDS.has('maxTokens')) { sets.push('maxTokens = ?'); values.push(parseInt(maxTokens)); }
+      if (temperature !== undefined && VALID_CONFIG_FIELDS.has('temperature')) { sets.push('temperature = ?'); values.push(parseFloat(temperature)); }
+      if (isActive !== undefined && VALID_CONFIG_FIELDS.has('isActive')) { sets.push('isActive = ?'); values.push(isActive ? 1 : 0); }
       sets.push('updatedAt = CURRENT_TIMESTAMP');
 
       if (sets.length > 1) {
@@ -451,7 +474,7 @@ router.get('/agents/workflows', (req, res) => {
   return res.json({ workflows: WORKFLOWS });
 });
 
-router.post('/agents/workflows/:name', async (req, res) => {
+router.post('/agents/workflows/:name', workflowRunLimiter, async (req, res) => {
   try {
     const { name } = req.params;
     if (!WORKFLOWS.includes(name)) {
