@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import ProductCardJakmall from '../components/ProductCardJakmall';
 import CategorySidebar from '../components/CategorySidebar';
@@ -99,22 +99,71 @@ export default function MarketplaceCategory() {
         <span style={{ color: '#333', fontWeight: '600' }}>{category?.name || slug}</span>
       </nav>
 
-      {/* Hero Banner — Full Image */}
-      {category && (
-        <div className="mkp-cat-hero" style={{ minHeight: '180px', marginBottom: '28px', borderRadius: '16px', overflow: 'hidden' }}>
-          <img
-            src={category.image}
-            alt={category.name}
-            style={{
-              width: '100%',
-              height: '100%',
-              objectFit: 'cover',
-              display: 'block',
-              borderRadius: '16px',
-            }}
-          />
-        </div>
-      )}
+      {/* Hero Banner — Grid Layout (featured product + sub-category cards) */}
+      {category && categoryProducts.length > 0 && (() => {
+        // Group products by sub-category, pick first product from each
+        const subGroups = {};
+        categoryProducts.forEach(p => {
+          const sub = p.categoryJakmall || 'Other';
+          if (!subGroups[sub]) subGroups[sub] = [];
+          subGroups[sub].push(p);
+        });
+        const subEntries = Object.entries(subGroups).sort((a, b) => b[1].length - a[1].length);
+        const featured = categoryProducts[0];
+        const subCards = subEntries.slice(0, 4);
+        const gradients = [
+          'linear-gradient(135deg, #667eea, #764ba2)',
+          'linear-gradient(135deg, #f093fb, #f5576c)',
+          'linear-gradient(135deg, #4facfe, #00f2fe)',
+          'linear-gradient(135deg, #43e97b, #38f9d7)',
+        ];
+        return (
+          <div style={{ display: 'grid', gridTemplateColumns: '1.4fr 1fr', gap: '12px', marginBottom: '28px', borderRadius: '16px', overflow: 'hidden' }}>
+            {/* Left: Featured product */}
+            <div style={{ position: 'relative', borderRadius: '16px', overflow: 'hidden', background: '#fff', border: '1px solid var(--border-default, #eee)', display: 'flex', alignItems: 'center', padding: '24px', minHeight: '220px', cursor: 'pointer' }}
+              onClick={() => featured && navigate(`/marketplace/product/${featured.slug}`)}>
+              <div style={{ flex: 1, zIndex: 2 }}>
+                <div style={{ fontSize: '10px', textTransform: 'uppercase', fontWeight: '700', color: category.color, letterSpacing: '0.5px', marginBottom: '6px' }}>{category.name}</div>
+                <h2 style={{ fontSize: '17px', fontWeight: '800', color: '#222', margin: '0 0 8px', lineHeight: '1.3', fontFamily: 'var(--font-display)' }}>
+                  {featured.name?.substring(0, 55)}{featured.name?.length > 55 ? '...' : ''}
+                </h2>
+                <div style={{ fontSize: '11px', color: '#777', marginBottom: '10px' }}>Mulai</div>
+                <div style={{ display: 'flex', alignItems: 'baseline', gap: '4px' }}>
+                  <span style={{ fontSize: '12px', fontWeight: '700', color: '#e74c3c' }}>Rp</span>
+                  <span style={{ fontSize: '26px', fontWeight: '900', color: '#e74c3c', fontFamily: 'var(--font-display)', lineHeight: '1' }}>
+                    {featured.priceUser ? Math.floor(featured.priceUser / 1000) : '—'}
+                  </span>
+                  <span style={{ fontSize: '11px', fontWeight: '700', color: '#e74c3c' }}>rb</span>
+                </div>
+              </div>
+              {featured.imageUrl && (
+                <img src={featured.imageUrl} alt="" style={{ width: '160px', height: '160px', objectFit: 'contain', marginLeft: '16px', filter: 'drop-shadow(0 4px 12px rgba(0,0,0,0.15))' }} />
+              )}
+            </div>
+
+            {/* Right: 4 sub-category cards */}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+              {subCards.map(([subName, prods], i) => {
+                const prod = prods[0];
+                return (
+                  <div key={subName}
+                    style={{ position: 'relative', borderRadius: '14px', overflow: 'hidden', padding: '14px 14px 10px', cursor: 'pointer', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', minHeight: '104px' }}
+                    onClick={() => { setActiveSubCat(subName); setPage(1); window.scrollTo({ top: 400, behavior: 'smooth' }); }}>
+                    <div style={{ position: 'absolute', inset: 0, background: gradients[i % gradients.length], opacity: 0.92 }} />
+                    <div style={{ position: 'relative', zIndex: 1 }}>
+                      <div style={{ fontSize: '10px', fontWeight: '800', color: '#fff', textTransform: 'uppercase', letterSpacing: '0.3px', lineHeight: '1.3' }}>{subName}</div>
+                      <div style={{ fontSize: '9px', color: 'rgba(255,255,255,0.75)', marginTop: '2px' }}>{prods.length} produk</div>
+                    </div>
+                    {prod?.imageUrl && (
+                      <img src={prod.imageUrl} alt="" style={{ position: 'relative', zIndex: 1, width: '52px', height: '52px', objectFit: 'contain', alignSelf: 'flex-end', marginTop: '4px', filter: 'drop-shadow(0 2px 6px rgba(0,0,0,0.2))' }} />
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        );
+      })()}
 
       {/* 2-Column Layout: Category Sidebar + Product Grid */}
       <div className="mkp-layout">
