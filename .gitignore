@@ -6,9 +6,11 @@
 # Backup directories
 *-backup/
 pre-audit-backup-*/
+backups/
 
 # Database
 backend/prisma/dev.db
+restored-dev.db
 
 # Node modules
 node_modules/
@@ -16,8 +18,15 @@ node_modules/
 # Build output
 frontend/dist/
 
+# Uploads (sensitive user data)
+backend/uploads/proofs/
+backend/uploads/payment-proofs/
+backend/uploads/qris/
+
 # Logs
 *.log
+backend-err.log
+backend-out.log
 
 # OS files
 .DS_Store
@@ -26,3 +35,7 @@ Thumbs.db
 # IDE
 .vscode/
 .idea/
+
+# Agent scratch/temp files
+backend/scratch/
+backend/src/marketing/reports/
