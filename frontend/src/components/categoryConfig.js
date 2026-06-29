@@ -103,6 +103,15 @@ export const CATEGORIES = [
     color: '#66a6ff',
     description: 'Tas, dompet, travel kit, dan aksesoris lainnya',
   },
+  {
+    slug: 'otomotif-kendaraan',
+    name: 'Otomotif & Kendaraan',
+    icon: '🚗',
+    image: '/images/promo/aksesoris-komputer.png',
+    gradient: 'linear-gradient(135deg, #2d3436 0%, #636e72 100%)',
+    color: '#636e72',
+    description: 'Aksesoris mobil, motor, dan suku cadang kendaraan',
+  },
 ];
 
 /** Get category config by slug */
