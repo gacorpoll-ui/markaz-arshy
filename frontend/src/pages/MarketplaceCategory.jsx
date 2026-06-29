@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+﻿import React, { useState, useEffect, useMemo } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import ProductCardJakmall from '../components/ProductCardJakmall';
 import CategorySidebar from '../components/CategorySidebar';
@@ -42,9 +42,13 @@ export default function MarketplaceCategory() {
 
   const dbSlug = getDbSlug(slug);
 
+  // Products in this parent category (for sidebar sub-cat counts)
+  const categoryProducts = useMemo(() => {
+    return products.filter(p => p.category?.slug === dbSlug);
+  }, [products, dbSlug]);
+
   const filtered = useMemo(() => {
-    let result = products.filter(p => p.category?.slug === dbSlug);
-    // Sub-category filter
+    let result = [...categoryProducts];
     if (activeSubCat) {
       result = result.filter(p => p.categoryJakmall === activeSubCat);
     }
@@ -56,7 +60,7 @@ export default function MarketplaceCategory() {
     else if (sortBy === 'price-high') result = [...result].sort((a, b) => (b.priceUser || 0) - (a.priceUser || 0));
     else if (sortBy === 'name') result = [...result].sort((a, b) => (a.name || '').localeCompare(b.name || ''));
     return result;
-  }, [products, dbSlug, sortBy, searchQuery, activeSubCat]);
+  }, [categoryProducts, sortBy, searchQuery, activeSubCat]);
 
   const totalPages = Math.ceil(filtered.length / ITEMS_PER_PAGE);
   const paginatedProducts = filtered.slice((page - 1) * ITEMS_PER_PAGE, page * ITEMS_PER_PAGE);
@@ -114,7 +118,7 @@ export default function MarketplaceCategory() {
 
       {/* 2-Column Layout: Category Sidebar + Product Grid */}
       <div className="mkp-layout">
-        <CategorySidebar products={products} activeSlug={slug} showAll={false} mode="sub" activeSubCat={activeSubCat} onSubCatChange={sub => { setActiveSubCat(sub); setPage(1); }} />
+        <CategorySidebar products={categoryProducts} activeSlug={slug} showAll={false} mode="sub" activeSubCat={activeSubCat} onSubCatChange={sub => { setActiveSubCat(sub); setPage(1); }} />
 
         <div style={{ minWidth: 0 }}>
           {/* Toolbar */}
