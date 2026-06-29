@@ -209,12 +209,12 @@ export default function Home({ user }) {
             </div>
             <div className="mall-hero-pills">
               {[
-                { key:'dapur', label:'Dapur', img:'/images/populer/dapur.jpg', bg:'rgba(239,68,68,0.12)' },
-                { key:'lampu', label:'Elektronik', img:'/images/populer/lampu.jpg', bg:'rgba(234,179,8,0.12)' },
-                { key:'alat-kesehatan', label:'Kesehatan', img:'/images/populer/alat-kesehatan.jpg', bg:'rgba(34,197,94,0.12)' },
-                { key:'olahraga', label:'Outdoor', img:'/images/populer/olahraga.jpg', bg:'rgba(59,130,246,0.12)' },
-                { key:'kopi', label:'Minuman', img:'/images/populer/kopi.jpg', bg:'rgba(168,85,247,0.12)' },
-                { key:'perkakas', label:'Perkakas', img:'/images/populer/perkakas.jpg', bg:'rgba(99,102,241,0.12)' },
+                { key:'perlengkapan-dapur', label:'Dapur', img:'/images/promo/perlengkapan-dapur.png', bg:'rgba(239,68,68,0.12)' },
+                { key:'lampu-rumah', label:'Elektronik', img:'/images/promo/lampu-rumah.png', bg:'rgba(234,179,8,0.12)' },
+                { key:'alat-kesehatan', label:'Kesehatan', img:'/images/promo/alat-kesehatan.png', bg:'rgba(34,197,94,0.12)' },
+                { key:'perlengkapan-olahraga', label:'Olahraga', img:'/images/promo/perlengkapan-olahraga.png', bg:'rgba(59,130,246,0.12)' },
+                { key:'perlengkapan-kopi', label:'Kopi', img:'/images/promo/perlengkapan-kopi.png', bg:'rgba(168,85,247,0.12)' },
+                { key:'perkakas', label:'Perkakas', img:'/images/promo/perkakas.png', bg:'rgba(99,102,241,0.12)' },
               ].map(({ key, label, img, bg }) => (
                 <Link key={key} to="/marketplace" className="mall-hero-pill" style={{ background: bg }}>
                   <img src={img} alt={label} className="mall-hero-pill-img" /> {label}
@@ -231,29 +231,32 @@ export default function Home({ user }) {
             </div>
           </div>
           <div className="mall-hero-visual">
-            <img src="/images/slides/hero-bg.jpg" alt="" className="mall-hero-bg-img" />
             <div className="mall-hero-visual-grid" />
             <div className="mall-hero-overlay" />
+            {/* Floating product showcase */}
             <div className="mall-hero-products">
               {[
-                { img:'/images/populer/dapur.jpg', name:'Peralatan Dapur', price:'Rp 15rb' },
-                { img:'/images/populer/lampu.jpg', name:'Lampu LED', price:'Rp 25rb' },
-                { img:'/images/populer/kopi.jpg', name:'French Press', price:'Rp 45rb' },
-                { img:'/images/populer/perkakas.jpg', name:'Tool Kit Set', price:'Rp 89rb' },
+                { img:'/images/promo/perlengkapan-dapur.png', name:'Peralatan Dapur', price:'Mulai Rp 15rb', discount:'-30%' },
+                { img:'/images/promo/perlengkapan-kopi.png', name:'Set Kopi', price:'Mulai Rp 45rb', discount:'-25%' },
+                { img:'/images/promo/perkakas.png', name:'Tool Kit', price:'Mulai Rp 89rb', discount:'-40%' },
+                { img:'/images/promo/lampu-rumah.png', name:'Lampu LED', price:'Mulai Rp 25rb', discount:'-20%' },
               ].map((p, i) => (
                 <Link key={i} to="/marketplace" className="mall-hero-product-card" style={{ textDecoration: 'none' }}>
-                  <img src={p.img} alt={p.name} style={{ width: '100%', height: 64, objectFit: 'cover', borderRadius: 10, marginBottom: 8 }} loading="lazy" />
+                  <div style={{ position: 'relative', marginBottom: 8 }}>
+                    <img src={p.img} alt={p.name} style={{ width: '100%', height: 80, objectFit: 'contain', borderRadius: 10, background: 'rgba(255,255,255,0.06)', padding: 6 }} loading="lazy" />
+                    <span style={{ position: 'absolute', top: 4, right: 4, background: '#ef4444', color: '#fff', fontSize: 9, fontWeight: 800, padding: '2px 6px', borderRadius: 6 }}>{p.discount}</span>
+                  </div>
                   <div className="name">{p.name}</div>
                   <div className="price">{p.price}</div>
                 </Link>
               ))}
             </div>
             <div className="mall-hero-badge top-left">
-              <img src="/images/populer/perkakas.jpg" alt="" style={{ width: 22, height: 22, borderRadius: 6, objectFit: 'cover' }} />
+              <img src="/images/promo/perlengkapan-dapur.png" alt="" style={{ width: 24, height: 24, objectFit: 'contain' }} />
               <span>Gudang Kebon Jeruk</span>
             </div>
             <div className="mall-hero-badge bottom-right">
-              <img src="/images/populer/dapur.jpg" alt="" style={{ width: 22, height: 22, borderRadius: 6, objectFit: 'cover' }} />
+              <img src="/images/promo/perlengkapan-olahraga.png" alt="" style={{ width: 24, height: 24, objectFit: 'contain' }} />
               <span>Kirim Se-Indonesia</span>
             </div>
           </div>
